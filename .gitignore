@@ -1,0 +1,7 @@
+# Bỏ qua thư mục Visual Studio
+.vs/
+
+# (Tuỳ chọn) Bỏ qua thêm các file build của .NET
+bin/
+obj/
+
