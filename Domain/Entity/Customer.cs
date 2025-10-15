@@ -25,5 +25,7 @@ namespace Domain.Entity
         public string? WardName { get; set; }
         public bool Active { get; set; }
         public ICollection<Order> Orders { get; set; } = new List<Order>();
+        public Guid? CompanyId { get; set; }
+        public Company Company { get; set; }
     }
 }

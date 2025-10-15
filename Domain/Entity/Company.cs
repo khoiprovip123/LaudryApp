@@ -10,7 +10,9 @@ namespace Domain.Entity
     {
         public string CompanyName { get; set; }
         public string OwnerName { get; set; }
-
+        public string Phone { get; set; }
+        public DateTime SubscriptionStartDate { get; set; }
+        public DateTime? PeriodLockDate { get; set; }
 
     }
 }

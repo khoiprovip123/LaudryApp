@@ -23,6 +23,8 @@ namespace Domain.Entity
         public Guid? CreatedBy { get; set; }
         public Guid? UpdatedBy { get; set; }
         public string? Notes { get; set; }
+        public Guid? CompanyId { get; set; }
+        public Company Company { get; set; }
 
         public Order(string code, Guid? customerId, Customer customer, string? addressText, DateTime? requestedPickupTime, DateTime? receivedTime, string? status, string? paymentStatus, decimal totalPrice, Guid? createdBy, Guid? updatedBy, string? notes)
         {

@@ -1,8 +1,8 @@
+using Infrastucture.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Infrastucture.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,4 +49,3 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 app.Run();
- 

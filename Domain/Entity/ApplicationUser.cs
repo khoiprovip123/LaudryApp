@@ -1,20 +1,23 @@
-﻿using System;
+﻿using Domain.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Domain.Entity
 {
-    public class Service : BaseEntity
+    public class ApplicationUser : IdentityUser<Guid>, IEntity<Guid>
     {
-        public string Name { get; set; }
-        public decimal UnitPrice { get; set; }
+        public ApplicationUser()
+        {
+            Active = true;
+        }
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
         public bool Active { get; set; }
-        public string Description{ get; set; }
-        public string DefaultCode { get; set; }
 
     }
 }

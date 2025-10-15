@@ -15,5 +15,10 @@ namespace Domain.Entity
         public Customer Customer { get; set; }
         public Guid? OrderId { get; private set; }
         public Order Order { get; set; }
+        public decimal Amount { get; set; }
+        public string PaymentMethod { get; set; }
+        public DateTime PaymentDate { get; set; }
+        public string? Note { get; set; }
+        public string PaymentCode { get; set; }
     }
 }

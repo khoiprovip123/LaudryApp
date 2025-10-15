@@ -15,6 +15,8 @@ namespace Domain.Entity
         public decimal TotalPrice => UnitPrice * Quantity;
         public Guid OrderId { get; set; }
         public Order Order { get; set; }
+        public Guid? CompanyId { get; set; }
+        public Company Company { get; set; }
 
         private OrderItem() { }
 
