@@ -6,14 +6,18 @@ using System.Threading.Tasks;
 
 namespace Domain.Entity
 {
-    public class Customer : BaseEntity<Guid>
+    public class Partner : BaseEntity<Guid>
     {
-        public Customer()
+        public Partner()
         {
             Active = true;
         }
 
         public string Name { get; set; }
+        public string Ref { get; set; }
+        public string NameNoSign { get; set; }
+        public bool IsCustomer { get; set; }
+        public bool IsCompany { get; set; }
         public string Phone { get; set; }
         public string? Notes { get; set; }
         public string? Address { get; set; }
@@ -27,5 +31,7 @@ namespace Domain.Entity
         public ICollection<Order> Orders { get; set; } = new List<Order>();
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
     }
 }

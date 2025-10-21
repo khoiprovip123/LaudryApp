@@ -15,10 +15,15 @@ namespace Infrastucture.EntityConfigurations
         {
             builder.HasIndex(x => new { x.Code, x.DateCreated });
 
-            builder.HasOne(x => x.Customer)
+            builder.HasOne(x => x.Partner)
                 .WithMany(x => x.Orders)
-                .HasForeignKey(x => x.CustomerId)
+                .HasForeignKey(x => x.PartnerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.Company)
+               .WithMany()
+               .HasForeignKey(x => x.CompanyId)
+               .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -12,8 +12,8 @@ namespace Domain.Entity
         public ICollection<OrderItem> OrderItem { get; set; } = new List<OrderItem>();
 
         public string Code { get; set; }
-        public Guid? CustomerId { get; set; }
-        public Customer Customer { get; set; }
+        public Guid? PartnerId { get; set; }
+        public Partner Partner { get; set; }
         public string? AddressText { get; set; }
         public DateTime? RequestedPickupTime { get; set; }
         public DateTime? ReceivedTime { get; set; }
@@ -26,10 +26,10 @@ namespace Domain.Entity
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
 
-        public Order(string code, Guid? customerId, Customer customer, string? addressText, DateTime? requestedPickupTime, DateTime? receivedTime, string? status, string? paymentStatus, decimal totalPrice, Guid? createdBy, Guid? updatedBy, string? notes)
+        public Order(string code, Guid? partnerId, string? addressText, DateTime? requestedPickupTime, DateTime? receivedTime, string? status, string? paymentStatus, decimal totalPrice, Guid? createdBy, Guid? updatedBy, string? notes)
         {
             Code = code;
-            CustomerId = customerId;
+            PartnerId = partnerId;
             AddressText = addressText;
             RequestedPickupTime = requestedPickupTime;
             ReceivedTime = receivedTime;

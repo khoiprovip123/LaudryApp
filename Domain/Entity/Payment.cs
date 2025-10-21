@@ -11,8 +11,8 @@ namespace Domain.Entity
     {
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
-        public Guid? CustomerId { get; set; }
-        public Customer Customer { get; set; }
+        public Guid? PartnerId { get; set; }
+        public Partner Partner { get; set; }
         public Guid? OrderId { get; private set; }
         public Order Order { get; set; }
         public decimal Amount { get; set; }
