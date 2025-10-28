@@ -16,14 +16,9 @@ namespace Domain.Interfaces
 
         int Take { get; }
         int Skip { get; }
-        bool isPagingEnabled { get; }
+        bool IsPagingEnabled { get; }
 
         Expression<Func<T, bool>> AsExpression();
         bool IsSatisfiedBy(T candidate);
-        ISpecification<T> And(ISpecification<T> other);
-        ISpecification<T> AndNot(ISpecification<T> other);
-        ISpecification<T> Or(ISpecification<T> other);
-        ISpecification<T> OrNot(ISpecification<T> other);
-        ISpecification<T> Not();
     }
 }

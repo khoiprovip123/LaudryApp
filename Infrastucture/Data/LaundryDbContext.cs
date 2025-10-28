@@ -13,10 +13,10 @@ namespace Infrastucture.Data
     {
         private readonly IConfiguration _configuration;
 
-        public LaundryDbContext(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
+        //public LaundryDbContext(IConfiguration configuration)
+        //{
+        //    _configuration = configuration;
+        //}
 
         public LaundryDbContext(DbContextOptions<LaundryDbContext> options) : base(options) { }
 
@@ -54,14 +54,14 @@ namespace Infrastucture.Data
         }
     }
 
-    public class CatalogDbContextDesignFactory : IDesignTimeDbContextFactory<LaundryDbContext>
-    {
-        public LaundryDbContext CreateDbContext(string[] args)
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<LaundryDbContext>()
-                .UseSqlServer("Server=.\\;User Id=sa;Password=123123;Initial Catalog=LaundryDB;");
+    //public class CatalogDbContextDesignFactory : IDesignTimeDbContextFactory<LaundryDbContext>
+    //{
+    //    public LaundryDbContext CreateDbContext(string[] args)
+    //    {
+    //        var optionsBuilder = new DbContextOptionsBuilder<LaundryDbContext>()
+    //            .UseSqlServer("Server=.\\;User Id=sa;Password=123123;Initial Catalog=LaundryDB; Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;");
 
-            return new LaundryDbContext(optionsBuilder.Options);
-        }
-    }
+    //        return new LaundryDbContext(optionsBuilder.Options);
+    //    }
+    //}
 }

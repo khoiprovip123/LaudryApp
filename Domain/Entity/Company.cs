@@ -13,6 +13,7 @@ namespace Domain.Entity
         public string Phone { get; set; }
         public DateTime SubscriptionStartDate { get; set; }
         public DateTime? PeriodLockDate { get; set; }
+        public bool Active{ get; set; }
 
     }
 }
