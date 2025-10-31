@@ -1,4 +1,5 @@
 ﻿using Domain.Entity;
+using Domain.Service;
 using Infrastucture.Data;
 using Infrastucture.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,6 +13,9 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Reflection;
 using System.Text;
+using Domain;
+using Infrastucture;
+using Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +32,12 @@ services.AddDbContext<LaundryDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 services.AddRouting(options => options.LowercaseUrls = true);
+
+services.ConfigureDomainServices(configuration);
+services.ConfigureInfraServices(configuration);
+services.ConfigureApplicationServices(configuration);
+
+
 services.AddCors(options =>
 {
     options.AddPolicy("DefaultCorsPolicy", policy =>
@@ -38,12 +48,12 @@ services.AddCors(options =>
 
 builder.Services.AddScoped<IDbContextProvider<LaundryDbContext>, DbContextProvider<LaundryDbContext>>();
 
-
 services.AddMediatR(cfg =>
 {
     // Nếu handler nằm trong project Application
     cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
 });
+
 
 // Cấu hình Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>

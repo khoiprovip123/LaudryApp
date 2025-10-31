@@ -7,7 +7,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Domain.Entity
 {
-    public class Payment : BaseEntity<Guid>
+    public class Payment : BaseEntity
     {
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
