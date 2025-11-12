@@ -1,0 +1,55 @@
+Understood. Here's the translated guideline in English while keeping all instructions clear and concise:
+
+---
+
+# GENERAL REQUIREMENTS
+
+* Reply entirely in English.
+* Prioritize **high-quality, clear, maintainable code**; use meaningful names; reduce nesting; avoid unnecessary try/catch.
+* Implement features in the **correct layer** (Domain ↔ Application ↔ Infrastructure ↔ API) and update DI properly.
+* With EF Core: use **SQL Server**, migrations in **Infrastructure**, Startup/Program in **LaundryAPI**. **Do not use EF6**.
+
+---
+
+# FEATURE IMPLEMENTATION GUIDE
+
+### Domain
+
+* Place **core models/business logic**, rules independent of infrastructure.
+* For new business like sequence/partner: extend `IIRSequenceService` / `PartnerService`; keep service interfaces clear.
+
+### Application
+
+* Write **MediatR Command/Query**; inject **Domain service**.
+* Do **not access EF directly**; go through service/repository only.
+
+### Infrastructure
+
+* When adding entities: add **DbSet**, `ApplyConfiguration`, create migration here.
+* Do **not contain pure business logic**; only data access.
+
+### API
+
+* Create/update **Controllers**; use `[Uow]` for write endpoints (POST/PUT/DELETE).
+* Keep **input/output mapping simple**; business logic goes in Application (MediatR).
+
+---
+
+# QUALITY CHECKLIST
+
+* Adding new entity → **DbSet + Configuration + Migration**.
+* Handler → call **Domain service** → repository/DbContext only in **Infrastructure/Service**.
+* Update **DI** (`Domain/Dependencies.cs`; `Infrastructure/Dependencies.cs` if needed).
+* API: attach `[Uow]` for write endpoints; minimal input validation.
+* Do not inject DbContext with `IConfiguration`; use `DbContextOptions<LaundryDbContext>` and `AddDbContext` in **Program.cs**.
+
+---
+
+# WHEN ANSWERING NEW REQUESTS
+
+* Be concise.
+* List **files to edit**.
+* Provide **layer-specific edits**.
+* Remind to **run migration** if DB changed.
+* Ensure **DI is updated properly**.
+

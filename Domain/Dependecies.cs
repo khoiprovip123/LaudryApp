@@ -13,7 +13,9 @@ namespace Domain
     {
         public static void ConfigureDomainServices(this IServiceCollection services, IConfiguration configuration = null)
         {
-            services.AddScoped<IParnerService, PartnerService>();
+            services.AddScoped<IPartnerService, PartnerService>();
+            services.AddScoped<ICompanyService, CompanyService>();
+			services.AddScoped<IIRSequenceService, IRSequenceService>();
         }
     }
 }

@@ -1,7 +1,12 @@
-﻿using Domain.Entity;
+﻿using Application;
+using Domain;
+using Domain.Entity;
+using Domain.Interfaces;
 using Domain.Service;
+using Infrastucture;
 using Infrastucture.Data;
 using Infrastucture.Interfaces;
+using Infrastucture.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -13,9 +18,6 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Reflection;
 using System.Text;
-using Domain;
-using Infrastucture;
-using Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,10 @@ services.ConfigureInfraServices(configuration);
 services.ConfigureApplicationServices(configuration);
 
 
+builder.Services.AddScoped<IDbContextProvider<LaundryDbContext>, DbContextProvider<LaundryDbContext>>();
+services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+
+
 services.AddCors(options =>
 {
     options.AddPolicy("DefaultCorsPolicy", policy =>
@@ -46,7 +52,6 @@ services.AddCors(options =>
               .AllowAnyMethod());
 });
 
-builder.Services.AddScoped<IDbContextProvider<LaundryDbContext>, DbContextProvider<LaundryDbContext>>();
 
 services.AddMediatR(cfg =>
 {
@@ -164,7 +169,7 @@ if (environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("DefaultCorsPolicy");
 
-app.UseAuthentication();  
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -144,20 +144,19 @@ namespace LaundryAPI.Controllers
             roles ??= new List<string>();
 
             var handler = new JwtSecurityTokenHandler();
-            var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
+            var claims = new List<Claim>{
+                         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                         new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
+                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
             // Nếu có CompanyId (nullable) thì thêm claim an toàn
             if (user.CompanyId != null)
                 claims.Add(new Claim("company_id", user.CompanyId.ToString()!));
 
-            // Nếu có session id
-            if (!string.IsNullOrEmpty(sid))
-                claims.Add(new Claim("sid", sid));
+            // Super admin: cờ lưu trong bảng AspNetUsers
+            var isSuperAdmin = user.IsSuperAdmin;
+            claims.Add(new Claim("is_super_admin", isSuperAdmin ? "true" : "false"));
 
             // Thêm các role (nếu có)
             foreach (var role in roles)

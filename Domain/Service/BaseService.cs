@@ -1,10 +1,10 @@
 ﻿using Domain.Entity;
 using Domain.Interfaces;
 using Domain.Specifications;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
+using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;

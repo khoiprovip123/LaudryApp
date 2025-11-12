@@ -76,6 +76,12 @@ namespace Infrastucture.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsSuperAdmin")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUserRoot")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -89,6 +95,9 @@ namespace Infrastucture.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<Guid?>("PartnerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -120,6 +129,10 @@ namespace Infrastucture.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("PartnerId")
+                        .IsUnique()
+                        .HasFilter("[PartnerId] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -159,6 +172,48 @@ namespace Infrastucture.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Companies");
+                });
+
+            modelBuilder.Entity("Domain.Entity.IRSequence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Implementation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NumberIncrement")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumberNext")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Padding")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("IRSequences");
                 });
 
             modelBuilder.Entity("Domain.Entity.Order", b =>
@@ -286,6 +341,10 @@ namespace Infrastucture.Migrations
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("DistrictCode")
                         .HasColumnType("nvarchar(max)");
 
@@ -320,12 +379,16 @@ namespace Infrastucture.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId")
+                    b.Property<int?>("SequenceNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SequencePrefix")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId1")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("WardCode")
                         .HasColumnType("nvarchar(max)");
@@ -336,8 +399,6 @@ namespace Infrastucture.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("Name", "Ref", "Phone");
 
@@ -540,6 +601,21 @@ namespace Infrastucture.Migrations
                         .WithMany()
                         .HasForeignKey("CompanyId");
 
+                    b.HasOne("Domain.Entity.Partner", "Partner")
+                        .WithOne("User")
+                        .HasForeignKey("Domain.Entity.ApplicationUser", "PartnerId");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Partner");
+                });
+
+            modelBuilder.Entity("Domain.Entity.IRSequence", b =>
+                {
+                    b.HasOne("Domain.Entity.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId");
+
                     b.Navigation("Company");
                 });
 
@@ -583,15 +659,7 @@ namespace Infrastucture.Migrations
                         .WithMany()
                         .HasForeignKey("CompanyId");
 
-                    b.HasOne("Domain.Entity.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Company");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entity.Payment", b =>
@@ -683,6 +751,9 @@ namespace Infrastucture.Migrations
             modelBuilder.Entity("Domain.Entity.Partner", b =>
                 {
                     b.Navigation("Orders");
+
+                    b.Navigation("User")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

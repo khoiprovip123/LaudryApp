@@ -17,7 +17,11 @@ namespace Domain.Entity
         }
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
+        public Guid? PartnerId { get; set; }
+        public Partner Partner { get; set; }
+        public bool IsUserRoot { get; set; }
         public bool Active { get; set; }
+		public bool IsSuperAdmin { get; set; } = false;
 
     }
 }

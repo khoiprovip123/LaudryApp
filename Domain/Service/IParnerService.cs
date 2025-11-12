@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Service
 {
-    public interface IParnerService : IBaseService<Partner>
+    public interface IPartnerService : IBaseService<Partner>
     {
     }
 }

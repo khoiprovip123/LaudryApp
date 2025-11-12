@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Domain.Entity
 {
@@ -34,7 +35,12 @@ namespace Domain.Entity
             {
                 var name = Name;
                 if (!string.IsNullOrEmpty(Ref))
-                    name = "[" + Ref + "] " + Name;
+                {
+                    if (IsCustomer)
+                        name = Name + " [" + Ref + "]";
+                    else
+                        name = "[" + Ref + "] " + Name;
+                }
                 return name;
             }
         }

@@ -4,7 +4,6 @@ using Infrastucture.EntityConfigurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Configuration;
 
 namespace Infrastucture.Data
@@ -34,6 +33,7 @@ namespace Infrastucture.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Payment> Payments { get; set; }
+		public DbSet<IRSequence> IRSequences { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -44,6 +44,7 @@ namespace Infrastucture.Data
             builder.ApplyConfiguration(new PartnerConfiguration());
             builder.ApplyConfiguration(new ServiceConfiguration());
             builder.ApplyConfiguration(new PaymentConfiguration());
+			builder.ApplyConfiguration(new IRSequenceConfiguration());
 
             base.OnModelCreating(builder);
         }
