@@ -11,7 +11,7 @@ import {
 	Stack,
 	useToast,
 } from '@chakra-ui/react';
-import { loginApi } from '../api/auth';
+import { loginApi, getSessionInfoApi } from '../api/auth';
 import { useAuthStore } from '../store/auth';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -20,6 +20,7 @@ const Login: React.FC = () => {
 	const [password, setPassword] = useState('');
 	const [loading, setLoading] = useState(false);
 	const setToken = useAuthStore((s) => s.setToken);
+	const setUserInfo = useAuthStore((s) => s.setUserInfo);
 	const toast = useToast();
 	const navigate = useNavigate();
 	const location = useLocation() as any;
@@ -31,6 +32,21 @@ const Login: React.FC = () => {
 			const res = await loginApi({ userName, password });
 			if (res.succeeded) {
 				setToken(res.token);
+				// Fetch session info ngay sau khi login thành công
+				try {
+					const sessionInfo = await getSessionInfoApi();
+					setUserInfo({
+						userId: sessionInfo.userId,
+						userName: sessionInfo.userName,
+						email: sessionInfo.email,
+						companyId: sessionInfo.companyId || null,
+						companyName: sessionInfo.companyName,
+						isSuperAdmin: sessionInfo.isSuperAdmin,
+					});
+				} catch (sessionErr) {
+					console.error('Failed to load session after login:', sessionErr);
+					// Không block login nếu không load được session, SessionLoader sẽ thử lại
+				}
 				const redirectTo = location.state?.from?.pathname || '/';
 				navigate(redirectTo, { replace: true });
 			} else {

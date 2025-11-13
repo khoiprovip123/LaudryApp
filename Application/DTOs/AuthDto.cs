@@ -30,4 +30,14 @@ namespace Application.DTOs
         public string ConfirmPassword { get; set; }
         public string Phone { get; set; }
     }
+
+    public class SessionInfoResponse
+    {
+        public string UserId { get; set; }
+        public string UserName { get; set; }
+        public string Email { get; set; }
+        public Guid? CompanyId { get; set; }
+        public string CompanyName { get; set; }
+        public bool IsSuperAdmin { get; set; }
+    }
 }

@@ -5,3 +5,6 @@
 bin/
 obj/
 
+# Cursor IDE
+.cursor/
+

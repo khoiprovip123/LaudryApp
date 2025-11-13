@@ -1,16 +1,18 @@
 ﻿using Application.DTOs;
 using Domain.Entity;
+using Domain.Service;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace LaundryAPI.Controllers
 {
@@ -22,13 +24,16 @@ namespace LaundryAPI.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
+        private readonly ICompanyService _companyService;
 
-        public AuthController(IMediator mediator, SignInManager<ApplicationUser> signInManager, IConfiguration config, UserManager<ApplicationUser> userManager)
+
+        public AuthController(IMediator mediator, SignInManager<ApplicationUser> signInManager, IConfiguration config, UserManager<ApplicationUser> userManager, ICompanyService companyService)
         {
             _mediator = mediator;
             _signInManager = signInManager;
             _config = config;
             _userManager = userManager;
+            _companyService = companyService;
         }
 
         [AllowAnonymous]
@@ -98,6 +103,33 @@ namespace LaundryAPI.Controllers
         }
 
         [HttpGet] public IActionResult Get() => Ok("ok");
+
+        [HttpGet("session")]
+        public async Task<IActionResult> GetSession()
+        {
+            var userId = UserId;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var user = await _userManager.Users
+                .Where(x => x.Id.ToString() == userId)
+                .Include(x => x.Company)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return Unauthorized();
+
+
+            return Ok(new SessionInfoResponse
+            {
+                UserId = user.Id.ToString(),
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                CompanyId = user.CompanyId,
+                CompanyName = user.Company?.CompanyName ?? string.Empty,
+                IsSuperAdmin = user.IsSuperAdmin,
+            });
+        }
 
         //private string GenerateToken(ApplicationUser user, DateTime expires, IList<string>? roles = null, string? sid = null)
         //{
