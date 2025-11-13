@@ -211,7 +211,8 @@ namespace Infrastucture.Repository
 
         public IQueryable<T> SearchQuery(Expression<Func<T, bool>> domain = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, int offSet = 0, int limit = 0, bool isPagingEnabled = false)
         {
-            IQueryable<T> query = Db.Set<T>();
+            // Sử dụng AsNoTracking() cho read-only queries để tăng performance
+            IQueryable<T> query = Db.Set<T>().AsNoTracking();
 
             if (domain != null)
                 query = query.Where(domain);
@@ -233,7 +234,8 @@ namespace Infrastucture.Repository
 
         public IQueryable<T> SearchQuery(ISpecification<T> spec, Func<IQueryable<T>, IOrderedQueryable<T>> sort = null, string includes = "", int offset = 0, int limit = 0, bool isPagingEnabled = false)
         {
-            var query = ApplySpecification(spec);
+            // Sử dụng AsNoTracking() cho read-only queries để tăng performance
+            var query = ApplySpecification(spec).AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(includes))
             {

@@ -1,69 +1,45 @@
 ﻿using JetBrains.Annotations;
 using System;
 using System.Diagnostics;
-using LHK.Security.Claims;
+using System.Security.Claims;
+using System.Linq;
 
-namespace LHK.Security.Users;
-
-public static class CurrentUserExtensions
+namespace LHK.Security.Users
 {
-    [CanBeNull]
-    public static string FindClaimValue(this ICurrentUser currentUser, string claimType)
+    public static class CurrentUserExtensions
     {
-        return currentUser.FindClaim(claimType)?.Value;
-    }
-
-    public static T FindClaimValue<T>(this ICurrentUser currentUser, string claimType)
-        where T : struct
-    {
-        var value = currentUser.FindClaimValue(claimType);
-        if (value == null)
+        [CanBeNull]
+        public static string FindClaimValue(this ICurrentUser currentUser, string claimType)
         {
-            return default;
+            return currentUser.FindClaim(claimType)?.Value;
         }
 
-        return value.To<T>();
-    }
-
-    public static string GetId(this ICurrentUser currentUser)
-    {
-        Debug.Assert(currentUser.Id != null, "currentUser.Id != null");
-
-        return currentUser.Id;
-    }
-
-    public static Guid? FindImpersonatorTenantId([NotNull] this ICurrentUser currentUser)
-    {
-        var impersonatorTenantId = currentUser.FindClaimValue(AbpClaimTypes.ImpersonatorTenantId);
-        if (impersonatorTenantId == null || impersonatorTenantId.IsNullOrWhiteSpace())
+        public static T? FindClaimValue<T>(this ICurrentUser currentUser, string claimType)
+            where T : struct
         {
-            return null;
-        }
-        if (Guid.TryParse(impersonatorTenantId, out var guid))
-        {
-            return guid;
+            var value = currentUser.FindClaimValue(claimType);
+            if (value == null)
+                return null;
+
+            try
+            {
+                return (T)Convert.ChangeType(value, typeof(T));
+            }
+            catch
+            {
+                return null;
+            }
         }
 
-        return null;
-    }
-
-    public static Guid? FindImpersonatorUserId([NotNull] this ICurrentUser currentUser)
-    {
-        var impersonatorUserId = currentUser.FindClaimValue(AbpClaimTypes.ImpersonatorUserId);
-        if (impersonatorUserId == null || impersonatorUserId.IsNullOrWhiteSpace())
+        public static string GetId(this ICurrentUser currentUser)
         {
-            return null;
-        }
-        if (Guid.TryParse(impersonatorUserId, out var guid))
-        {
-            return guid;
+            Debug.Assert(currentUser.Id != null, "currentUser.Id != null");
+            return currentUser.Id!;
         }
 
-        return null;
-    }
-
-    public static bool IsNullOrWhiteSpace(this string str)
-    {
-        return string.IsNullOrWhiteSpace(str);
+        public static bool IsNullOrWhiteSpace(this string? str)
+        {
+            return string.IsNullOrWhiteSpace(str);
+        }
     }
 }

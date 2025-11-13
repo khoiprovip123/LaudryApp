@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Domain.Entity;
 using Domain.Service;
+using LaundryAPI.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -42,34 +43,28 @@ namespace LaundryAPI.Controllers
         {
             var user = await _userManager.Users.Where(x => x.UserName == model.UserName).Include(x => x.Company).FirstOrDefaultAsync();
             if (user == null)
-                throw new Exception($"Tên đăng nhập {model.UserName} không tồn tại");
+                throw new UserFriendlyException($"Tên đăng nhập {model.UserName} không tồn tại", "USER_NOT_FOUND");
 
             if (!user.Active)
-                throw new Exception($"Tên đăng nhập {model.UserName} không khả dụng");
+                throw new UserFriendlyException($"Tên đăng nhập {model.UserName} không khả dụng", "USER_INACTIVE");
 
-            //if (user.Company.Active == false)
-            //    throw new Exception($"Tên đăng nhập {model.UserName} không thể truy cập vào chi nhánh đã bị đóng");
+            //if (user.Company?.Active == false)
+            //    throw new UserFriendlyException($"Tên đăng nhập {model.UserName} không thể truy cập vào chi nhánh đã bị đóng", "COMPANY_INACTIVE");
 
             var result = await _signInManager.PasswordSignInAsync(model.UserName, model.Password, false, lockoutOnFailure: false);
 
             if (result.Succeeded)
             {
-
                 return Ok(new LoginResponse
                 {
                     Succeeded = true,
                     Token = GenerateToken(user, DateTime.UtcNow.AddDays(7)),
                     Message = "Authentication succeeded",
                 });
-
             }
             else
             {
-                return Unauthorized(new LoginResponse
-                {
-                    Succeeded = false,
-                    Message = "Invalid username or password",
-                });
+                throw new UserFriendlyException("Tên đăng nhập hoặc mật khẩu không đúng", "INVALID_CREDENTIALS");
             }
         }
 
@@ -77,11 +72,9 @@ namespace LaundryAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest dto)
         {
-
             var existingUser = await _userManager.FindByNameAsync(dto.UserName);
             if (existingUser != null)
-                return BadRequest("Username already exists");
-
+                throw new UserFriendlyException("Tên đăng nhập đã tồn tại", "USERNAME_EXISTS");
 
             var user = new ApplicationUser
             {
@@ -90,7 +83,10 @@ namespace LaundryAPI.Controllers
 
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new UserFriendlyException($"Không thể tạo tài khoản: {errors}", "REGISTRATION_FAILED");
+            }
 
             // Sinh JWT token trả về luôn (tuỳ chọn)
             var token = GenerateToken(user, DateTime.UtcNow.AddHours(2));

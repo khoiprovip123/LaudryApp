@@ -9,57 +9,59 @@ namespace LHK.Security.Users;
 
 public class CurrentUser : ICurrentUser
 {
-    private static readonly Claim[] EmptyClaimsArray = new Claim[0];
+     private readonly ICurrentPrincipalAccessor _principalAccessor;
+        private static readonly Claim[] EmptyClaimsArray = Array.Empty<Claim>();
 
-    public virtual string UserName => this.FindClaimValue(AbpClaimTypes.UserName);
+        public CurrentUser(ICurrentPrincipalAccessor principalAccessor)
+        {
+            _principalAccessor = principalAccessor;
+        }
 
-    public virtual string Name => this.FindClaimValue(AbpClaimTypes.Name);
+        private ClaimsPrincipal? Principal => _principalAccessor.Principal;
 
-    public virtual string SurName => this.FindClaimValue(AbpClaimTypes.SurName);
+        public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated ?? false;
 
-    public virtual string PhoneNumber => this.FindClaimValue(AbpClaimTypes.PhoneNumber);
+        public string? Id => this.FindClaimValue(ClaimTypes.NameIdentifier);
 
-    public virtual bool PhoneNumberVerified => string.Equals(this.FindClaimValue(AbpClaimTypes.PhoneNumberVerified), "true", StringComparison.InvariantCultureIgnoreCase);
+        public string? UserName => this.FindClaimValue(ClaimTypes.Name);
 
-    public virtual string Email => this.FindClaimValue(AbpClaimTypes.Email);
+        public string? Email => this.FindClaimValue(ClaimTypes.Email);
 
-    public virtual bool EmailVerified => string.Equals(this.FindClaimValue(AbpClaimTypes.EmailVerified), "true", StringComparison.InvariantCultureIgnoreCase);
+        public string? PhoneNumber => this.FindClaimValue(ClaimTypes.MobilePhone);
+
+        public Guid? CompanyId
+        {
+            get
+            {
+                var value = this.FindClaimValue("company_id");
+                return Guid.TryParse(value, out var id) ? id : null;
+            }
+        }
+
+        public bool IsSuperAdmin =>
+            string.Equals(this.FindClaimValue("is_super_admin"), "true", StringComparison.OrdinalIgnoreCase);
+
+        public string[] Roles =>
+            Principal?.FindAll(ClaimTypes.Role).Select(c => c.Value).Distinct().ToArray() ?? Array.Empty<string>();
 
 
-    public virtual string[] Roles => FindClaims(AbpClaimTypes.Role).Select(c => c.Value).Distinct().ToArray();
+        public virtual Claim? FindClaim(string claimType)
+        {
+            return Principal?.Claims.FirstOrDefault(c => c.Type == claimType);
+        }
 
-    public Guid? CompanyId => this.FindClaimValue<Guid>(AbpClaimTypes.CompanyId);
+        public virtual Claim[] FindClaims(string claimType)
+        {
+            return Principal?.Claims.Where(c => c.Type == claimType).ToArray() ?? EmptyClaimsArray;
+        }
 
-    public bool IsAuthenticated => throw new NotImplementedException();
+        public virtual Claim[] GetAllClaims()
+        {
+            return Principal?.Claims.ToArray() ?? EmptyClaimsArray;
+        }
 
-    public string Id => throw new NotImplementedException();
-
-    public string TenantId => throw new NotImplementedException();
-
-    private readonly ICurrentPrincipalAccessor _principalAccessor;
-
-    public CurrentUser(ICurrentPrincipalAccessor principalAccessor)
-    {
-        _principalAccessor = principalAccessor;
-    }
-
-    public virtual Claim FindClaim(string claimType)
-    {
-        return _principalAccessor.Principal?.Claims.FirstOrDefault(c => c.Type == claimType);
-    }
-
-    public virtual Claim[] FindClaims(string claimType)
-    {
-        return _principalAccessor.Principal?.Claims.Where(c => c.Type == claimType).ToArray() ?? EmptyClaimsArray;
-    }
-
-    public virtual Claim[] GetAllClaims()
-    {
-        return _principalAccessor.Principal?.Claims.ToArray() ?? EmptyClaimsArray;
-    }
-
-    public virtual bool IsInRole(string roleName)
-    {
-        return FindClaims(AbpClaimTypes.Role).Any(c => c.Value == roleName);
-    }
+        public virtual bool IsInRole(string roleName)
+        {
+            return Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase);
+        }
 }

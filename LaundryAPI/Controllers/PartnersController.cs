@@ -24,7 +24,14 @@ namespace LaundryAPI.Controllers
 			return Ok(res);
 		}
 
-		[Uow]
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetPartnerByCompanyId(Guid id)
+        {
+            var res = await Mediator.Send(new GetPartnerByIdQuery { Id = id });
+            return Ok(res);
+        }
+
+        [Uow]
         [HttpPost]
 		public async Task<IActionResult> CreatePartnerCustomer([FromBody] CreatePartnerCommand command)
         {

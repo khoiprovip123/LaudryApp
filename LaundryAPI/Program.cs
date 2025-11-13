@@ -7,6 +7,8 @@ using Infrastucture;
 using Infrastucture.Data;
 using Infrastucture.Interfaces;
 using Infrastucture.Repository;
+using LaundryAPI.Filters;
+using LHK.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -39,6 +41,11 @@ services.ConfigureDomainServices(configuration);
 services.ConfigureInfraServices(configuration);
 services.ConfigureApplicationServices(configuration);
 
+// Đăng ký IHttpContextAccessor (cần cho CurrentPrincipalAccessor)
+services.AddHttpContextAccessor();
+
+// Đăng ký Security services (ICurrentUser, ICurrentPrincipalAccessor)
+services.AddUsersServices();
 
 builder.Services.AddScoped<IDbContextProvider<LaundryDbContext>, DbContextProvider<LaundryDbContext>>();
 services.AddScoped<IUnitOfWork, EfUnitOfWork>();
@@ -117,7 +124,11 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
-services.AddControllers();
+services.AddControllers(options =>
+{
+    // Đăng ký Global Exception Filter
+    options.Filters.Add<GlobalExceptionFilter>();
+});
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen(c =>
 {

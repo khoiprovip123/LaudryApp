@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Infrastucture\Infrastucture.csproj" />
+    <ProjectReference Include="..\LHK.Security\LHK.Security.csproj" />
   </ItemGroup>
 
   <ItemGroup>

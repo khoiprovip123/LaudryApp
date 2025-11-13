@@ -17,6 +17,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\LHK.Security\LHK.Security.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Folder Include="Repositories\" />
 	</ItemGroup>
 

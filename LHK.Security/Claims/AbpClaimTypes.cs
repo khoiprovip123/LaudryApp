@@ -1,84 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Text;
+﻿using System.Security.Claims;
 
 namespace LHK.Security.Claims;
 
 public static class AbpClaimTypes
 {
-    /// <summary>
-    /// Default: <see cref="ClaimTypes.Name"/>
-    /// </summary>
-    public static string UserName { get; set; } = ClaimTypes.Name;
-
-    /// <summary>
-    /// Default: <see cref="ClaimTypes.GivenName"/>
-    /// </summary>
-    public static string Name { get; set; } = ClaimTypes.GivenName;
-
-    /// <summary>
-    /// Default: <see cref="ClaimTypes.Surname"/>
-    /// </summary>
-    public static string SurName { get; set; } = ClaimTypes.Surname;
-
-    /// <summary>
-    /// Default: <see cref="ClaimTypes.NameIdentifier"/>
-    /// </summary>
+    // Chuẩn hệ thống
     public static string UserId { get; set; } = ClaimTypes.NameIdentifier;
-
-    /// <summary>
-    /// Default: <see cref="ClaimTypes.Role"/>
-    /// </summary>
+    public static string UserName { get; set; } = ClaimTypes.Name;
     public static string Role { get; set; } = ClaimTypes.Role;
-
-    /// <summary>
-    /// Default: <see cref="ClaimTypes.Email"/>
-    /// </summary>
     public static string Email { get; set; } = ClaimTypes.Email;
+    public static string GivenName { get; set; } = ClaimTypes.GivenName;
+    public static string Surname { get; set; } = ClaimTypes.Surname;
 
-    /// <summary>
-    /// Default: "email_verified".
-    /// </summary>
-    public static string EmailVerified { get; set; } = "email_verified";
-
-    /// <summary>
-    /// Default: "company_id".
-    /// </summary>
+    // Các claim bổ sung tùy dự án
     public static string CompanyId { get; set; } = "company_id";
-
-    /// <summary>
-    /// Default: "phone_number".
-    /// </summary>
+    public static string IsSuperAdmin { get; set; } = "is_super_admin";
     public static string PhoneNumber { get; set; } = "phone_number";
-
-    /// <summary>
-    /// Default: "phone_number_verified".
-    /// </summary>
     public static string PhoneNumberVerified { get; set; } = "phone_number_verified";
+    public static string TenantId { get; set; } = "tenant_id";
 
-    /// <summary>
-    /// Default: "tenantid".
-    /// </summary>
-    public static string TenantId { get; set; } = "tenantid";
-
-    /// <summary>
-    /// Default: "editionid".
-    /// </summary>
-    public static string EditionId { get; set; } = "editionid";
-
-    /// <summary>
-    /// Default: "client_id".
-    /// </summary>
-    public static string ClientId { get; set; } = "client_id";
-
-    /// <summary>
-    /// Default: "impersonator_tenantid".
-    /// </summary>
+    // Impersonation
     public static string ImpersonatorTenantId { get; set; } = "impersonator_tenantid";
-
-    /// <summary>
-    /// Default: "impersonator_userid".
-    /// </summary>
     public static string ImpersonatorUserId { get; set; } = "impersonator_userid";
 }

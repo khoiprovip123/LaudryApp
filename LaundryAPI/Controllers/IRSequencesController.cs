@@ -22,6 +22,7 @@ namespace LaundryAPI.Controllers
 		{
 			var query = _sequenceService.SearchQuery();
 			var total = await query.CountAsync();
+			// AsNoTracking() đã được áp dụng trong SearchQuery(), chỉ cần select và execute
 			var items = await query
 				.OrderBy(s => s.Code)
 				.Skip(offset)

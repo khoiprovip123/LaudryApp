@@ -23,7 +23,9 @@ namespace Application.Companies.Queries
 			var companies = _companyService.SearchQuery();
 			var totalItems = await companies.CountAsync(cancellationToken);
 
+			// Đảm bảo sử dụng AsNoTracking() và chỉ select các fields cần thiết
 			var items = await companies
+				.AsNoTracking() // Thêm AsNoTracking() để tăng performance
 				.OrderByDescending(x => x.SubscriptionStartDate)
 				.Skip(request.Offset)
 				.Take(request.Limit)

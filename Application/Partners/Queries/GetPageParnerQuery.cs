@@ -1,8 +1,10 @@
 ﻿using Application.DTOs;
+using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,17 +17,19 @@ namespace Application.Partners.Queries
     {
         public int Limit { get; set; }
         public int Offset { get; set; }
-        public string? Keyword { get; set; }
+        public string? Search { get; set; }
     }
 
     class GetPageParnerQueryHandler : IRequestHandler<GetPageParnerQuery, PagedResult<PartnerDto>>
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IPartnerService _partnerService;
-        public GetPageParnerQueryHandler(IHttpContextAccessor httpContextAccessor, IPartnerService partnerService)
+        private readonly IWorkContext _workContext;
+        public GetPageParnerQueryHandler(IHttpContextAccessor httpContextAccessor, IPartnerService partnerService, IWorkContext workContext = null)
         {
             _httpContextAccessor = httpContextAccessor;
             _partnerService = partnerService;
+            _workContext = workContext;
         }
         public async Task<PagedResult<PartnerDto>> Handle(GetPageParnerQuery request, CancellationToken cancellationToken)
         {
@@ -33,22 +37,27 @@ namespace Application.Partners.Queries
 
             // Lọc theo CompanyId nếu người dùng thuộc một công ty
             var ctx = _httpContextAccessor.HttpContext;
-            var companyClaim = ctx?.User?.FindFirst("company_id");
-            if (companyClaim != null && Guid.TryParse(companyClaim.Value, out var companyId))
+            var companyId = _workContext.CompanyId;
+
+            if (companyId != null)
             {
                 partners = partners.Where(p => p.CompanyId == companyId);
             }
 
-            if (!string.IsNullOrWhiteSpace(request.Keyword))
+            if (!string.IsNullOrWhiteSpace(request.Search))
             {
-                var kw = request.Keyword.Trim();
+                var kw = request.Search.Trim().ToLower();
                 partners = partners.Where(p =>
-                    p.Name.Contains(kw) || p.Phone.Contains(kw) || p.Ref.Contains(kw));
+                    (p.Name != null && p.Name.ToLower().Contains(kw)) ||
+                    (p.Phone != null && p.Phone.Contains(kw)) ||
+                    (p.Ref != null && p.Ref.ToLower().Contains(kw)) ||
+                    (p.NameNoSign != null && p.NameNoSign.ToLower().Contains(kw)));
             }
-            var totalItems = await partners.CountAsync();
+            var totalItems = await partners.CountAsync(cancellationToken);
 
             var items = await partners
-                .OrderByDescending(x => x.Id)
+                .AsNoTracking()
+                .OrderByDescending(x => x.DateCreated)
                 .Skip(request.Offset)
                 .Take(request.Limit)
                 .Select(p => new PartnerDto
