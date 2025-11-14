@@ -1,10 +1,11 @@
 ﻿using Domain.Entity;
+using LHK.Security.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,7 +15,8 @@ namespace Application.Partners.Commands
 	{
 		public string Name { get; set; }
 		public string Phone { get; set; }
-		public string? Notes { get; set; }
+        public string? PhoneLastThreeDigits { get; set; }
+        public string? Notes { get; set; }
 		public string? Address { get; set; }
 		public string? CityCode { get; set; }
 		public string? CityName { get; set; }
@@ -49,8 +51,8 @@ namespace Application.Partners.Commands
 				var ctx = _httpContextAccessor.HttpContext;
 				var companyClaim = ctx?.User?.FindFirst("company_id");
 				if (companyClaim == null || !Guid.TryParse(companyClaim.Value, out var parsedCompanyId))
-					throw new Exception("Không xác định được cửa hàng của người dùng.");
-				companyId = parsedCompanyId;
+                    throw new UserFriendlyException("Không xác định được cửa hàng của người dùng.", "COMPANY_NOT_FOUND");
+                companyId = parsedCompanyId;
 			}
 
 			var partnerRef = await _sequenceService.GetNextRefAsync("Customer", companyId, cancellationToken);
@@ -59,7 +61,8 @@ namespace Application.Partners.Commands
 			{
 				Name = request.Name,
 				Phone = request.Phone,
-				Notes = request.Notes,
+                PhoneLastThreeDigits = request.PhoneLastThreeDigits,
+                Notes = request.Notes,
 				Address = request.Address,
 				CityCode = request.CityCode,
 				CityName = request.CityName,

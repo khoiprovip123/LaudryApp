@@ -5,6 +5,7 @@ export type CustomerDto = {
 	name: string;
 	ref: string;
 	phone: string;
+	phoneLastThreeDigits?: string | null;
 	address?: string | null;
 	active: boolean;
 	notes?: string | null;
@@ -36,6 +37,7 @@ export const getCustomerById = async (id: string) => {
 export type CreateCustomerRequest = {
 	name: string;
 	phone: string;
+	phoneLastThreeDigits?: string | null;
 	address?: string | null;
 	cityCode?: string | null;
 	cityName?: string | null;
@@ -55,6 +57,7 @@ export type UpdateCustomerRequest = {
 	id: string;
 	name: string;
 	phone: string;
+	phoneLastThreeDigits?: string | null;
 	address?: string | null;
 	cityCode?: string | null;
 	cityName?: string | null;

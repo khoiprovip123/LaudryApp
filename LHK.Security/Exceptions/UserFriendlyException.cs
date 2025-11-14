@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace LaundryAPI.Exceptions
+namespace LHK.Security.Exceptions
 {
     /// <summary>
     /// Exception cho các lỗi thân thiện với người dùng (hiển thị trực tiếp cho user)

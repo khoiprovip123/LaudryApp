@@ -1,3 +1,4 @@
+using Domain.Caching;
 using LHK.Security.Users;
 using System;
 

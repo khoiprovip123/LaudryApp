@@ -11,6 +11,7 @@ const CustomerEdit: React.FC = () => {
 		id,
 		name: '',
 		phone: '',
+		phoneLastThreeDigits: '',
 		address: '',
 		active: true,
 	});
@@ -26,6 +27,7 @@ const CustomerEdit: React.FC = () => {
 					id,
 					name: data.name,
 					phone: data.phone,
+					phoneLastThreeDigits: data.phoneLastThreeDigits ?? '',
 					address: data.address ?? '',
 					active: data.active,
 				});
@@ -69,6 +71,19 @@ const CustomerEdit: React.FC = () => {
 							<FormControl isRequired>
 								<FormLabel>SĐT</FormLabel>
 								<Input value={form.phone} onChange={(e) => update('phone', e.target.value)} />
+							</FormControl>
+							<FormControl>
+								<FormLabel>3 số cuối SĐT (để tìm kiếm nhanh)</FormLabel>
+								<Input 
+									value={form.phoneLastThreeDigits ?? ''} 
+									onChange={(e) => {
+										// Chỉ cho phép nhập số và tối đa 3 ký tự
+										const value = e.target.value.replace(/[^\d]/g, '').slice(0, 3);
+										update('phoneLastThreeDigits', value);
+									}}
+									maxLength={3}
+									placeholder="VD: 678"
+								/>
 							</FormControl>
 							<FormControl>
 								<FormLabel>Địa chỉ</FormLabel>

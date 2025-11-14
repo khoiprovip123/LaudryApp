@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Application
 {
-    public static class Dependecies
+    public static class Dependencies
     {
         public static IServiceCollection ConfigureApplicationServices(this IServiceCollection services, IConfiguration configuration = null)
         {

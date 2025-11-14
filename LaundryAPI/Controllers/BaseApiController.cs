@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Domain;
+using Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,7 +22,7 @@ namespace LaundryAPI.Controllers
 
         protected ISender Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
 
-       // protected IWorkContext WorkContext => HttpContext.RequestServices.GetRequiredService<IWorkContext>();
+       protected IWorkContext WorkContext => HttpContext.RequestServices.GetRequiredService<IWorkContext>();
 
         protected string UserId
         {
@@ -33,13 +35,13 @@ namespace LaundryAPI.Controllers
             }
         }
 
-        //protected Guid CompanyId
-        //{
-        //    get
-        //    {
-        //        return WorkContext.GetCurrentCompanyAsync().GetAwaiter().GetResult().Id;
-        //    }
-        //}
+        protected Guid? CompanyId
+        {
+            get
+            {
+                return WorkContext.CompanyId;
+            }
+        }
 
         protected Guid UserPartnerId
         {

@@ -8,6 +8,7 @@ const CustomerCreate: React.FC = () => {
 	const [form, setForm] = useState<CreateCustomerRequest>({
 		name: '',
 		phone: '',
+		phoneLastThreeDigits: '',
 		address: '',
 		isCompany: false,
 	});
@@ -50,6 +51,19 @@ const CustomerCreate: React.FC = () => {
 							<FormControl isRequired>
 								<FormLabel>SĐT</FormLabel>
 								<Input value={form.phone} onChange={(e) => update('phone', e.target.value)} />
+							</FormControl>
+							<FormControl>
+								<FormLabel>3 số cuối SĐT (để tìm kiếm nhanh)</FormLabel>
+								<Input 
+									value={form.phoneLastThreeDigits ?? ''} 
+									onChange={(e) => {
+										// Chỉ cho phép nhập số và tối đa 3 ký tự
+										const value = e.target.value.replace(/[^\d]/g, '').slice(0, 3);
+										update('phoneLastThreeDigits', value);
+									}}
+									maxLength={3}
+									placeholder="VD: 678"
+								/>
 							</FormControl>
 							<FormControl>
 								<FormLabel>Địa chỉ</FormLabel>

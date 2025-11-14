@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace LaundryAPI.Exceptions
+ namespace LHK.Security.Exceptions
 {
     /// <summary>
     /// Exception cho các lỗi business logic

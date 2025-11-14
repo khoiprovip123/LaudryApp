@@ -1,7 +1,7 @@
 ﻿using Application.DTOs;
 using Domain.Entity;
 using Domain.Service;
-using LaundryAPI.Exceptions;
+using LHK.Security.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

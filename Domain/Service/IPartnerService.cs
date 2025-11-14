@@ -1,4 +1,4 @@
-﻿using Application.Service;
+using Application.Service;
 using Domain.Entity;
 using System;
 using System.Collections.Generic;
@@ -12,3 +12,4 @@ namespace Domain.Service
     {
     }
 }
+

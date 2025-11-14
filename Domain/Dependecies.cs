@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Domain
 {
-    public static class Dependecies
+    public static class Dependencies
     {
         public static void ConfigureDomainServices(this IServiceCollection services, IConfiguration? configuration = null)
         {

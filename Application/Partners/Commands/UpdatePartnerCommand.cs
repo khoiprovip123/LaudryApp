@@ -1,4 +1,5 @@
 using Domain.Service;
+using LHK.Security.Exceptions;
 using MediatR;
 
 namespace Application.Partners.Commands
@@ -8,7 +9,8 @@ namespace Application.Partners.Commands
 		public Guid Id { get; set; }
 		public string Name { get; set; }
 		public string Phone { get; set; }
-		public string? Notes { get; set; }
+        public string? PhoneLastThreeDigits { get; set; }
+        public string? Notes { get; set; }
 		public string? Address { get; set; }
 		public string? CityCode { get; set; }
 		public string? CityName { get; set; }
@@ -30,11 +32,12 @@ namespace Application.Partners.Commands
 		public async Task<Unit> Handle(UpdatePartnerCommand request, CancellationToken cancellationToken)
 		{
 			var partner = await _partnerService.GetByIdAsync(request.Id);
-			if (partner == null) throw new Exception("Khách hàng không tồn tại");
+            if (partner == null) throw new UserFriendlyException("Khách hàng không tồn tại", "PARTNER_NOT_FOUND");
 
-			partner.Name = request.Name;
-			partner.Phone = request.Phone;
-			partner.Notes = request.Notes;
+            partner.Name = request.Name ?? string.Empty;
+            partner.Phone = request.Phone ?? string.Empty;
+            partner.PhoneLastThreeDigits = request.PhoneLastThreeDigits;
+            partner.Notes = request.Notes;
 			partner.Address = request.Address;
 			partner.CityCode = request.CityCode;
 			partner.CityName = request.CityName;

@@ -11,7 +11,7 @@ namespace LaundryAPI.Controllers
     public class PartnersController : BaseApiController
     {
         [HttpGet]
-		public async Task<IActionResult> GetPartners([FromQuery] GetPageParnerQuery query)
+		public async Task<IActionResult> GetPartners([FromQuery] GetPagePartnerQuery query)
         {
             var res = await Mediator.Send(query);
             return Ok(res);

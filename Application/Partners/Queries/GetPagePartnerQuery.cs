@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
@@ -13,25 +13,25 @@ using System.Threading.Tasks;
 
 namespace Application.Partners.Queries
 {
-    public class GetPageParnerQuery : IRequest<PagedResult<PartnerDto>>
+    public class GetPagePartnerQuery : IRequest<PagedResult<PartnerDto>>
     {
         public int Limit { get; set; }
         public int Offset { get; set; }
         public string? Search { get; set; }
     }
 
-    class GetPageParnerQueryHandler : IRequestHandler<GetPageParnerQuery, PagedResult<PartnerDto>>
+    class GetPagePartnerQueryHandler : IRequestHandler<GetPagePartnerQuery, PagedResult<PartnerDto>>
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IPartnerService _partnerService;
         private readonly IWorkContext _workContext;
-        public GetPageParnerQueryHandler(IHttpContextAccessor httpContextAccessor, IPartnerService partnerService, IWorkContext workContext = null)
+        public GetPagePartnerQueryHandler(IHttpContextAccessor httpContextAccessor, IPartnerService partnerService, IWorkContext workContext = null)
         {
             _httpContextAccessor = httpContextAccessor;
             _partnerService = partnerService;
             _workContext = workContext;
         }
-        public async Task<PagedResult<PartnerDto>> Handle(GetPageParnerQuery request, CancellationToken cancellationToken)
+        public async Task<PagedResult<PartnerDto>> Handle(GetPagePartnerQuery request, CancellationToken cancellationToken)
         {
             var partners = _partnerService.SearchQuery(p => p.IsCustomer);
 
@@ -50,6 +50,7 @@ namespace Application.Partners.Queries
                 partners = partners.Where(p =>
                     (p.Name != null && p.Name.ToLower().Contains(kw)) ||
                     (p.Phone != null && p.Phone.Contains(kw)) ||
+                    (p.PhoneLastThreeDigits != null && p.PhoneLastThreeDigits.Contains(kw)) ||
                     (p.Ref != null && p.Ref.ToLower().Contains(kw)) ||
                     (p.NameNoSign != null && p.NameNoSign.ToLower().Contains(kw)));
             }
@@ -103,5 +104,4 @@ namespace Application.Partners.Queries
         public bool Active { get; set; }
     }
 }
-
 

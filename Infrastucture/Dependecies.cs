@@ -1,6 +1,6 @@
-﻿using Domain.Interfaces;
+﻿using Domain;
+using Domain.Interfaces;
 using Domain.Service;
-using Infrastucture.Data;
 using Infrastucture.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 
 namespace Infrastucture
 {
-    public static class Dependecies
+    public static class Dependencies
     {
         public static void ConfigureInfraServices(this IServiceCollection services, IConfiguration configuration = null)
         {
             services.AddScoped(typeof(IAsyncRepository<>), typeof(EfRepository<>));
-
+            services.AddScoped<ICatalogDbContextMigrationService, LaundryDbContextMigrationService>();
         }
     }
 }

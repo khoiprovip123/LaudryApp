@@ -53,6 +53,7 @@ namespace Domain.Entity
         public bool IsCustomer { get; set; }
         public bool IsCompany { get; set; }
         public string Phone { get; set; }
+        public string? PhoneLastThreeDigits { get; set; }
         public string? Notes { get; set; }
         public string? Address { get; set; }
         public string? CityCode { get; set; }

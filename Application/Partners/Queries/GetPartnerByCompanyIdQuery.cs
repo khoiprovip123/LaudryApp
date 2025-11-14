@@ -20,11 +20,27 @@ namespace Application.Partners.Queries
 
 		public async Task<PartnerDto> Handle(GetPartnerByCompanyIdQuery request, CancellationToken cancellationToken)
 		{
-			var partner =  _partnerService.SearchQuery();
-			
-            var a = new PartnerDto();
-			return a;
-		}
+            var partner = await _partnerService.GetByIdAsync(request.Id);
+            if (partner == null)
+                throw new Exception("Partner not found");
+
+            return new PartnerDto
+            {
+                Id = partner.Id,
+                Name = partner.Name ?? string.Empty,
+                Ref = partner.Ref ?? string.Empty,
+                NameNoSign = partner.NameNoSign ?? string.Empty,
+                Phone = partner.Phone ?? string.Empty,
+                Active = partner.Active,
+                Address = partner.Address,
+                CityCode = partner.CityCode,
+                CityName = partner.CityName,
+                DistrictCode = partner.DistrictCode,
+                DistrictName = partner.DistrictName,
+                IsCustomer = partner.IsCustomer,
+                IsCompany = partner.IsCompany,
+            };
+        }
 	}
 
 }
