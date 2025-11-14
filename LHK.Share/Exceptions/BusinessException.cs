@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
- namespace LHK.Security.Exceptions
+ namespace LHK.Share.Exceptions
 {
     /// <summary>
     /// Exception cho các lỗi business logic

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace LHK.Security.Exceptions
+namespace LHK.Share.Exceptions
 {
     /// <summary>
     /// Exception cho các lỗi thân thiện với người dùng (hiển thị trực tiếp cho user)

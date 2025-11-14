@@ -4,7 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LHK.Security.Claims;
+namespace LHK.Share.Claims;
 
 public interface IAbpClaimsPrincipalFactory
 {

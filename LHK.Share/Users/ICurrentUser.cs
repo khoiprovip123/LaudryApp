@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Claims;
 
-namespace LHK.Security.Users
+namespace LHK.Share.Users
 {
     public interface ICurrentUser
     {

@@ -1,5 +1,5 @@
 using Domain.Interfaces;
-using LHK.Security.Users;
+using LHK.Share.Users;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 

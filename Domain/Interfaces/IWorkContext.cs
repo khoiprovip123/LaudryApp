@@ -1,5 +1,6 @@
 using Domain.Caching;
-using LHK.Security.Users;
+using LHK.Share.Users;
+using LHK.Share.Users;
 using System;
 
 namespace Domain.Interfaces;

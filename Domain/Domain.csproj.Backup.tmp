@@ -17,11 +17,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Repositories\" />
+		<ProjectReference Include="..\LHK.Share\LHK.Share.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\LHK.Share\LHK.Share.csproj" />
+		<Folder Include="Repositories\" />
 	</ItemGroup>
 
 </Project>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
 
-namespace LHK.Security.Claims;
+namespace LHK.Share.Claims;
 
 public interface ICurrentPrincipalAccessor
 {

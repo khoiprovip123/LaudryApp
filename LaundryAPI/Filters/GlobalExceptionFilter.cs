@@ -1,5 +1,5 @@
 using LaundryAPI.DTOs;
-using LHK.Security.Exceptions;
+using LHK.Share.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,5 @@
 using Domain.Service;
-using LHK.Security.Exceptions;
+using LHK.Share.Exceptions;
 using MediatR;
 
 namespace Application.Partners.Commands

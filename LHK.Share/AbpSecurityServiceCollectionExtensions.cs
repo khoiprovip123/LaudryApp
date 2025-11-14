@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using LHK.Security.Users;
-using LHK.Security.Claims;
+using LHK.Share.Users;
+using LHK.Share.Claims;
 
-namespace LHK.Security;
+namespace LHK.Share;
 public static class AbpSecurityServiceCollectionExtensions
 {
     public static void AddUsersServices(this IServiceCollection services)

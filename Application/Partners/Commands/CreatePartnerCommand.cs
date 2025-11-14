@@ -1,5 +1,5 @@
 ﻿using Domain.Entity;
-using LHK.Security.Exceptions;
+using LHK.Share.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System;

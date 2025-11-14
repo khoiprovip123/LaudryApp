@@ -8,7 +8,7 @@ using Infrastucture.Data;
 using Infrastucture.Interfaces;
 using Infrastucture.Repository;
 using LaundryAPI.Filters;
-using LHK.Security;
+using LHK.Share;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;

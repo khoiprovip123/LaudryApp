@@ -1,7 +1,7 @@
 ﻿using Application.DTOs;
 using Domain.Entity;
 using Domain.Service;
-using LHK.Security.Exceptions;
+using LHK.Share.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

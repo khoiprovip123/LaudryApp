@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Linq;
 using System.Security.Principal;
-using LHK.Security.Claims;
+using LHK.Share.Claims;
 
-namespace LHK.Security.Users;
+namespace LHK.Share.Users;
 
 public class CurrentUser : ICurrentUser
 {

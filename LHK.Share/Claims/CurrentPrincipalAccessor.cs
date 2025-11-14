@@ -2,7 +2,7 @@ using System;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 
-namespace LHK.Security.Claims;
+namespace LHK.Share.Claims;
 
 public class CurrentPrincipalAccessor : ICurrentPrincipalAccessor
 {

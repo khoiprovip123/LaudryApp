@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.11.35222.181
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11205.157 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LaundryAPI", "LaundryAPI.csproj", "{C46466C7-C86C-486F-8926-D5FEBE9B991C}"
 EndProject
@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastucture", "..\Infrast
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Framework", "Framework", "{C70AECB3-4917-4446-AD11-23D0A777C968}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LHK.Security", "..\LHK.Security\LHK.Security.csproj", "{06AABB3C-E93B-406A-A008-0F3105BA406F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LHK.Share", "..\LHK.Share\LHK.Share.csproj", "{06AABB3C-E93B-406A-A008-0F3105BA406F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

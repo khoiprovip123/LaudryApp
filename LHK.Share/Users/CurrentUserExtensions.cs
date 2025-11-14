@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using System.Linq;
 
-namespace LHK.Security.Users
+namespace LHK.Share.Users
 {
     public static class CurrentUserExtensions
     {

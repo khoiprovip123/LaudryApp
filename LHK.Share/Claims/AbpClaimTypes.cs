@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace LHK.Security.Claims;
+namespace LHK.Share.Claims;
 
 public static class AbpClaimTypes
 {
