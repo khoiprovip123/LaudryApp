@@ -19,7 +19,7 @@ namespace Domain.Entity
         public Company Company { get; set; }
         public Guid? PartnerId { get; set; }
         public Partner Partner { get; set; }
-        public bool IsUserRoot { get; set; }
+        public bool IsUserRoot { get; set; } // Chủ cửa hàng (Owner) - có toàn quyền trong cửa hàng của mình
         public bool Active { get; set; }
 		public bool IsSuperAdmin { get; set; } = false;
 

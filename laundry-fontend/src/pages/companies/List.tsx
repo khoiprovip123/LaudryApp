@@ -28,6 +28,9 @@ import type { CompanyDto } from "../../api/companies";
 import { deleteCompany, getCompanies } from "../../api/companies";
 import { ChevronLeftIcon, ChevronRightIcon, AddIcon } from "@chakra-ui/icons";
 import CompanyEditModal from "../../components/CompanyEditModal";
+import { ProtectedButton } from "../../components/ProtectedButton";
+import { useAuth } from "../../hooks/useAuth";
+import { Permissions } from "../../constants/permissions";
 
 const CompaniesList: React.FC = () => {
   const [items, setItems] = useState<CompanyDto[]>([]);
@@ -39,19 +42,22 @@ const CompaniesList: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const toast = useToast();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
 
   const load = async () => {
     setLoading(true);
     try {
       const res = await getCompanies({ limit: pageSize, offset });
-      setItems(res.items);
-      setTotalItems(res.totalItems);
+      setItems(res.items || []);
+      setTotalItems(res.totalItems || 0);
     } catch (err: any) {
       toast({
         status: "error",
         title: "Lỗi tải danh sách",
         description: err?.message || "Có lỗi xảy ra",
       });
+      setItems([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -137,25 +143,20 @@ const CompaniesList: React.FC = () => {
     <Box className="flex flex-col h-full w-full">
       <Flex justify="space-between" className="bg-white border-b border-gray-200" align="center" p={2}>
         <Heading size="md">Cửa hàng</Heading>
-        <Button
+        <ProtectedButton
+          permission={Permissions.Companies_Create}
           leftIcon={<AddIcon />}
           colorScheme="blue"
           onClick={() => navigate("/companies/new")}
           _focus={{ boxShadow: 'none', outline: 'none' }}
         >
           Thêm mới
-        </Button>
+        </ProtectedButton>
       </Flex>
 
       <div className="p-2 flex-1 w-full overflow-hidden flex flex-col">
         <div className="bg-white w-full h-full rounded-md flex flex-col overflow-hidden">
-          {loading ? (
-            <Flex justify="center" align="center" className="h-full">
-              <Spinner />
-            </Flex>
-          ) : (
-            <>
-              <TableContainer 
+          <TableContainer 
                 flex="1"
                 minH="0"
                 overflowY="auto" 
@@ -177,7 +178,20 @@ const CompaniesList: React.FC = () => {
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {items.map((c) => (
+                    {loading && items.length === 0 ? (
+                      <Tr>
+                        <Td colSpan={7} textAlign="center" py={8}>
+                          <Spinner />
+                        </Td>
+                      </Tr>
+                    ) : items.length === 0 ? (
+                      <Tr>
+                        <Td colSpan={7} textAlign="center" py={8}>
+                          Không có dữ liệu
+                        </Td>
+                      </Tr>
+                    ) : (
+                      items.map((c) => (
                       <Tr key={c.id}>
                         <Td>{c.companyName}</Td>
                         <Td>{c.ownerName}</Td>
@@ -193,24 +207,29 @@ const CompaniesList: React.FC = () => {
                         </Td>
                         <Td>
                           <ButtonGroup size="sm" variant="outline">
-                            <Button
-                              colorScheme="blue"
-                              onClick={() => setEditingId(c.id)}
-                              _focus={{ boxShadow: 'none', outline: 'none' }}
-                            >
-                              Sửa
-                            </Button>
-                            <Button
-                              colorScheme="red"
-                              onClick={() => setDeletingId(c.id)}
-                              _focus={{ boxShadow: 'none', outline: 'none' }}
-                            >
-                              Xóa
-                            </Button>
+                            {hasPermission(Permissions.Companies_Update) && (
+                              <Button
+                                colorScheme="blue"
+                                onClick={() => setEditingId(c.id)}
+                                _focus={{ boxShadow: 'none', outline: 'none' }}
+                              >
+                                Sửa
+                              </Button>
+                            )}
+                            {hasPermission(Permissions.Companies_Delete) && (
+                              <Button
+                                colorScheme="red"
+                                onClick={() => setDeletingId(c.id)}
+                                _focus={{ boxShadow: 'none', outline: 'none' }}
+                              >
+                                Xóa
+                              </Button>
+                            )}
                           </ButtonGroup>
                         </Td>
                       </Tr>
-                    ))}
+                    ))
+                    )}
                   </Tbody>
                 </Table>
               </TableContainer>
@@ -310,8 +329,6 @@ const CompaniesList: React.FC = () => {
                   {Math.min(offset + 1, totalItems)}-{Math.min(offset + pageSize, totalItems)} / {totalItems}
                 </Box>
               </Flex>
-            </>
-          )}
         </div>
       </div>
 		<AlertDialog

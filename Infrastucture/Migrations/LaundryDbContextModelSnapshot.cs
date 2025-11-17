@@ -174,6 +174,33 @@ namespace Infrastucture.Migrations
                     b.ToTable("Companies");
                 });
 
+            modelBuilder.Entity("Domain.Entity.EmployeePermissionGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PermissionGroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PermissionGroupId");
+
+                    b.HasIndex("EmployeeId", "PermissionGroupId")
+                        .IsUnique();
+
+                    b.ToTable("EmployeePermissionGroups", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entity.IRSequence", b =>
                 {
                     b.Property<Guid>("Id")
@@ -456,6 +483,48 @@ namespace Infrastucture.Migrations
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("Domain.Entity.PermissionGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Permissions")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("Name", "CompanyId")
+                        .IsUnique()
+                        .HasFilter("[CompanyId] IS NOT NULL");
+
+                    b.ToTable("PermissionGroups", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entity.Service", b =>
                 {
                     b.Property<Guid>("Id")
@@ -613,6 +682,25 @@ namespace Infrastucture.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Domain.Entity.EmployeePermissionGroup", b =>
+                {
+                    b.HasOne("Domain.Entity.ApplicationUser", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.PermissionGroup", "PermissionGroup")
+                        .WithMany("EmployeePermissionGroups")
+                        .HasForeignKey("PermissionGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("PermissionGroup");
+                });
+
             modelBuilder.Entity("Domain.Entity.IRSequence", b =>
                 {
                     b.HasOne("Domain.Entity.Company", "Company")
@@ -686,6 +774,16 @@ namespace Infrastucture.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Domain.Entity.PermissionGroup", b =>
+                {
+                    b.HasOne("Domain.Entity.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("Domain.Entity.Service", b =>
                 {
                     b.HasOne("Domain.Entity.Company", "Company")
@@ -757,6 +855,11 @@ namespace Infrastucture.Migrations
 
                     b.Navigation("User")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Entity.PermissionGroup", b =>
+                {
+                    b.Navigation("EmployeePermissionGroups");
                 });
 #pragma warning restore 612, 618
         }

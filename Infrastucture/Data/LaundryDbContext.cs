@@ -34,6 +34,8 @@ namespace Infrastucture.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Payment> Payments { get; set; }
 		public DbSet<IRSequence> IRSequences { get; set; }
+        public DbSet<PermissionGroup> PermissionGroups { get; set; }
+        public DbSet<EmployeePermissionGroup> EmployeePermissionGroups { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -45,6 +47,8 @@ namespace Infrastucture.Data
             builder.ApplyConfiguration(new ServiceConfiguration());
             builder.ApplyConfiguration(new PaymentConfiguration());
 			builder.ApplyConfiguration(new IRSequenceConfiguration());
+            builder.ApplyConfiguration(new PermissionGroupConfiguration());
+            builder.ApplyConfiguration(new EmployeePermissionGroupConfiguration());
 
             base.OnModelCreating(builder);
         }

@@ -8,6 +8,8 @@ export type UserInfo = {
 	companyId: string | null;
 	companyName: string;
 	isSuperAdmin: boolean;
+	roles: string[];
+	permissions: string[];
 };
 
 type AuthState = {

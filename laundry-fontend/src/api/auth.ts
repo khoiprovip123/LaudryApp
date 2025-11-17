@@ -9,6 +9,8 @@ export type LoginResponse = {
 	succeeded: boolean;
 	message: string;
 	token: string;
+	roles: string[];
+	permissions: string[];
 };
 
 export type SessionInfoResponse = {
@@ -18,6 +20,8 @@ export type SessionInfoResponse = {
 	companyId: string | null;
 	companyName: string;
 	isSuperAdmin: boolean;
+	roles: string[];
+	permissions: string[];
 };
 
 export const loginApi = async (payload: LoginRequest) => {

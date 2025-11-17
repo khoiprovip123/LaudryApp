@@ -21,6 +21,8 @@ namespace Application.DTOs
         public bool Succeeded { get; set; } = false;
         public string Message { get; set; }
         public string Token { get; set; }
+        public List<string> Roles { get; set; } = new List<string>();
+        public List<string> Permissions { get; set; } = new List<string>();
     }
 
     public class RegisterRequest
@@ -39,5 +41,7 @@ namespace Application.DTOs
         public Guid? CompanyId { get; set; }
         public string CompanyName { get; set; }
         public bool IsSuperAdmin { get; set; }
+        public List<string> Roles { get; set; } = new List<string>();
+        public List<string> Permissions { get; set; } = new List<string>();
     }
 }

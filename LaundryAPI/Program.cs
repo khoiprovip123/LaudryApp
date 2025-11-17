@@ -123,7 +123,13 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    LaundryAPI.Authorization.Policies.ConfigurePolicies(options);
+});
+
+// Đăng ký Resource Authorization Handler
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, LaundryAPI.Authorization.CompanyResourceAuthorizationHandler>();
 services.AddControllers(options =>
 {
     // Đăng ký Global Exception Filter
@@ -167,6 +173,9 @@ services.AddSwaggerGen(c =>
 });
 
 services.AddHealthChecks();
+
+// Đăng ký RoleSeederService để seed roles khi app khởi động
+services.AddHostedService<Infrastucture.Services.RoleSeederService>();
 
 var app = builder.Build();
 

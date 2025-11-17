@@ -49,9 +49,21 @@ const Login: React.FC = () => {
             companyId: sessionInfo.companyId || null,
             companyName: sessionInfo.companyName,
             isSuperAdmin: sessionInfo.isSuperAdmin,
+            roles: sessionInfo.roles || [],
+            permissions: sessionInfo.permissions || [],
           });
         } catch (sessionErr) {
-          // Không block login nếu không load được session, SessionLoader sẽ thử lại
+          // Fallback: sử dụng roles và permissions từ login response nếu không load được session
+          setUserInfo({
+            userId: '',
+            userName: userName,
+            email: '',
+            companyId: null,
+            companyName: '',
+            isSuperAdmin: false,
+            roles: res.roles || [],
+            permissions: res.permissions || [],
+          });
           handleError(sessionErr, { title: "Cảnh báo", showToast: false });
         }
         const redirectTo = location.state?.from?.pathname || "/";

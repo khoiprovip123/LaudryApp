@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { Box, Button, Flex, HStack, Link, Text, Menu, MenuButton, MenuList, MenuItem, Avatar, VStack, Divider, IconButton, useBreakpointValue, Collapse } from '@chakra-ui/react';
 import { Link as RouterLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
-import { getIsSuperAdminFromToken } from '../utils/jwt';
+import { useAuth } from '../hooks/useAuth';
+import { Permissions } from '../constants/permissions';
 import logo from '../assets/images/logo-vip-main.png';
 import { HamburgerIcon, CloseIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 // @ts-ignore - react-icons sẽ được cài đặt sau
-import { FaBuilding, FaUsers, FaSignOutAlt, FaUser, FaChevronDown, FaList } from 'react-icons/fa';
+import { FaBuilding, FaUsers, FaSignOutAlt, FaUser, FaChevronDown, FaList, FaUserShield } from 'react-icons/fa';
 
 const AppLayout: React.FC = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const logout = useAuthStore((s) => s.logout);
-	const token = useAuthStore((s) => s.token);
 	const userInfo = useAuthStore((s) => s.userInfo);
-	const isSuperAdmin = token ? getIsSuperAdminFromToken(token) : false;
+	const { isSuperAdmin, hasPermission } = useAuth();
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isCatalogOpen, setIsCatalogOpen] = useState(false);
 
@@ -22,6 +22,7 @@ const AppLayout: React.FC = () => {
 	const isCompaniesActive = location.pathname.startsWith('/companies');
 	const isCustomersActive = location.pathname.startsWith('/customers');
 	const isServicesActive = location.pathname.startsWith('/services');
+	const isPermissionGroupsActive = location.pathname.startsWith('/permission-groups');
 	
 	// Tự động mở menu Danh mục nếu đang ở trang dịch vụ
 	React.useEffect(() => {
@@ -86,6 +87,7 @@ const AppLayout: React.FC = () => {
 				</div>
 				{/* menu */}
 				<Box>
+					{/* Menu Cửa hàng - chỉ hiện cho SuperAdmin */}
 					{isSuperAdmin && (
 						<Link 
 							as={RouterLink} 
@@ -112,7 +114,8 @@ const AppLayout: React.FC = () => {
 							<div className="truncate">Cửa hàng</div>
 						</Link>
 					)}
-					{!isSuperAdmin && (
+					{/* Menu Khách hàng - chỉ hiện cho user có permission Partners.View */}
+					{hasPermission(Permissions.Partners_View) && (
 						<Link 
 							as={RouterLink} 
 							to="/customers" 
@@ -139,53 +142,112 @@ const AppLayout: React.FC = () => {
 						</Link>
 					)}
 					
-					{/* Menu Danh mục với submenu */}
-					<Box>
-						<Button
-							w="100%"
-							justifyContent="flex-start"
-							leftIcon={<FaList size={18} />}
-							rightIcon={isCatalogOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
-							onClick={() => setIsCatalogOpen(!isCatalogOpen)}
-							p={2}
+					{/* Menu Danh mục với submenu - chỉ hiện nếu có permission Services.View */}
+					{hasPermission(Permissions.Services_View) && (
+						<Box>
+							<Button
+								w="100%"
+								justifyContent="flex-start"
+								leftIcon={<FaList size={18} />}
+								rightIcon={isCatalogOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+								onClick={() => setIsCatalogOpen(!isCatalogOpen)}
+								p={2}
+								borderRadius="md"
+								bg={isServicesActive ? 'blue.50' : 'transparent'}
+								color={isServicesActive ? 'blue.600' : 'gray.700'}
+								borderLeft={isServicesActive ? '3px solid' : '3px solid transparent'}
+								borderLeftColor={isServicesActive ? 'blue.500' : 'transparent'}
+								_hover={{ bg: isServicesActive ? 'blue.50' : 'gray.100' }}
+								fontWeight={isServicesActive ? 'semibold' : 'normal'}
+								variant="ghost"
+								_focus={{ boxShadow: 'none', outline: 'none' }}
+							>
+								<div className="truncate flex-1 text-left">Danh mục</div>
+							</Button>
+							<Collapse in={isCatalogOpen} animateOpacity>
+								<Box pl={6} mt={1}>
+									<Link 
+										as={RouterLink} 
+										to="/services" 
+										display="flex" 
+										alignItems="center" 
+										gap={2} 
+										p={2} 
+										borderRadius="md"
+										bg={isServicesActive ? 'blue.50' : 'transparent'}
+										color={isServicesActive ? 'blue.600' : 'gray.700'}
+										borderLeft={isServicesActive ? '3px solid' : '3px solid transparent'}
+										borderLeftColor={isServicesActive ? 'blue.500' : 'transparent'}
+										_hover={{ bg: isServicesActive ? 'blue.50' : 'gray.100' }}
+										fontWeight={isServicesActive ? 'semibold' : 'normal'}
+										onClick={handleMenuLinkClick}
+										whiteSpace="nowrap"
+										overflow="hidden"
+										textOverflow="ellipsis"
+									>
+										<div className="truncate">Dịch vụ</div>
+									</Link>
+								</Box>
+							</Collapse>
+						</Box>
+					)}
+
+					{/* Menu Nhân viên - chỉ hiện cho UserRoot hoặc SuperAdmin */}
+					{(isSuperAdmin || hasPermission(Permissions.Companies_View)) && (
+						<Link 
+							as={RouterLink} 
+							to="/employees" 
+							display="flex" 
+							alignItems="center" 
+							gap={2} 
+							p={2} 
 							borderRadius="md"
-							bg={isServicesActive ? 'blue.50' : 'transparent'}
-							color={isServicesActive ? 'blue.600' : 'gray.700'}
-							borderLeft={isServicesActive ? '3px solid' : '3px solid transparent'}
-							borderLeftColor={isServicesActive ? 'blue.500' : 'transparent'}
-							_hover={{ bg: isServicesActive ? 'blue.50' : 'gray.100' }}
-							fontWeight={isServicesActive ? 'semibold' : 'normal'}
-							variant="ghost"
-							_focus={{ boxShadow: 'none', outline: 'none' }}
+							bg={location.pathname.startsWith('/employees') ? 'blue.50' : 'transparent'}
+							color={location.pathname.startsWith('/employees') ? 'blue.600' : 'gray.700'}
+							borderLeft={location.pathname.startsWith('/employees') ? '3px solid' : '3px solid transparent'}
+							borderLeftColor={location.pathname.startsWith('/employees') ? 'blue.500' : 'transparent'}
+							_hover={{ bg: location.pathname.startsWith('/employees') ? 'blue.50' : 'gray.100' }}
+							fontWeight={location.pathname.startsWith('/employees') ? 'semibold' : 'normal'}
+							onClick={handleMenuLinkClick}
+							whiteSpace="nowrap"
+							overflow="hidden"
+							textOverflow="ellipsis"
 						>
-							<div className="truncate flex-1 text-left">Danh mục</div>
-						</Button>
-						<Collapse in={isCatalogOpen} animateOpacity>
-							<Box pl={6} mt={1}>
-								<Link 
-									as={RouterLink} 
-									to="/services" 
-									display="flex" 
-									alignItems="center" 
-									gap={2} 
-									p={2} 
-									borderRadius="md"
-									bg={isServicesActive ? 'blue.50' : 'transparent'}
-									color={isServicesActive ? 'blue.600' : 'gray.700'}
-									borderLeft={isServicesActive ? '3px solid' : '3px solid transparent'}
-									borderLeftColor={isServicesActive ? 'blue.500' : 'transparent'}
-									_hover={{ bg: isServicesActive ? 'blue.50' : 'gray.100' }}
-									fontWeight={isServicesActive ? 'semibold' : 'normal'}
-									onClick={handleMenuLinkClick}
-									whiteSpace="nowrap"
-									overflow="hidden"
-									textOverflow="ellipsis"
-								>
-									<div className="truncate">Dịch vụ</div>
-								</Link>
+							<Box flexShrink={0}>
+								<FaUser size={18} />
 							</Box>
-						</Collapse>
-					</Box>
+							<div className="truncate">Nhân viên</div>
+						</Link>
+					)}
+
+					{/* Menu Nhóm quyền - chỉ hiện cho UserRoot hoặc SuperAdmin */}
+					{(isSuperAdmin || hasPermission(Permissions.Companies_View)) && (
+						<Link 
+							as={RouterLink} 
+							to="/permission-groups" 
+							display="flex" 
+							alignItems="center" 
+							gap={2} 
+							p={2} 
+							borderRadius="md"
+							bg={isPermissionGroupsActive ? 'blue.50' : 'transparent'}
+							color={isPermissionGroupsActive ? 'blue.600' : 'gray.700'}
+							borderLeft={isPermissionGroupsActive ? '3px solid' : '3px solid transparent'}
+							borderLeftColor={isPermissionGroupsActive ? 'blue.500' : 'transparent'}
+							_hover={{ bg: isPermissionGroupsActive ? 'blue.50' : 'gray.100' }}
+							fontWeight={isPermissionGroupsActive ? 'semibold' : 'normal'}
+							onClick={handleMenuLinkClick}
+							whiteSpace="nowrap"
+							overflow="hidden"
+							textOverflow="ellipsis"
+						>
+							<Box flexShrink={0}>
+								<FaUserShield size={18} />
+							</Box>
+							<div className="truncate">Nhóm quyền</div>
+						</Link>
+					)}
+
 				</Box>
 			</Box>
 

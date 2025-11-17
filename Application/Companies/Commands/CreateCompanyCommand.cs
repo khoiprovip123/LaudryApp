@@ -1,4 +1,5 @@
-﻿using Domain.Entity;
+﻿using Domain.Constants;
+using Domain.Entity;
 using Domain.Service;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -66,18 +67,24 @@ namespace Application.Companies.Commands
 				UserId = string.Empty
 			};
 
-			// Tạo user gốc cho cửa hàng
+			// Tạo user gốc cho cửa hàng (IsUserRoot = true nghĩa là UserRoot)
 			var user = new ApplicationUser()
 			{
 				UserName = request.UserName,
 				CompanyId = company.Id,
-				IsUserRoot = true,
+				IsUserRoot = true, // Đánh dấu là chủ cửa hàng (UserRoot)
 				Active = true,
 				IsSuperAdmin = false
 			};
 
 			await _partnerService.CreateAsync(partner);
-			await _userManager.CreateAsync(user, request.Password);
+			var createResult = await _userManager.CreateAsync(user, request.Password);
+			
+			if (createResult.Succeeded)
+			{
+				// Gán role "UserRoot" cho chủ cửa hàng (IsUserRoot = true) - có toàn quyền
+				await _userManager.AddToRoleAsync(user, Domain.Constants.Roles.UserRoot);
+			}
 
 			return Unit.Value;
 		}

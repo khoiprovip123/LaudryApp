@@ -1,4 +1,5 @@
 ﻿using Application.DTOs;
+using Domain.Constants;
 using Domain.Entity;
 using Domain.Service;
 using LHK.Share.Exceptions;
@@ -55,11 +56,17 @@ namespace LaundryAPI.Controllers
 
             if (result.Succeeded)
             {
+                // Lấy roles của user
+                var roles = await _userManager.GetRolesAsync(user);
+                var permissions = await GetUserPermissionsAsync(user);
+                
                 return Ok(new LoginResponse
                 {
                     Succeeded = true,
-                    Token = GenerateToken(user, DateTime.UtcNow.AddDays(7)),
+                    Token = await GenerateTokenAsync(user, DateTime.UtcNow.AddDays(7), roles.ToList()),
                     Message = "Authentication succeeded",
+                    Roles = roles.ToList(),
+                    Permissions = permissions.ToList()
                 });
             }
             else
@@ -89,7 +96,8 @@ namespace LaundryAPI.Controllers
             }
 
             // Sinh JWT token trả về luôn (tuỳ chọn)
-            var token = GenerateToken(user, DateTime.UtcNow.AddHours(2));
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = await GenerateTokenAsync(user, DateTime.UtcNow.AddHours(2), roles.ToList());
 
             return Ok(new
             {
@@ -115,6 +123,9 @@ namespace LaundryAPI.Controllers
             if (user == null)
                 return Unauthorized();
 
+            // Lấy roles và permissions của user
+            var roles = await _userManager.GetRolesAsync(user);
+            var permissions = await GetUserPermissionsAsync(user);
 
             return Ok(new SessionInfoResponse
             {
@@ -124,6 +135,8 @@ namespace LaundryAPI.Controllers
                 CompanyId = user.CompanyId,
                 CompanyName = user.Company?.CompanyName ?? string.Empty,
                 IsSuperAdmin = user.IsSuperAdmin,
+                Roles = roles.ToList(),
+                Permissions = permissions.ToList()
             });
         }
 
@@ -167,9 +180,61 @@ namespace LaundryAPI.Controllers
         //    return handler.WriteToken(token);
         //}
 
-        private string GenerateToken(ApplicationUser user, DateTime expiresUtc, IList<string>? roles = null, string? sid = null)
+        /// <summary>
+        /// Lấy danh sách permissions của user dựa trên roles
+        /// </summary>
+        private async Task<IList<string>> GetUserPermissionsAsync(ApplicationUser user)
         {
-            roles ??= new List<string>();
+            var roles = await _userManager.GetRolesAsync(user);
+            var permissions = new List<string>();
+
+            // Super admin có tất cả permissions
+            if (user.IsSuperAdmin)
+            {
+                permissions.AddRange(Roles.Permissions.SuperAdminPermissions);
+                return permissions.Distinct().ToList();
+            }
+
+            // IsUserRoot = true nghĩa là UserRoot - có toàn quyền trong cửa hàng của mình
+            if (user.IsUserRoot)
+            {
+                permissions.AddRange(Roles.Permissions.UserRootPermissions);
+                return permissions.Distinct().ToList();
+            }
+
+            // Lấy permissions từ roles
+            foreach (var role in roles)
+            {
+                switch (role)
+                {
+                    case Roles.UserRoot:
+                        permissions.AddRange(Roles.Permissions.UserRootPermissions);
+                        break;
+                    case Roles.Admin:
+                        permissions.AddRange(Roles.Permissions.AdminPermissions);
+                        break;
+                    case Roles.Manager:
+                        permissions.AddRange(Roles.Permissions.ManagerPermissions);
+                        break;
+                    case Roles.Employee:
+                        permissions.AddRange(Roles.Permissions.EmployeePermissions);
+                        break;
+                    case Roles.Customer:
+                        permissions.AddRange(Roles.Permissions.CustomerPermissions);
+                        break;
+                }
+            }
+
+            return permissions.Distinct().ToList();
+        }
+
+        /// <summary>
+        /// Generate JWT token với roles và permissions
+        /// </summary>
+        private async Task<string> GenerateTokenAsync(ApplicationUser user, DateTime expiresUtc, IList<string>? roles = null, string? sid = null)
+        {
+            roles ??= await _userManager.GetRolesAsync(user);
+            var permissions = await GetUserPermissionsAsync(user);
 
             var handler = new JwtSecurityTokenHandler();
             var claims = new List<Claim>{
@@ -186,10 +251,20 @@ namespace LaundryAPI.Controllers
             var isSuperAdmin = user.IsSuperAdmin;
             claims.Add(new Claim("is_super_admin", isSuperAdmin ? "true" : "false"));
 
-            // Thêm các role (nếu có)
+            // IsUserRoot = true nghĩa là UserRoot (chủ cửa hàng)
+            var isUserRoot = user.IsUserRoot;
+            claims.Add(new Claim("is_user_root", isUserRoot ? "true" : "false"));
+
+            // Thêm các role
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            // Thêm các permissions
+            foreach (var permission in permissions)
+            {
+                claims.Add(new Claim("permission", permission));
             }
 
             // Tạo credentials ký token: Key lưu ở cấu hình là Base64, cần decode
