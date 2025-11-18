@@ -69,11 +69,7 @@ const PermissionGroupEdit: React.FC = () => {
 					active: permissionGroup.active,
 				});
 			} catch (err: any) {
-				toast({
-					status: 'error',
-					title: 'Lỗi tải dữ liệu',
-					description: err?.message || 'Có lỗi xảy ra',
-				});
+				// Toast error đã được xử lý tự động bởi http wrapper
 				navigate('/permission-groups');
 			} finally {
 				setLoadingData(false);
@@ -87,11 +83,18 @@ const PermissionGroupEdit: React.FC = () => {
 		setForm((s: UpdatePermissionGroupRequest) => ({ ...s, [k]: v }));
 
 	const handlePermissionChange = (permissionCode: string, checked: boolean) => {
-		if (checked) {
-			setForm((s) => ({ ...s, permissions: [...s.permissions, permissionCode] }));
-		} else {
-			setForm((s) => ({ ...s, permissions: s.permissions.filter((p) => p !== permissionCode) }));
-		}
+		setForm((s) => {
+			if (checked) {
+				// Chỉ thêm nếu chưa có trong danh sách
+				if (s.permissions.includes(permissionCode)) {
+					return s;
+				}
+				return { ...s, permissions: [...s.permissions, permissionCode] };
+			} else {
+				// Loại bỏ permission khỏi danh sách
+				return { ...s, permissions: s.permissions.filter((p) => p !== permissionCode) };
+			}
+		});
 	};
 
 	const handleSelectAllCategory = (category: string, checked: boolean) => {
@@ -120,7 +123,7 @@ const PermissionGroupEdit: React.FC = () => {
 			toast({ status: 'success', title: 'Cập nhật nhóm quyền thành công' });
 			navigate('/permission-groups');
 		} catch (err: any) {
-			toast({ status: 'error', title: 'Cập nhật thất bại', description: err?.message || 'Có lỗi xảy ra' });
+			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
 			setLoading(false);
 		}
@@ -345,44 +348,44 @@ const PermissionGroupEdit: React.FC = () => {
 											<Collapse in={isExpanded} animateOpacity>
 												<CardBody pt={2}>
 													<SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-														{perms.map((perm) => (
-															<Box
-																key={perm.code}
-																p={3}
-																border="1px solid"
-																borderColor={form.permissions.includes(perm.code) ? 'blue.300' : 'gray.200'}
-																borderRadius="md"
-																bg={form.permissions.includes(perm.code) ? 'blue.50' : 'white'}
-																_hover={{
-																	borderColor: 'blue.400',
-																	shadow: 'sm',
-																}}
-																cursor="pointer"
-																onClick={() => handlePermissionChange(perm.code, !form.permissions.includes(perm.code))}
-																transition="all 0.2s"
-															>
-																<Checkbox
-																	isChecked={form.permissions.includes(perm.code)}
-																	onChange={(e) => {
-																		e.stopPropagation();
-																		handlePermissionChange(perm.code, e.target.checked);
+														{perms.map((perm) => {
+															const isChecked = form.permissions.includes(perm.code);
+															return (
+																<Box
+																	key={perm.code}
+																	p={3}
+																	border="1px solid"
+																	borderColor={isChecked ? 'blue.300' : 'gray.200'}
+																	borderRadius="md"
+																	bg={isChecked ? 'blue.50' : 'white'}
+																	_hover={{
+																		borderColor: 'blue.400',
+																		shadow: 'sm',
 																	}}
-																	colorScheme="blue"
-																	size="md"
+																	transition="all 0.2s"
 																>
-																	<VStack align="start" spacing={0} ml={2}>
-																		<Text fontSize="sm" fontWeight="medium" color="gray.700">
-																			{perm.name}
-																		</Text>
-																		{perm.description && (
-																			<Text fontSize="xs" color="gray.500" noOfLines={2}>
-																				{perm.description}
+																	<Checkbox
+																		isChecked={isChecked}
+																		onChange={(e) => {
+																			handlePermissionChange(perm.code, e.target.checked);
+																		}}
+																		colorScheme="blue"
+																		size="md"
+																	>
+																		<VStack align="start" spacing={0} ml={2}>
+																			<Text fontSize="sm" fontWeight="medium" color="gray.700">
+																				{perm.name}
 																			</Text>
-																		)}
-																	</VStack>
-																</Checkbox>
-															</Box>
-														))}
+																			{perm.description && (
+																				<Text fontSize="xs" color="gray.500" noOfLines={2}>
+																					{perm.description}
+																				</Text>
+																			)}
+																		</VStack>
+																	</Checkbox>
+																</Box>
+															);
+														})}
 													</SimpleGrid>
 												</CardBody>
 											</Collapse>

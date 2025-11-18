@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, useToast } from "@chakra-ui/react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./style.css";
 import AppLayout from "./layouts/AppLayout";
@@ -26,6 +26,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import IndexRedirect from "./components/IndexRedirect";
 import { useAuthStore } from "./store/auth";
+import { useToastStore } from "./store/toast";
 import { getSessionInfoApi } from "./api/auth";
 import { Permissions } from "./constants/permissions";
 
@@ -61,13 +62,25 @@ const SessionLoader: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 	return <>{children}</>;
 };
 
+const ToastInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+	const toast = useToast();
+	const setToast = useToastStore((s) => s.setToast);
+
+	useEffect(() => {
+		setToast(toast);
+	}, [toast, setToast]);
+
+	return <>{children}</>;
+};
+
 const RootApp: React.FC = () => {
   return (
     <ChakraProvider>
       <AppErrorBoundary>
         <BrowserRouter>
-          <SessionLoader>
-            <Routes>
+          <ToastInitializer>
+            <SessionLoader>
+              <Routes>
               <Route path="/login" element={<Login />} />
 
               <Route
@@ -218,8 +231,9 @@ const RootApp: React.FC = () => {
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </SessionLoader>
+              </Routes>
+            </SessionLoader>
+          </ToastInitializer>
         </BrowserRouter>
       </AppErrorBoundary>
     </ChakraProvider>

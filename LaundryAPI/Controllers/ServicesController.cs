@@ -1,5 +1,6 @@
 using Application.Services.Queries;
 using Application.Services.Commands;
+using Domain.Constants;
 using LaundryAPI.Attributes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ namespace LaundryAPI.Controllers
 	public class ServicesController : BaseApiController
 	{
 		[HttpGet]
+		[CheckAccess(Actions = Permissions.Services_View)]
 		public async Task<IActionResult> GetServices([FromQuery] GetPageServiceQuery query)
 		{
 			var res = await Mediator.Send(query);
@@ -18,6 +20,7 @@ namespace LaundryAPI.Controllers
 		}
 
 		[HttpGet("{id}")]
+		[CheckAccess(Actions = Permissions.Services_View)]
 		public async Task<IActionResult> GetServiceById(Guid id)
 		{
 			var res = await Mediator.Send(new GetServiceByIdQuery { Id = id });
@@ -26,6 +29,7 @@ namespace LaundryAPI.Controllers
 
 		[Uow]
 		[HttpPost]
+		[CheckAccess(Actions = Permissions.Services_Create)]
 		public async Task<IActionResult> CreateService([FromBody] CreateServiceCommand command)
 		{
 			var res = await Mediator.Send(command);
@@ -34,6 +38,7 @@ namespace LaundryAPI.Controllers
 
 		[Uow]
 		[HttpPut("{id}")]
+		[CheckAccess(Actions = Permissions.Services_Update)]
 		public async Task<IActionResult> UpdateService(Guid id, [FromBody] UpdateServiceCommand command)
 		{
 			if (id != command.Id) return BadRequest("Id không khớp");
@@ -43,6 +48,7 @@ namespace LaundryAPI.Controllers
 
 		[Uow]
 		[HttpDelete("{id}")]
+		[CheckAccess(Actions = Permissions.Services_Delete)]
 		public async Task<IActionResult> DeleteService(Guid id)
 		{
 			var res = await Mediator.Send(new DeleteServiceCommand { Id = id });

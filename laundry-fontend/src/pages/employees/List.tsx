@@ -48,11 +48,7 @@ const EmployeesList: React.FC = () => {
       setItems(res.items || []);
       setTotalItems(res.totalItems || 0);
     } catch (err: any) {
-      toast({
-        status: "error",
-        title: "Lỗi tải danh sách",
-        description: err?.message || "Có lỗi xảy ra",
-      });
+      // Toast error đã được xử lý tự động bởi http wrapper
       setItems([]);
       setTotalItems(0);
     } finally {
@@ -108,11 +104,7 @@ const EmployeesList: React.FC = () => {
       toast({ status: "success", title: "Xóa nhân viên thành công" });
       await load();
     } catch (err: any) {
-      toast({
-        status: "error",
-        title: "Xóa thất bại",
-        description: err?.message || "Có lỗi xảy ra",
-      });
+      // Toast error đã được xử lý tự động bởi http wrapper
     } finally {
       setDeletingId(null);
     }

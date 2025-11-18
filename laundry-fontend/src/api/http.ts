@@ -1,6 +1,8 @@
 import axios, { AxiosError } from 'axios';
+import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useAuthStore } from '../store/auth';
-import { parseError } from '../utils/errorHandler';
+import { useToastStore } from '../store/toast';
+import { parseError, formatErrorWithCode } from '../utils/errorHandler';
 
 function resolveBaseUrl(): string {
 	// 1) Ưu tiên cấu hình runtime trong localStorage
@@ -54,8 +56,7 @@ http.interceptors.response.use(
 		// Parse error để có thông tin chi tiết
 		const parsedError = parseError(err);
 		
-		// Log error để debug (không hiển thị toast ở đây vì không có access đến toast context)
-		// Các component sẽ tự quyết định có hiển thị toast hay không
+		// Log error để debug
 		console.error('API Error:', {
 			status: err?.response?.status,
 			code: parsedError.code,
@@ -69,5 +70,134 @@ http.interceptors.response.use(
 		return Promise.reject(err);
 	}
 );
+
+/**
+ * Wrapper functions cho các phương thức HTTP với tự động parse và hiển thị lỗi
+ * Sử dụng các functions này thay vì gọi trực tiếp http.get/post/put/patch/delete
+ * để có xử lý lỗi đồng nhất cho cả project
+ */
+
+type HttpOptions = AxiosRequestConfig & {
+	/**
+	 * Tắt tự động hiển thị toast khi có lỗi (mặc định: false)
+	 * Nếu true, sẽ không hiển thị toast, chỉ parse error và throw
+	 */
+	silent?: boolean;
+};
+
+/**
+ * Wrapper cho http.get với tự động parse và hiển thị lỗi
+ */
+export const httpGet = async <T = any>(
+	url: string,
+	config?: HttpOptions
+): Promise<AxiosResponse<T>> => {
+	try {
+		return await http.get<T>(url, config);
+	} catch (err) {
+		handleHttpError(err, config?.silent);
+		throw err;
+	}
+};
+
+/**
+ * Wrapper cho http.post với tự động parse và hiển thị lỗi
+ */
+export const httpPost = async <T = any>(
+	url: string,
+	data?: any,
+	config?: HttpOptions
+): Promise<AxiosResponse<T>> => {
+	try {
+		return await http.post<T>(url, data, config);
+	} catch (err) {
+		handleHttpError(err, config?.silent);
+		throw err;
+	}
+};
+
+/**
+ * Wrapper cho http.put với tự động parse và hiển thị lỗi
+ */
+export const httpPut = async <T = any>(
+	url: string,
+	data?: any,
+	config?: HttpOptions
+): Promise<AxiosResponse<T>> => {
+	try {
+		return await http.put<T>(url, data, config);
+	} catch (err) {
+		handleHttpError(err, config?.silent);
+		throw err;
+	}
+};
+
+/**
+ * Wrapper cho http.patch với tự động parse và hiển thị lỗi
+ */
+export const httpPatch = async <T = any>(
+	url: string,
+	data?: any,
+	config?: HttpOptions
+): Promise<AxiosResponse<T>> => {
+	try {
+		return await http.patch<T>(url, data, config);
+	} catch (err) {
+		handleHttpError(err, config?.silent);
+		throw err;
+	}
+};
+
+/**
+ * Wrapper cho http.delete với tự động parse và hiển thị lỗi
+ */
+export const httpDelete = async <T = any>(
+	url: string,
+	config?: HttpOptions
+): Promise<AxiosResponse<T>> => {
+	try {
+		return await http.delete<T>(url, config);
+	} catch (err) {
+		handleHttpError(err, config?.silent);
+		throw err;
+	}
+};
+
+/**
+ * Hàm xử lý lỗi HTTP: parse error và hiển thị toast
+ */
+function handleHttpError(err: unknown, silent?: boolean): void {
+	// Không hiển thị toast nếu silent = true
+	if (silent) {
+		return;
+	}
+
+	// Không hiển thị toast cho lỗi 401 (đã được xử lý trong interceptor)
+	if (err instanceof AxiosError && err?.response?.status === 401) {
+		return;
+	}
+
+	// Parse error
+	const errorWithCode = formatErrorWithCode(err);
+
+	// Lấy toast function từ store
+	const toast = useToastStore.getState().toast;
+
+	// Hiển thị toast nếu có toast function
+	if (toast) {
+		const toastTitle = errorWithCode.code
+			? `Có lỗi xảy ra [${errorWithCode.code}]`
+			: 'Có lỗi xảy ra';
+
+		toast({
+			title: toastTitle,
+			description: errorWithCode.message + (errorWithCode.details ? `\n${errorWithCode.details}` : ''),
+			status: 'error',
+			duration: 5000,
+			isClosable: true,
+			position: 'top-right',
+		});
+	}
+}
 
 

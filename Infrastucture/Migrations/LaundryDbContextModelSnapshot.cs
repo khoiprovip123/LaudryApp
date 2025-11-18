@@ -171,7 +171,7 @@ namespace Infrastucture.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Companies");
+                    b.ToTable("Companies", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entity.EmployeePermissionGroup", b =>
@@ -240,7 +240,7 @@ namespace Infrastucture.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("IRSequences");
+                    b.ToTable("IRSequences", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entity.Order", b =>
@@ -299,7 +299,7 @@ namespace Infrastucture.Migrations
 
                     b.HasIndex("Code", "DateCreated");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entity.OrderItem", b =>
@@ -342,7 +342,7 @@ namespace Infrastucture.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entity.Partner", b =>
@@ -432,7 +432,7 @@ namespace Infrastucture.Migrations
 
                     b.HasIndex("Name", "Ref", "Phone");
 
-                    b.ToTable("Partners");
+                    b.ToTable("Partners", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entity.Payment", b =>
@@ -480,7 +480,7 @@ namespace Infrastucture.Migrations
 
                     b.HasIndex("PartnerId");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entity.PermissionGroup", b =>
@@ -561,7 +561,7 @@ namespace Infrastucture.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("Service");
+                    b.ToTable("Service", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

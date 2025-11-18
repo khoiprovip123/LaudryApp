@@ -59,14 +59,14 @@ namespace Infrastucture.Data
         }
     }
 
-    //public class CatalogDbContextDesignFactory : IDesignTimeDbContextFactory<LaundryDbContext>
-    //{
-    //    public LaundryDbContext CreateDbContext(string[] args)
-    //    {
-    //        var optionsBuilder = new DbContextOptionsBuilder<LaundryDbContext>()
-    //            .UseSqlServer("Server=.\\;User Id=sa;Password=123123;Initial Catalog=LaundryDB; Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;");
+    public class CatalogDbContextDesignFactory : IDesignTimeDbContextFactory<LaundryDbContext>
+    {
+        public LaundryDbContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<LaundryDbContext>()
+                .UseSqlServer("Server=.\\;User Id=sa;Password=123123;Initial Catalog=LaundryDB; Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;");
 
-    //        return new LaundryDbContext(optionsBuilder.Options);
-    //    }
-    //}
+            return new LaundryDbContext(optionsBuilder.Options);
+        }
+    }
 }

@@ -27,6 +27,35 @@ namespace Domain.Service
         /// Kiểm tra tên nhóm quyền đã tồn tại trong công ty chưa
         /// </summary>
         Task<bool> IsNameExistsAsync(string name, Guid? companyId, Guid? excludeId = null);
+
+        /// <summary>
+        /// Kiểm tra các nhân viên có thuộc cùng công ty không
+        /// </summary>
+        Task<List<ApplicationUser>> ValidateEmployeesBelongToCompanyAsync(List<Guid> employeeIds, Guid companyId);
+
+        /// <summary>
+        /// Lấy PermissionList của user từ PermissionGroup đầu tiên
+        /// </summary>
+        Task<PermissionList> GetPermissionGroupsByUserIdAsync(Guid userId);
+
+        /// <summary>
+        /// Lấy tất cả permissions của user từ các PermissionGroup
+        /// </summary>
+        Task<List<string>> GetUserPermissionsAsync(Guid userId);
+
+        /// <summary>
+        /// Kiểm tra user có quyền truy cập các actions được chỉ định không
+        /// </summary>
+        Task<AccessResult> HasAccess(Guid userId, string[] permissions);
+    }
+
+    /// <summary>
+    /// Kết quả kiểm tra quyền truy cập
+    /// </summary>
+    public class AccessResult
+    {
+        public bool Access { get; set; }
+        public string Error { get; set; } = string.Empty;
     }
 }
 

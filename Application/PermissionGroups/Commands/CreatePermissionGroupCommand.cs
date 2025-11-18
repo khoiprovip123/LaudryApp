@@ -2,7 +2,6 @@ using Domain.Entity;
 using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
-using System.Text.Json;
 
 namespace Application.PermissionGroups.Commands
 {
@@ -48,7 +47,7 @@ namespace Application.PermissionGroups.Commands
                 Name = request.Name,
                 Description = request.Description,
                 CompanyId = companyId,
-                Permissions = JsonSerializer.Serialize(request.Permissions ?? new List<string>()),
+                Permissions = new PermissionList { Items = request.Permissions ?? new List<string>() },
                 Active = request.Active
             };
 

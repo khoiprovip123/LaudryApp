@@ -55,11 +55,7 @@ const PermissionGroupCreate: React.FC = () => {
 				const permissions = await getAllPermissions();
 				setAvailablePermissions(permissions);
 			} catch (err: any) {
-				toast({
-					status: 'error',
-					title: 'Lỗi tải danh sách quyền',
-					description: err?.message || 'Có lỗi xảy ra',
-				});
+				// Toast error đã được xử lý tự động bởi http wrapper
 			} finally {
 				setLoadingPermissions(false);
 			}
@@ -104,7 +100,7 @@ const PermissionGroupCreate: React.FC = () => {
 			toast({ status: 'success', title: 'Tạo nhóm quyền thành công' });
 			navigate('/permission-groups');
 		} catch (err: any) {
-			toast({ status: 'error', title: 'Tạo thất bại', description: err?.message || 'Có lỗi xảy ra' });
+			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
 			setLoading(false);
 		}

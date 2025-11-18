@@ -27,15 +27,17 @@ namespace LaundryAPI.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
         private readonly ICompanyService _companyService;
+        private readonly IPermissionGroupService _permissionGroupService;
 
 
-        public AuthController(IMediator mediator, SignInManager<ApplicationUser> signInManager, IConfiguration config, UserManager<ApplicationUser> userManager, ICompanyService companyService)
+        public AuthController(IMediator mediator, SignInManager<ApplicationUser> signInManager, IConfiguration config, UserManager<ApplicationUser> userManager, ICompanyService companyService, IPermissionGroupService permissionGroupService)
         {
             _mediator = mediator;
             _signInManager = signInManager;
             _config = config;
             _userManager = userManager;
             _companyService = companyService;
+            _permissionGroupService = permissionGroupService;
         }
 
         [AllowAnonymous]
@@ -188,6 +190,7 @@ namespace LaundryAPI.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             var permissions = new List<string>();
 
+            var permissionEmployee = await _permissionGroupService.GetPermissionGroupsByUserIdAsync(user.Id);
             // Super admin có tất cả permissions
             if (user.IsSuperAdmin)
             {
@@ -202,28 +205,11 @@ namespace LaundryAPI.Controllers
                 return permissions.Distinct().ToList();
             }
 
-            // Lấy permissions từ roles
-            foreach (var role in roles)
+           if(permissionEmployee != null && permissionEmployee.Items != null && permissionEmployee.Items.Count > 0)
             {
-                switch (role)
-                {
-                    case Roles.UserRoot:
-                        permissions.AddRange(Roles.Permissions.UserRootPermissions);
-                        break;
-                    case Roles.Admin:
-                        permissions.AddRange(Roles.Permissions.AdminPermissions);
-                        break;
-                    case Roles.Manager:
-                        permissions.AddRange(Roles.Permissions.ManagerPermissions);
-                        break;
-                    case Roles.Employee:
-                        permissions.AddRange(Roles.Permissions.EmployeePermissions);
-                        break;
-                    case Roles.Customer:
-                        permissions.AddRange(Roles.Permissions.CustomerPermissions);
-                        break;
-                }
+                permissions.AddRange(permissionEmployee.Items);
             }
+
 
             return permissions.Distinct().ToList();
         }

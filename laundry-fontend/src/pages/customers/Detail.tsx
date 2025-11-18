@@ -49,11 +49,7 @@ const CustomerDetail: React.FC = () => {
 				const data = await getCustomerById(id);
 				setCustomer(data);
 			} catch (err: any) {
-				toast({
-					status: 'error',
-					title: 'Không tải được thông tin khách hàng',
-					description: err?.message || 'Có lỗi xảy ra',
-				});
+				// Toast error đã được xử lý tự động bởi http wrapper
 				navigate('/customers');
 			} finally {
 				setLoading(false);

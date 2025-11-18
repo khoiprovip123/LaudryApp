@@ -32,7 +32,7 @@ const CustomerEdit: React.FC = () => {
 					active: data.active,
 				});
 			} catch (err: any) {
-				toast({ status: 'error', title: 'Không tải được dữ liệu', description: err?.message || 'Có lỗi xảy ra' });
+				// Toast error đã được xử lý tự động bởi http wrapper
 			}
 		})();
 	}, [id, toast]);
@@ -48,7 +48,7 @@ const CustomerEdit: React.FC = () => {
 			toast({ status: 'success', title: 'Cập nhật thành công' });
 			navigate('/customers');
 		} catch (err: any) {
-			toast({ status: 'error', title: 'Cập nhật thất bại', description: err?.message || 'Có lỗi xảy ra' });
+			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
 			setLoading(false);
 		}

@@ -5,7 +5,6 @@ using Domain.Service;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace Application.PermissionGroups.Queries
 {
@@ -19,24 +18,21 @@ namespace Application.PermissionGroups.Queries
     {
         private readonly IPermissionGroupService _permissionGroupService;
         private readonly IWorkContext _workContext;
-        private readonly IAsyncRepository<Domain.Entity.PermissionGroup> _repository;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public GetPermissionGroupByIdQueryHandler(
             IPermissionGroupService permissionGroupService, 
             IWorkContext workContext,
-            IAsyncRepository<Domain.Entity.PermissionGroup> repository,
             UserManager<ApplicationUser> userManager)
         {
             _permissionGroupService = permissionGroupService;
             _workContext = workContext;
-            _repository = repository;
             _userManager = userManager;
         }
 
         public async Task<PermissionGroupDto> Handle(GetPermissionGroupByIdQuery request, CancellationToken cancellationToken)
         {
-            var query = _repository.SearchQuery(g => g.Id == request.Id)
+            var query = _permissionGroupService.SearchQuery(g => g.Id == request.Id)
                 .Include(g => g.Company)
                 .Include(g => g.EmployeePermissionGroups)
                     .ThenInclude(epg => epg.Employee)
@@ -55,10 +51,6 @@ namespace Application.PermissionGroups.Queries
                     throw new UnauthorizedAccessException("Bạn không có quyền xem nhóm quyền này");
             }
 
-            var permissions = string.IsNullOrEmpty(permissionGroup.Permissions)
-                ? new List<string>()
-                : JsonSerializer.Deserialize<List<string>>(permissionGroup.Permissions) ?? new List<string>();
-
             var dto = new PermissionGroupDto
             {
                 Id = permissionGroup.Id,
@@ -66,7 +58,7 @@ namespace Application.PermissionGroups.Queries
                 Description = permissionGroup.Description,
                 CompanyId = permissionGroup.CompanyId,
                 CompanyName = permissionGroup.Company?.CompanyName ?? string.Empty,
-                Permissions = permissions,
+                Permissions = permissionGroup.Permissions?.Items ?? new List<string>(),
                 Active = permissionGroup.Active,
                 EmployeeCount = permissionGroup.EmployeePermissionGroups.Count
             };

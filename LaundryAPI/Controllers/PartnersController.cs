@@ -1,16 +1,18 @@
 ﻿using Application.Partners.Queries;
 using Application.Partners.Commands;
+using Domain.Constants;
 using LaundryAPI.Attributes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LaundryAPI.Controllers
+namespace LaundryAPI.Controllers 
 {
     [Route("api/[controller]")]
     [ApiController]
     public class PartnersController : BaseApiController
     {
         [HttpGet]
+		[CheckAccess(Actions = Permissions.Partners_View)]
 		public async Task<IActionResult> GetPartners([FromQuery] GetPagePartnerQuery query)
         {
             var res = await Mediator.Send(query);
@@ -18,6 +20,7 @@ namespace LaundryAPI.Controllers
         }
 
 		[HttpGet("{id}")]
+		[CheckAccess(Actions = Permissions.Partners_View)]
 		public async Task<IActionResult> GetPartnerById(Guid id)
 		{
 			var res = await Mediator.Send(new GetPartnerByIdQuery { Id = id });
@@ -25,6 +28,7 @@ namespace LaundryAPI.Controllers
 		}
 
         [HttpGet("[action]")]
+        [CheckAccess(Actions = Permissions.Partners_View)]
         public async Task<IActionResult> GetPartnerByCompanyId(Guid id)
         {
             var res = await Mediator.Send(new GetPartnerByIdQuery { Id = id });
@@ -33,6 +37,7 @@ namespace LaundryAPI.Controllers
 
         [Uow]
         [HttpPost]
+		[CheckAccess(Actions = Permissions.Partners_Create)]
 		public async Task<IActionResult> CreatePartnerCustomer([FromBody] CreatePartnerCommand command)
         {
             var res = await Mediator.Send(command);
@@ -41,6 +46,7 @@ namespace LaundryAPI.Controllers
 
 		[Uow]
 		[HttpPut("{id}")]
+		[CheckAccess(Actions = Permissions.Partners_Update)]
 		public async Task<IActionResult> UpdatePartner(Guid id, [FromBody] UpdatePartnerCommand command)
 		{
 			if (id != command.Id) return BadRequest("Id không khớp");
@@ -50,6 +56,7 @@ namespace LaundryAPI.Controllers
 
 		[Uow]
 		[HttpDelete("{id}")]
+		[CheckAccess(Actions = Permissions.Partners_Delete)]
 		public async Task<IActionResult> DeletePartner(Guid id)
 		{
 			var res = await Mediator.Send(new DeletePartnerCommand { Id = id });

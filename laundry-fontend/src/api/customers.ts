@@ -1,4 +1,4 @@
-import { http } from './http';
+import { httpGet, httpPost, httpPut, httpDelete } from './http';
 
 export type CustomerDto = {
 	id: string;
@@ -25,12 +25,12 @@ export type PagedResult<T> = {
 };
 
 export const getCustomers = async (params: { limit: number; offset: number; search?: string }) => {
-	const { data } = await http.get<PagedResult<CustomerDto>>('/partners', { params });
+	const { data } = await httpGet<PagedResult<CustomerDto>>('/partners', { params });
 	return data;
 };
 
 export const getCustomerById = async (id: string) => {
-	const { data } = await http.get<CustomerDto>(`/partners/${id}`);
+	const { data } = await httpGet<CustomerDto>(`/partners/${id}`);
 	return data;
 };
 
@@ -50,7 +50,7 @@ export type CreateCustomerRequest = {
 };
 
 export const createCustomer = async (payload: CreateCustomerRequest) => {
-	await http.post('/partners', { ...payload, isCompany: false });
+	await httpPost('/partners', { ...payload, isCompany: false });
 };
 
 export type UpdateCustomerRequest = {
@@ -69,11 +69,11 @@ export type UpdateCustomerRequest = {
 };
 
 export const updateCustomer = async (id: string, payload: UpdateCustomerRequest) => {
-	await http.put(`/partners/${id}`, payload);
+	await httpPut(`/partners/${id}`, payload);
 };
 
 export const deleteCustomer = async (id: string) => {
-	await http.delete(`/partners/${id}`);
+	await httpDelete(`/partners/${id}`);
 };
 
 

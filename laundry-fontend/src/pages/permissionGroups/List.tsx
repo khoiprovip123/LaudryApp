@@ -109,11 +109,7 @@ const PermissionGroupsList: React.FC = () => {
       toast({ status: "success", title: "Xóa nhóm quyền thành công" });
       await load();
     } catch (err: any) {
-      toast({
-        status: "error",
-        title: "Xóa thất bại",
-        description: err?.message || "Có lỗi xảy ra",
-      });
+      // Toast error đã được xử lý tự động bởi http wrapper
     } finally {
       setDeletingId(null);
     }

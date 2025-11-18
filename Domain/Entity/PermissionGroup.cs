@@ -28,7 +28,7 @@ namespace Domain.Entity
         /// <summary>
         /// Danh sách mã quyền (permission codes)
         /// </summary>
-        public string Permissions { get; set; } // JSON array of permission codes
+        public PermissionList Permissions { get; set; } = new PermissionList(); // JSON array of permission codes
 
         /// <summary>
         /// Danh sách nhân viên trong nhóm quyền

@@ -19,8 +19,11 @@ namespace Infrastucture.EntityConfigurations
             builder.Property(pg => pg.Description)
                 .HasMaxLength(1000);
 
-            builder.Property(pg => pg.Permissions)
-                .HasColumnType("nvarchar(max)");
+            builder.OwnsOne(pg => pg.Permissions, pb =>
+            {
+                pb.ToJson();
+                pb.Property(p => p.Items);
+            });
 
             builder.HasOne(pg => pg.Company)
                 .WithMany()

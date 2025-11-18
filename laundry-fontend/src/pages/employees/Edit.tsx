@@ -43,11 +43,7 @@ const EmployeeEdit: React.FC = () => {
 					active: employee.active,
 				});
 			} catch (err: any) {
-				toast({
-					status: 'error',
-					title: 'Lỗi tải dữ liệu',
-					description: err?.message || 'Có lỗi xảy ra',
-				});
+				// Toast error đã được xử lý tự động bởi http wrapper
 				navigate('/employees');
 			} finally {
 				setLoadingData(false);
@@ -67,7 +63,7 @@ const EmployeeEdit: React.FC = () => {
 			toast({ status: 'success', title: 'Cập nhật nhân viên thành công' });
 			navigate('/employees');
 		} catch (err: any) {
-			toast({ status: 'error', title: 'Cập nhật thất bại', description: err?.message || 'Có lỗi xảy ra' });
+			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
 			setLoading(false);
 		}

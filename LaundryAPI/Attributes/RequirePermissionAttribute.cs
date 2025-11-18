@@ -1,3 +1,4 @@
+using Domain.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
@@ -45,10 +46,11 @@ namespace LaundryAPI.Attributes
             var hasPermission = user.HasClaim("permission", _permission);
             if (!hasPermission)
             {
+                var errorMessage = PermissionMessageHelper.FormatAccessDeniedMessage(new[] { _permission });
                 context.Result = new ObjectResult(new
                 {
                     error = "FORBIDDEN",
-                    message = $"Bạn không có quyền thực hiện thao tác này. Yêu cầu permission: {_permission}"
+                    message = errorMessage
                 })
                 {
                     StatusCode = 403

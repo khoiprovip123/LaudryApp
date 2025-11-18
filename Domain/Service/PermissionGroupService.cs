@@ -1,5 +1,6 @@
 using Application.Service;
 using Domain.Entity;
+using Domain.Helpers;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -103,6 +104,121 @@ namespace Domain.Service
             }
 
             return await query.AnyAsync();
+        }
+
+        public async Task<List<ApplicationUser>> ValidateEmployeesBelongToCompanyAsync(List<Guid> employeeIds, Guid companyId)
+        {
+            if (!employeeIds.Any())
+                return new List<ApplicationUser>();
+
+            var employees = await _userRepository
+                .SearchQuery(u => employeeIds.Contains(u.Id))
+                .ToListAsync();
+
+            return employees;
+        }
+
+        public async Task<PermissionList> GetPermissionGroupsByUserIdAsync(Guid userId)
+        {
+            var listPermissions = await _permissionGroupRepository
+                .SearchQuery(pg => pg.EmployeePermissionGroups.Any(epg => epg.EmployeeId == userId))
+                .Select(pg => pg.Permissions)
+                .FirstOrDefaultAsync();
+
+            return listPermissions ?? new PermissionList();
+        }
+
+        public async Task<List<string>> GetUserPermissionsAsync(Guid userId)
+        {
+            // Query từ PermissionGroup thông qua EmployeePermissionGroup để lấy tất cả permissions
+            var permissionGroups = await _permissionGroupRepository
+                .SearchQuery(pg => pg.Active && pg.EmployeePermissionGroups.Any(epg => epg.EmployeeId == userId))
+                .ToListAsync();
+
+            if (permissionGroups == null || !permissionGroups.Any())
+                return new List<string>();
+
+            // Lấy tất cả permissions từ các PermissionGroup mà user thuộc về
+            var permissions = new List<string>();
+
+            foreach (var pg in permissionGroups)
+            {
+                if (pg.Permissions != null && pg.Permissions.Items != null)
+                {
+                    permissions.AddRange(pg.Permissions.Items);
+                }
+            }
+
+            // Loại bỏ duplicate và trả về
+            return permissions.Distinct().ToList();
+        }
+
+        public async Task<AccessResult> HasAccess(Guid userId, string[] permissions)
+        {
+            if (permissions == null || permissions.Length == 0)
+            {
+                return new AccessResult
+                {
+                    Access = true,
+                    Error = string.Empty
+                };
+            }
+
+            // Lấy user để check SuperAdmin và UserRoot
+            var user = await _userRepository
+                .SearchQuery(u => u.Id == userId)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return new AccessResult
+                {
+                    Access = false,
+                    Error = "Người dùng không tồn tại"
+                };
+            }
+
+            // SuperAdmin có tất cả quyền
+            if (user.IsSuperAdmin)
+            {
+                return new AccessResult
+                {
+                    Access = true,
+                    Error = string.Empty
+                };
+            }
+
+            // UserRoot có tất cả quyền trong cửa hàng của mình
+            if (user.IsUserRoot)
+            {
+                return new AccessResult
+                {
+                    Access = true,
+                    Error = string.Empty
+                };
+            }
+
+            // Lấy permissions của user
+            var userPermissions = await GetUserPermissionsAsync(userId);
+
+            // Kiểm tra user có ít nhất một trong các permissions được yêu cầu không (OR logic)
+            var hasPermission = permissions.Any(requiredPermission =>
+                userPermissions.Contains(requiredPermission, StringComparer.OrdinalIgnoreCase));
+
+            if (!hasPermission)
+            {
+                return new AccessResult
+                {
+                    Access = false,
+                    Error = PermissionMessageHelper.FormatAccessDeniedMessage(permissions)
+                };
+            }
+
+            return new AccessResult
+            {
+                Access = true,
+                Error = string.Empty
+            };
         }
     }
 }

@@ -54,11 +54,7 @@ const CustomersList: React.FC = () => {
       setItems(res.items);
       setTotalItems(res.totalItems);
     } catch (err: any) {
-      toast({
-        status: "error",
-        title: "Lỗi tải danh sách",
-        description: err?.message || "Có lỗi xảy ra",
-      });
+      // Toast error đã được xử lý tự động bởi http wrapper
     } finally {
       setLoading(false);
     }
@@ -262,12 +258,7 @@ const CustomersList: React.FC = () => {
                                   });
                                   void load();
                                 } catch (err: any) {
-                                  toast({
-                                    status: "error",
-                                    title: "Xóa thất bại",
-                                    description:
-                                      err?.message || "Có lỗi xảy ra",
-                                  });
+                                  // Toast error đã được xử lý tự động bởi http wrapper
                                 }
                               }}
                               _focus={{ boxShadow: "none", outline: "none" }}

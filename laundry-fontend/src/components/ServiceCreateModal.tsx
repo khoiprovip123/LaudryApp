@@ -58,7 +58,7 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 			});
 			onSuccess?.();
 		} catch (err: any) {
-			toast({ status: 'error', title: 'Tạo dịch vụ thất bại', description: err?.message || 'Có lỗi xảy ra' });
+			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
 			setLoading(false);
 		}

@@ -1,9 +1,6 @@
 using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
-using Domain.Entity;
-using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 namespace Application.PermissionGroups.Commands
@@ -18,16 +15,13 @@ namespace Application.PermissionGroups.Commands
     {
         private readonly IPermissionGroupService _permissionGroupService;
         private readonly IWorkContext _workContext;
-        private readonly UserManager<ApplicationUser> _userManager;
 
         public AddEmployeesToPermissionGroupCommandHandler(
             IPermissionGroupService permissionGroupService, 
-            IWorkContext workContext,
-            UserManager<ApplicationUser> userManager)
+            IWorkContext workContext)
         {
             _permissionGroupService = permissionGroupService;
             _workContext = workContext;
-            _userManager = userManager;
         }
 
         public async Task<Unit> Handle(AddEmployeesToPermissionGroupCommand request, CancellationToken cancellationToken)
@@ -47,9 +41,7 @@ namespace Application.PermissionGroups.Commands
             // Kiểm tra nhân viên có thuộc cùng công ty không (nếu không phải SuperAdmin)
             if (!_workContext.IsSuperAdmin && permissionGroup.CompanyId.HasValue)
             {
-                var employees = await _userManager.Users
-                    .Where(e => request.EmployeeIds.Contains(e.Id))
-                    .ToListAsync(cancellationToken);
+                var employees = await _permissionGroupService.ValidateEmployeesBelongToCompanyAsync(request.EmployeeIds, permissionGroup.CompanyId.Value);
 
                 var invalidEmployees = employees.Where(e => e.CompanyId != permissionGroup.CompanyId).ToList();
                 if (invalidEmployees.Any())

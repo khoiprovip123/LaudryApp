@@ -1,7 +1,7 @@
+using Domain.Entity;
 using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
-using System.Text.Json;
 
 namespace Application.PermissionGroups.Commands
 {
@@ -47,7 +47,8 @@ namespace Application.PermissionGroups.Commands
             // Cập nhật thông tin
             permissionGroup.Name = request.Name;
             permissionGroup.Description = request.Description;
-            permissionGroup.Permissions = JsonSerializer.Serialize(request.Permissions ?? new List<string>());
+            permissionGroup.Permissions = permissionGroup.Permissions ?? new PermissionList();
+            permissionGroup.Permissions.Items = request.Permissions ?? new List<string>();
             permissionGroup.Active = request.Active;
 
             await _permissionGroupService.UpdateAsync(permissionGroup);

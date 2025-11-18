@@ -1,5 +1,6 @@
 using Application.PermissionGroups.Commands;
 using Application.PermissionGroups.Queries;
+using Domain.Constants;
 using LaundryAPI.Attributes;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,7 @@ namespace LaundryAPI.Controllers
     public class PermissionGroupsController : BaseApiController
     {
         [HttpGet]
+        [CheckAccess(Actions = Permissions.Companies_View)]
         public async Task<IActionResult> GetPermissionGroups([FromQuery] GetPagePermissionGroupQuery query)
         {
             var result = await Mediator.Send(query);
@@ -19,6 +21,7 @@ namespace LaundryAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [CheckAccess(Actions = Permissions.Companies_View)]
         public async Task<IActionResult> GetPermissionGroupById(Guid id, [FromQuery] bool includeEmployees = true)
         {
             var result = await Mediator.Send(new GetPermissionGroupByIdQuery { Id = id, IncludeEmployees = includeEmployees });
@@ -26,6 +29,7 @@ namespace LaundryAPI.Controllers
         }
 
         [HttpGet("{id}/employees")]
+        [CheckAccess(Actions = Permissions.Companies_View)]
         public async Task<IActionResult> GetEmployeesByPermissionGroup(Guid id)
         {
             var result = await Mediator.Send(new GetEmployeesByPermissionGroupQuery { PermissionGroupId = id });
@@ -34,6 +38,7 @@ namespace LaundryAPI.Controllers
 
         [UowAttribute]
         [HttpPost]
+        [CheckAccess(Actions = Permissions.Companies_Create)]
         public async Task<IActionResult> CreatePermissionGroup([FromBody] CreatePermissionGroupCommand command)
         {
             var result = await Mediator.Send(command);
@@ -42,6 +47,7 @@ namespace LaundryAPI.Controllers
 
         [Uow]
         [HttpPut("{id}")]
+        [CheckAccess(Actions = Permissions.Companies_Update)]
         public async Task<IActionResult> UpdatePermissionGroup(Guid id, [FromBody] UpdatePermissionGroupCommand command)
         {
             if (id != command.Id) return BadRequest("Id không khớp");
@@ -51,6 +57,7 @@ namespace LaundryAPI.Controllers
 
         [Uow]
         [HttpDelete("{id}")]
+        [CheckAccess(Actions = Permissions.Companies_Delete)]
         public async Task<IActionResult> DeletePermissionGroup(Guid id)
         {
             await Mediator.Send(new DeletePermissionGroupCommand { Id = id });
@@ -59,6 +66,7 @@ namespace LaundryAPI.Controllers
 
         [Uow]
         [HttpPost("{id}/employees")]
+        [CheckAccess(Actions = Permissions.Companies_Update)]
         public async Task<IActionResult> AddEmployeesToPermissionGroup(Guid id, [FromBody] AddEmployeesToPermissionGroupCommand command)
         {
             if (id != command.PermissionGroupId) return BadRequest("Id không khớp");
@@ -68,6 +76,7 @@ namespace LaundryAPI.Controllers
 
         [Uow]
         [HttpDelete("{id}/employees")]
+        [CheckAccess(Actions = Permissions.Companies_Update)]
         public async Task<IActionResult> RemoveEmployeesFromPermissionGroup(Guid id, [FromBody] RemoveEmployeesFromPermissionGroupCommand command)
         {
             if (id != command.PermissionGroupId) return BadRequest("Id không khớp");

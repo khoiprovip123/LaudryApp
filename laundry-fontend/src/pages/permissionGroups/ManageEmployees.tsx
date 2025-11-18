@@ -59,11 +59,7 @@ const ManageEmployees: React.FC = () => {
 				setPermissionGroup(group);
 				setEmployees(employeesData);
 			} catch (err: any) {
-				toast({
-					status: 'error',
-					title: 'Lỗi tải dữ liệu',
-					description: err?.message || 'Có lỗi xảy ra',
-				});
+				// Toast error đã được xử lý tự động bởi http wrapper
 				navigate('/permission-groups');
 			} finally {
 				setLoadingData(false);
@@ -80,11 +76,7 @@ const ManageEmployees: React.FC = () => {
 			const availableEmployees = res.items.filter(e => !existingIds.includes(e.id));
 			setAllEmployees(availableEmployees);
 		} catch (err: any) {
-			toast({
-				status: 'error',
-				title: 'Lỗi tải danh sách nhân viên',
-				description: err?.message || 'Có lỗi xảy ra',
-			});
+			// Toast error đã được xử lý tự động bởi http wrapper
 		}
 	};
 
@@ -115,7 +107,7 @@ const ManageEmployees: React.FC = () => {
 			const employeesData = await getEmployeesByPermissionGroup(id!);
 			setEmployees(employeesData);
 		} catch (err: any) {
-			toast({ status: 'error', title: 'Thêm thất bại', description: err?.message || 'Có lỗi xảy ra' });
+			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
 			setAdding(false);
 		}
@@ -133,7 +125,7 @@ const ManageEmployees: React.FC = () => {
 			const employeesData = await getEmployeesByPermissionGroup(id!);
 			setEmployees(employeesData);
 		} catch (err: any) {
-			toast({ status: 'error', title: 'Xóa thất bại', description: err?.message || 'Có lỗi xảy ra' });
+			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
 			setRemoving(null);
 		}

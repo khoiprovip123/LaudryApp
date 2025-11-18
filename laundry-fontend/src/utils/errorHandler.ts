@@ -94,15 +94,48 @@ export function parseError(error: unknown): {
 
 /**
  * Format error message để hiển thị cho user
+ * Bao gồm cả code và message
  */
 export function formatErrorMessage(error: unknown): string {
 	const parsed = parseError(error);
 	
-	// Nếu có details, kết hợp với message
+	// Nếu có code, hiển thị cả code và message
+	if (parsed.code) {
+		const codeMessage = `[${parsed.code}] ${parsed.message}`;
+		
+		// Nếu có details, thêm vào
+		if (parsed.details) {
+			return `${codeMessage}\n${parsed.details}`;
+		}
+		
+		return codeMessage;
+	}
+	
+	// Nếu không có code nhưng có details, kết hợp với message
 	if (parsed.details) {
 		return `${parsed.message}\n${parsed.details}`;
 	}
 
 	return parsed.message;
+}
+
+/**
+ * Format error để hiển thị với code và message riêng biệt
+ * Trả về object với code và message để có thể hiển thị riêng
+ */
+export function formatErrorWithCode(error: unknown): {
+	code?: string;
+	message: string;
+	details?: string;
+	statusCode?: number;
+} {
+	const parsed = parseError(error);
+	
+	return {
+		code: parsed.code,
+		message: parsed.message,
+		details: parsed.details,
+		statusCode: parsed.statusCode,
+	};
 }
 

@@ -51,11 +51,7 @@ const CompaniesList: React.FC = () => {
       setItems(res.items || []);
       setTotalItems(res.totalItems || 0);
     } catch (err: any) {
-      toast({
-        status: "error",
-        title: "Lỗi tải danh sách",
-        description: err?.message || "Có lỗi xảy ra",
-      });
+      // Toast error đã được xử lý tự động bởi http wrapper
       setItems([]);
       setTotalItems(0);
     } finally {
@@ -129,11 +125,7 @@ const CompaniesList: React.FC = () => {
       setDeletingId(null);
       void load();
     } catch (err: any) {
-      toast({
-        status: "error",
-        title: "Xóa thất bại",
-        description: err?.message || "Có lỗi xảy ra",
-      });
+      // Toast error đã được xử lý tự động bởi http wrapper
     }
   };
 

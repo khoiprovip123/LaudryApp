@@ -55,7 +55,7 @@ const CompanyEditModal: React.FC<Props> = ({ isOpen, onClose, companyId, onSucce
 						active: data.active,
 					});
 				} catch (err: any) {
-					toast({ status: 'error', title: 'Không tải được dữ liệu', description: err?.message || 'Có lỗi xảy ra' });
+					// Toast error đã được xử lý tự động bởi http wrapper
 				}
 			})();
 		}
@@ -77,7 +77,7 @@ const CompanyEditModal: React.FC<Props> = ({ isOpen, onClose, companyId, onSucce
 			onClose();
 			onSuccess?.();
 		} catch (err: any) {
-			toast({ status: 'error', title: 'Cập nhật thất bại', description: err?.message || 'Có lỗi xảy ra' });
+			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
 			setLoading(false);
 		}

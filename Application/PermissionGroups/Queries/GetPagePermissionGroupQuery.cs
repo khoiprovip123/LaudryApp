@@ -1,9 +1,8 @@
 using Application.DTOs;
-using Domain.Entity;
 using Domain.Interfaces;
+using Domain.Service;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace Application.PermissionGroups.Queries
 {
@@ -16,18 +15,18 @@ namespace Application.PermissionGroups.Queries
 
     public class GetPagePermissionGroupQueryHandler : IRequestHandler<GetPagePermissionGroupQuery, PagedResult<PermissionGroupDto>>
     {
-        private readonly IDbContext _dbContext;
+        private readonly IPermissionGroupService _permissionGroupService;
         private readonly IWorkContext _workContext;
 
-        public GetPagePermissionGroupQueryHandler(IDbContext dbContext, IWorkContext workContext)
+        public GetPagePermissionGroupQueryHandler(IPermissionGroupService permissionGroupService, IWorkContext workContext)
         {
-            _dbContext = dbContext;
+            _permissionGroupService = permissionGroupService;
             _workContext = workContext;
         }
 
         public async Task<PagedResult<PermissionGroupDto>> Handle(GetPagePermissionGroupQuery request, CancellationToken cancellationToken)
         {
-            var query = _dbContext.Set<PermissionGroup>()
+            var query = _permissionGroupService.SearchQuery()
                 .Include(g => g.Company)
                 .Include(g => g.EmployeePermissionGroups)
                 .AsQueryable();
@@ -56,23 +55,16 @@ namespace Application.PermissionGroups.Queries
                 .Take(request.Limit)
                 .ToListAsync(cancellationToken);
 
-            var items = permissionGroups.Select(g =>
+            var items = permissionGroups.Select(g => new PermissionGroupDto
             {
-                var permissions = string.IsNullOrEmpty(g.Permissions)
-                    ? new List<string>()
-                    : JsonSerializer.Deserialize<List<string>>(g.Permissions) ?? new List<string>();
-
-                return new PermissionGroupDto
-                {
-                    Id = g.Id,
-                    Name = g.Name,
-                    Description = g.Description,
-                    CompanyId = g.CompanyId,
-                    CompanyName = g.Company?.CompanyName ?? string.Empty,
-                    Permissions = permissions,
-                    Active = g.Active,
-                    EmployeeCount = g.EmployeePermissionGroups.Count
-                };
+                Id = g.Id,
+                Name = g.Name,
+                Description = g.Description,
+                CompanyId = g.CompanyId,
+                CompanyName = g.Company?.CompanyName ?? string.Empty,
+                Permissions = g.Permissions?.Items ?? new List<string>(),
+                Active = g.Active,
+                EmployeeCount = g.EmployeePermissionGroups.Count
             }).ToList();
 
             return new PagedResult<PermissionGroupDto>(totalItems, request.Offset, request.Limit)
