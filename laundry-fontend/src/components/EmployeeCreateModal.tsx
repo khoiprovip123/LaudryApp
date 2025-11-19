@@ -13,9 +13,9 @@ import {
 	Input,
 	Stack,
 	Switch,
-	useToast,
 	Box,
 } from '@chakra-ui/react';
+import { useToast } from '../hooks/useToast';
 import { createEmployee } from '../api/employees';
 import type { CreateEmployeeRequest } from '../api/employees';
 

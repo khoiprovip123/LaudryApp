@@ -49,7 +49,8 @@ const CompanyEdit: React.FC = () => {
 				// Toast error đã được xử lý tự động bởi http wrapper
 			}
 		})();
-	}, [id, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	const update = <K extends keyof UpdateCompanyRequest>(k: K, v: UpdateCompanyRequest[K]) =>
 		setForm((s: UpdateCompanyRequest) => ({ ...s, [k]: v }));

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea, useToast } from '@chakra-ui/react';
+import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea } from '@chakra-ui/react';
+import { useToast } from '../../hooks/useToast';
 import { createService } from '../../api/services';
 import type { CreateServiceRequest } from '../../api/services';
 import { useNavigate } from 'react-router-dom';

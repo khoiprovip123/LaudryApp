@@ -61,7 +61,8 @@ const PermissionGroupCreate: React.FC = () => {
 			}
 		};
 		void loadPermissions();
-	}, [toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const update = <K extends keyof CreatePermissionGroupRequest>(k: K, v: CreatePermissionGroupRequest[K]) =>
 		setForm((s: CreatePermissionGroupRequest) => ({ ...s, [k]: v }));

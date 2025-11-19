@@ -15,7 +15,6 @@ import {
 	Th,
 	Thead,
 	Tr,
-	useToast,
 	Badge,
 	Text,
 	HStack,
@@ -32,23 +31,34 @@ import {
 	Textarea,
 	VStack,
 	useDisclosure,
+	Tabs,
+	TabList,
+	Tab,
 } from '@chakra-ui/react';
 import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { getOrders, deleteOrder } from '../../api/orders';
 import type { OrderDto } from '../../api/orders';
-import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabels } from '../../constants/orderStatus';
+import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabels, type OrderStatusType } from '../../constants/orderStatus';
 import { createPayment } from '../../api/payments';
 import { exportOrdersToExcel } from '../../api/export';
 import { FaFileExcel } from 'react-icons/fa';
+import SearchInput from '../../components/SearchInput';
+import { useToast } from '../../hooks/useToast';
 
 const OrdersList: React.FC = () => {
 	const [items, setItems] = useState<OrderDto[]>([]);
 	const [totalItems, setTotalItems] = useState(0);
 	const [offset, setOffset] = useState(0);
 	const [pageSize, setPageSize] = useState(10);
-	const keyword = ''; // TODO: Implement search input if needed
+	const [searchKeyword, setSearchKeyword] = useState<string>('');
 	const [statusFilter, setStatusFilter] = useState<string>('');
+	const [dateFrom, setDateFrom] = useState<string>(() => {
+		return new Date().toISOString().split('T')[0];
+	});
+	const [dateTo, setDateTo] = useState<string>(() => {
+		return new Date().toISOString().split('T')[0];
+	});
 	const [loading, setLoading] = useState(false);
 	const [selectedOrder, setSelectedOrder] = useState<OrderDto | null>(null);
 	const [creatingPayment, setCreatingPayment] = useState(false);
@@ -68,8 +78,10 @@ const OrdersList: React.FC = () => {
 			const res = await getOrders({ 
 				limit: pageSize, 
 				offset, 
-				search: keyword || undefined,
+				search: searchKeyword || undefined,
 				status: statusFilter || undefined,
+				dateFrom: dateFrom || undefined,
+				dateTo: dateTo || undefined,
 			});
 			setItems(res.items);
 			setTotalItems(res.totalItems);
@@ -83,7 +95,7 @@ const OrdersList: React.FC = () => {
 	useEffect(() => {
 		void load();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [offset, pageSize, statusFilter]);
+	}, [offset, pageSize, statusFilter, dateFrom, dateTo, searchKeyword]);
 
 	// Tính toán phân trang
 	const currentPage = Math.floor(offset / pageSize) + 1;
@@ -229,8 +241,10 @@ const OrdersList: React.FC = () => {
 			await exportOrdersToExcel({
 				limit: pageSize,
 				offset,
-				search: keyword || undefined,
+				search: searchKeyword || undefined,
 				status: statusFilter || undefined,
+				dateFrom: dateFrom || undefined,
+				dateTo: dateTo || undefined,
 			});
 			toast({
 				status: 'success',
@@ -272,31 +286,95 @@ const OrdersList: React.FC = () => {
 				<div className="bg-white w-full h-full rounded-md flex flex-col overflow-hidden">
 					{/* Filter Bar */}
 					<Box p={3} borderBottom="1px solid" borderColor="gray.200">
-						<HStack spacing={4}>
-							<Box>
-								<Text fontSize="sm" color="gray.600" mb={1}>
-									Lọc theo trạng thái
-								</Text>
-								<Select
-									value={statusFilter}
-									onChange={(e) => {
-										setStatusFilter(e.target.value);
-										setOffset(0); // Reset về trang đầu khi filter
-									}}
-									size="sm"
-									w="200px"
-									placeholder="Tất cả trạng thái"
-									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
-								>
-									<option value="">Tất cả trạng thái</option>
+						<VStack spacing={4} align="stretch">
+							{/* Tabs cho trạng thái */}
+							<Tabs 
+								index={statusFilter ? Object.values(OrderStatus).indexOf(statusFilter as OrderStatusType) + 1 : 0}
+								onChange={(index) => {
+									if (index === 0) {
+										setStatusFilter('');
+									} else {
+										setStatusFilter(Object.values(OrderStatus)[index - 1]);
+									}
+									setOffset(0);
+								}}
+								variant="enclosed"
+								colorScheme="blue"
+							>
+								<TabList>
+									<Tab>Tất cả</Tab>
 									{Object.values(OrderStatus).map((status) => (
-										<option key={status} value={status}>
-											{OrderStatusLabels[status]}
-										</option>
+										<Tab key={status}>{OrderStatusLabels[status]}</Tab>
 									))}
-								</Select>
-							</Box>
-						</HStack>
+								</TabList>
+							</Tabs>
+
+							{/* Search và Date Filter */}
+							<HStack spacing={4} flexWrap="wrap">
+								<Box flex="1" minW="200px">
+									<FormLabel fontSize="sm" color="gray.600">
+										Tìm kiếm (Tên khách hàng, Mã đơn)
+									</FormLabel>
+									<SearchInput
+										value={searchKeyword}
+										onChange={(value) => {
+											setSearchKeyword(value);
+											setOffset(0);
+										}}
+										placeholder="Nhập tên khách hàng hoặc mã đơn..."
+										debounceMs={300}
+									/>
+								</Box>
+								<Box>
+									<FormLabel fontSize="sm" color="gray.600">
+										Từ ngày
+									</FormLabel>
+									<Input
+										type="date"
+										size="sm"
+										value={dateFrom}
+										onChange={(e) => {
+											setDateFrom(e.target.value);
+											setOffset(0);
+										}}
+										w="150px"
+										_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+									/>
+								</Box>
+								<Box>
+									<FormLabel fontSize="sm" color="gray.600">
+										Đến ngày
+									</FormLabel>
+									<Input
+										type="date"
+										size="sm"
+										value={dateTo}
+										onChange={(e) => {
+											setDateTo(e.target.value);
+											setOffset(0);
+										}}
+										w="150px"
+										_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+									/>
+								</Box>
+								{(dateFrom || dateTo || searchKeyword) && (
+									<Button
+										size="sm"
+										variant="outline"
+										onClick={() => {
+											setDateFrom('');
+											setDateTo('');
+											setSearchKeyword('');
+											setOffset(0);
+										}}
+										mt={6}
+										_focus={{ boxShadow: 'none', outline: 'none' }}
+									>
+										Xóa bộ lọc
+									</Button>
+								)}
+							</HStack>
+						</VStack>
 					</Box>
 					{loading ? (
 						<Flex justify="center" align="center" className="h-full">

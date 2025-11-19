@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea, useToast } from '@chakra-ui/react';
+import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea } from '@chakra-ui/react';
+import { useToast } from '../../hooks/useToast';
 import { getServiceById, updateService } from '../../api/services';
 import type { UpdateServiceRequest } from '../../api/services';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -39,7 +40,8 @@ const ServiceEdit: React.FC = () => {
 				// Toast error đã được xử lý tự động bởi http wrapper
 			}
 		})();
-	}, [id, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	const update = <K extends keyof UpdateServiceRequest>(k: K, v: UpdateServiceRequest[K]) =>
 		setForm((s) => ({ ...s, [k]: v }));

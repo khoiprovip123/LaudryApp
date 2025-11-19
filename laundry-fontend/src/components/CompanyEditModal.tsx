@@ -15,8 +15,8 @@ import {
 	Stack,
 	HStack,
 	Switch,
-	useToast,
 } from '@chakra-ui/react';
+import { useToast } from '../hooks/useToast';
 import { getCompanyById, updateCompany } from '../api/companies';
 import type { UpdateCompanyRequest } from '../api/companies';
 
@@ -59,7 +59,8 @@ const CompanyEditModal: React.FC<Props> = ({ isOpen, onClose, companyId, onSucce
 				}
 			})();
 		}
-	}, [isOpen, companyId, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen, companyId]);
 
 	const update = <K extends keyof UpdateCompanyRequest>(k: K, v: UpdateCompanyRequest[K]) =>
 		setForm((s: UpdateCompanyRequest) => ({ ...s, [k]: v }));
@@ -123,7 +124,7 @@ const CompanyEditModal: React.FC<Props> = ({ isOpen, onClose, companyId, onSucce
 								</FormControl>
 							</HStack>
 							<FormControl display="flex" alignItems="center">
-								<FormLabel mb="0">Active</FormLabel>
+								<FormLabel mb="0">Hoạt động</FormLabel>
 								<Switch isChecked={form.active} onChange={(e: React.ChangeEvent<HTMLInputElement>) => update('active', e.target.checked)} />
 							</FormControl>
 						</Stack>

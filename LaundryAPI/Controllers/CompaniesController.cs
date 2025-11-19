@@ -62,5 +62,14 @@ namespace LaundryAPI.Controllers
             var res = await Mediator.Send(new DeleteCompanyCommand { Id = id });
             return Ok(res);
         }
+
+        [Uow]
+        [HttpDelete("{id}/data")]
+        [CheckAccess(Actions = Permissions.Orders_Update)]
+        public async Task<IActionResult> DeleteCompanyData(Guid id)
+        {
+            await Mediator.Send(new DeleteCompanyDataCommand { CompanyId = id });
+            return Ok(new { message = "Đã xóa tất cả dữ liệu của cửa hàng thành công." });
+        }
     }
 }

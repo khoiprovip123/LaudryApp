@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Spinner, useToast } from '@chakra-ui/react';
+import { Box, Button, Spinner } from '@chakra-ui/react';
+import { useToast } from '../hooks/useToast';
 import { getOrderPrint, type OrderPrintDto } from '../api/orders';
 import { FaPrint } from 'react-icons/fa';
 

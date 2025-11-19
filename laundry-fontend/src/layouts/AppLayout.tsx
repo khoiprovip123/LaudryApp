@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Box, Button, Flex, HStack, Link, Text, Menu, MenuButton, MenuList, MenuItem, Avatar, VStack, Divider, IconButton, useBreakpointValue, Collapse } from '@chakra-ui/react';
+import { Box, Button, Flex, HStack, Link, Text, Menu, MenuButton, MenuList, MenuItem, Avatar, VStack, Divider, IconButton, useBreakpointValue, Collapse, useDisclosure, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay } from '@chakra-ui/react';
 import { Link as RouterLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useToast } from '../hooks/useToast';
 import { useAuthStore } from '../store/auth';
 import { useAuth } from '../hooks/useAuth';
 import { Permissions } from '../constants/permissions';
+import { deleteCompanyData } from '../api/companies';
 import logo from '../assets/images/logo-vip-main.png';
 import { HamburgerIcon, CloseIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 // @ts-ignore - react-icons sẽ được cài đặt sau
-import { FaBuilding, FaUsers, FaSignOutAlt, FaUser, FaChevronDown, FaList, FaUserShield, FaShoppingCart, FaClipboardList, FaChartLine, FaFileAlt } from 'react-icons/fa';
+import { FaBuilding, FaUsers, FaSignOutAlt, FaUser, FaChevronDown, FaList, FaUserShield, FaShoppingCart, FaClipboardList, FaChartLine, FaFileAlt, FaTrash } from 'react-icons/fa';
 
 const AppLayout: React.FC = () => {
 	const navigate = useNavigate();
@@ -17,6 +19,10 @@ const AppLayout: React.FC = () => {
 	const { isSuperAdmin, hasPermission } = useAuth();
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+	const { isOpen: isDeleteDialogOpen, onOpen: onDeleteDialogOpen, onClose: onDeleteDialogClose } = useDisclosure();
+	const [isDeleting, setIsDeleting] = useState(false);
+	const cancelRef = React.useRef<HTMLButtonElement>(null);
+	const toast = useToast();
 
 	// Kiểm tra route active
 	const isDashboardActive = location.pathname === '/dashboard' || location.pathname === '/';
@@ -47,6 +53,39 @@ const AppLayout: React.FC = () => {
 		// Đóng menu khi click vào link trên mobile
 		if (isMobile) {
 			setIsMenuOpen(false);
+		}
+	};
+
+	const handleDeleteCompanyData = async () => {
+		if (!userInfo?.companyId) {
+			toast({
+				title: 'Lỗi',
+				description: 'Không tìm thấy thông tin cửa hàng',
+				status: 'error',
+			});
+			return;
+		}
+
+		setIsDeleting(true);
+		try {
+			await deleteCompanyData(userInfo.companyId);
+			toast({
+				title: 'Thành công',
+				description: 'Đã xóa tất cả dữ liệu của cửa hàng thành công',
+				status: 'success',
+				duration: 3000,
+			});
+			onDeleteDialogClose();
+			// Reload trang để refresh dữ liệu
+			window.location.reload();
+		} catch (error: any) {
+			toast({
+				title: 'Lỗi',
+				description: error.response?.data?.message || 'Không thể xóa dữ liệu',
+				status: 'error',
+			});
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
@@ -115,7 +154,7 @@ const AppLayout: React.FC = () => {
 							<Box flexShrink={0}>
 								<FaChartLine size={18} />
 							</Box>
-							<div className="truncate">Dashboard</div>
+							<div className="truncate">Tổng quan</div>
 						</Link>
 					)}
 					{/* Menu Cửa hàng - chỉ hiện cho SuperAdmin */}
@@ -423,6 +462,21 @@ const AppLayout: React.FC = () => {
 									</VStack>
 								</Box>
 								<Divider />
+								{userInfo?.companyId && !isSuperAdmin && (
+									<>
+										<MenuItem
+											icon={<FaTrash />}
+											onClick={onDeleteDialogOpen}
+											color="red.500"
+											_hover={{ bg: 'red.50' }}
+											_focus={{ bg: 'red.50', boxShadow: 'none', outline: 'none' }}
+											_active={{ bg: 'red.100' }}
+										>
+											Xóa tất cả dữ liệu cửa hàng
+										</MenuItem>
+										<Divider />
+									</>
+								)}
 								<MenuItem
 									icon={<FaSignOutAlt />}
 									onClick={handleLogout}
@@ -436,6 +490,59 @@ const AppLayout: React.FC = () => {
 							</MenuList>
 						</Menu>
 					)}
+
+					{/* Confirmation Dialog */}
+					<AlertDialog
+						isOpen={isDeleteDialogOpen}
+						leastDestructiveRef={cancelRef}
+						onClose={onDeleteDialogClose}
+					>
+						<AlertDialogOverlay>
+							<AlertDialogContent>
+								<AlertDialogHeader fontSize="lg" fontWeight="bold">
+									Xác nhận xóa dữ liệu
+								</AlertDialogHeader>
+
+								<AlertDialogBody>
+									<Text mb={2}>
+										Bạn có chắc chắn muốn xóa <strong>TẤT CẢ</strong> dữ liệu của cửa hàng này?
+									</Text>
+									<Text fontSize="sm" color="red.600" fontWeight="bold" mb={2}>
+										Hành động này không thể hoàn tác!
+									</Text>
+									<Text fontSize="sm" color="gray.600">
+										Dữ liệu sẽ bị xóa bao gồm:
+									</Text>
+									<Box as="ul" fontSize="sm" color="gray.600" pl={4} mt={2}>
+										<li>Đơn hàng và chi tiết đơn hàng</li>
+										<li>Thanh toán</li>
+										<li>Khách hàng</li>
+										<li>Dịch vụ</li>
+										<li>Template in</li>
+										<li>Nhóm quyền</li>
+									</Box>
+									<Text fontSize="sm" color="green.600" fontWeight="semibold" mt={2}>
+										Giữ lại: Cửa hàng và tài khoản đăng nhập
+									</Text>
+								</AlertDialogBody>
+
+								<AlertDialogFooter>
+									<Button ref={cancelRef} onClick={onDeleteDialogClose} isDisabled={isDeleting}>
+										Hủy
+									</Button>
+									<Button
+										colorScheme="red"
+										onClick={handleDeleteCompanyData}
+										ml={3}
+										isLoading={isDeleting}
+										loadingText="Đang xóa..."
+									>
+										Xóa dữ liệu
+									</Button>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialogOverlay>
+					</AlertDialog>
 				</div>
 				<Box as="main" className='h-full' overflow="auto">
 					<Outlet />

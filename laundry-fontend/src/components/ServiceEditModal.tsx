@@ -16,9 +16,9 @@ import {
 	Stack,
 	Switch,
 	Textarea,
-	useToast,
 	Box,
 } from '@chakra-ui/react';
+import { useToast } from '../hooks/useToast';
 import { getServiceById, updateService } from '../api/services';
 import type { UpdateServiceRequest } from '../api/services';
 import { numberToWords } from '../utils/numberToWords';
@@ -60,7 +60,8 @@ const ServiceEditModal: React.FC<Props> = ({ isOpen, onClose, serviceId, onSucce
 				}
 			})();
 		}
-	}, [isOpen, serviceId, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen, serviceId]);
 
 	const update = <K extends keyof UpdateServiceRequest>(k: K, v: UpdateServiceRequest[K]) =>
 		setForm((s) => ({ ...s, [k]: v }));
@@ -118,7 +119,7 @@ const ServiceEditModal: React.FC<Props> = ({ isOpen, onClose, serviceId, onSucce
 								<Textarea value={form.description} onChange={(e) => update('description', e.target.value)} rows={4} />
 							</FormControl>
 							<FormControl display="flex" alignItems="center">
-								<FormLabel mb="0">Active</FormLabel>
+								<FormLabel mb="0">Hoạt động</FormLabel>
 								<Switch isChecked={form.active} onChange={(e) => update('active', e.target.checked)} />
 							</FormControl>
 						</Stack>

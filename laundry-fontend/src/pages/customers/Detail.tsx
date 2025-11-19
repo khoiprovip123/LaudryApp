@@ -62,7 +62,8 @@ const CustomerDetail: React.FC = () => {
 		};
 
 		void loadCustomer();
-	}, [id, toast, navigate]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	useEffect(() => {
 		const loadOrders = async () => {

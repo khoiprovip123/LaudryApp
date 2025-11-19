@@ -14,8 +14,8 @@ import {
 	Input,
 	Stack,
 	Switch,
-	useToast,
 } from '@chakra-ui/react';
+import { useToast } from '../hooks/useToast';
 import { getEmployeeById, updateEmployee } from '../api/employees';
 import type { UpdateEmployeeRequest } from '../api/employees';
 
@@ -52,7 +52,8 @@ const EmployeeEditModal: React.FC<Props> = ({ isOpen, onClose, employeeId, onSuc
 				}
 			})();
 		}
-	}, [isOpen, employeeId, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen, employeeId]);
 
 	const update = <K extends keyof UpdateEmployeeRequest>(k: K, v: UpdateEmployeeRequest[K]) =>
 		setForm((s) => ({ ...s, [k]: v }));

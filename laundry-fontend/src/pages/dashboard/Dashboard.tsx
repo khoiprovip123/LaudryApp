@@ -78,7 +78,7 @@ const Dashboard: React.FC = () => {
 			<Box className="bg-white rounded-md p-4 mb-4">
 				<Flex justify="space-between" align="center">
 					<Heading size="lg" color="gray.800">
-						Dashboard
+						Tổng quan
 					</Heading>
 					<Button
 						colorScheme="blue"
@@ -266,7 +266,7 @@ const Dashboard: React.FC = () => {
 									formatter={(value: number) => formatCurrency(value)}
 									labelFormatter={(value) => new Date(value).toLocaleDateString('vi-VN')}
 								/>
-								<Line type="monotone" dataKey="revenue" stroke="#3182CE" strokeWidth={2} />
+								<Line type="monotone" dataKey="revenue" stroke="#3182CE" strokeWidth={2} name="Doanh thu" />
 							</LineChart>
 						</ResponsiveContainer>
 					</CardBody>

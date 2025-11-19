@@ -16,9 +16,9 @@ import {
 	Stack,
 	Switch,
 	Textarea,
-	useToast,
 	Box,
 } from '@chakra-ui/react';
+import { useToast } from '../hooks/useToast';
 import { createService } from '../api/services';
 import type { CreateServiceRequest } from '../api/services';
 import { numberToWords } from '../utils/numberToWords';
@@ -98,7 +98,7 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 								<Textarea value={form.description} onChange={(e) => update('description', e.target.value)} rows={4} />
 							</FormControl>
 							<FormControl display="flex" alignItems="center">
-								<FormLabel mb="0">Active</FormLabel>
+								<FormLabel mb="0">Hoạt động</FormLabel>
 								<Switch isChecked={form.active} onChange={(e) => update('active', e.target.checked)} />
 							</FormControl>
 						</Stack>

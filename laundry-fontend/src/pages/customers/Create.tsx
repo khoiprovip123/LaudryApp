@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, useToast } from '@chakra-ui/react';
+import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch } from '@chakra-ui/react';
+import { useToast } from '../../hooks/useToast';
 import { createCustomer } from '../../api/customers';
 import type { CreateCustomerRequest } from '../../api/customers';
 import { useNavigate } from 'react-router-dom';

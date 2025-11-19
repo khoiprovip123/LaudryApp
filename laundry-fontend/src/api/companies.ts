@@ -33,7 +33,6 @@ export type CreateCompanyRequest = {
 	active: boolean;
 	isActive: boolean;
 };
-
 export type UpdateCompanyRequest = {
 	id: string;
 	companyName: string;
@@ -68,4 +67,6 @@ export const deleteCompany = async (id: string) => {
 	await http.delete(`/companies/${id}`);
 };
 
-
+export const deleteCompanyData = async (companyId: string): Promise<void> => {
+	await http.delete(`/companies/${companyId}/data`);
+};

@@ -236,7 +236,7 @@ const Reports: React.FC = () => {
 											formatter={(value: number) => formatCurrency(value)}
 											labelFormatter={(value) => new Date(value).toLocaleDateString('vi-VN')}
 										/>
-										<Bar dataKey="revenue" fill="#3182CE" />
+										<Bar dataKey="revenue" fill="#3182CE" name="Doanh thu" />
 									</BarChart>
 								</ResponsiveContainer>
 							</CardBody>

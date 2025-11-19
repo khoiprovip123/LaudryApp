@@ -1,5 +1,5 @@
-import { useToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
+import { useToast } from './useToast';
 import { parseError, formatErrorMessage, formatErrorWithCode } from '../utils/errorHandler';
 
 /**
@@ -35,7 +35,6 @@ export function useErrorHandler() {
 					status: 'error',
 					duration: 5000,
 					isClosable: true,
-					position: 'top-right',
 				});
 			}
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, useToast } from '@chakra-ui/react';
+import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch } from '@chakra-ui/react';
+import { useToast } from '../../hooks/useToast';
 import { getCustomerById, updateCustomer } from '../../api/customers';
 import type { UpdateCustomerRequest } from '../../api/customers';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -35,7 +36,8 @@ const CustomerEdit: React.FC = () => {
 				// Toast error đã được xử lý tự động bởi http wrapper
 			}
 		})();
-	}, [id, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	const update = <K extends keyof UpdateCustomerRequest>(k: K, v: UpdateCustomerRequest[K]) =>
 		setForm((s) => ({ ...s, [k]: v }));

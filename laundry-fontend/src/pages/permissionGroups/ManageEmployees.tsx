@@ -66,7 +66,8 @@ const ManageEmployees: React.FC = () => {
 			}
 		};
 		void loadData();
-	}, [id, navigate, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	const loadAllEmployees = async () => {
 		try {

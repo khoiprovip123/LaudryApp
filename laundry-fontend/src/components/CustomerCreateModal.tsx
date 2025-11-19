@@ -12,9 +12,9 @@ import {
 	FormLabel,
 	Input,
 	Stack,
-	useToast,
 	Box,
 } from '@chakra-ui/react';
+import { useToast } from '../hooks/useToast';
 import { createCustomer } from '../api/customers';
 import type { CreateCustomerRequest } from '../api/customers';
 import AddressAutocomplete, { type AddressSuggestion } from './AddressAutocomplete';

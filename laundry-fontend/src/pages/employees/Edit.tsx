@@ -50,7 +50,8 @@ const EmployeeEdit: React.FC = () => {
 			}
 		};
 		void loadData();
-	}, [id, navigate, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	const update = <K extends keyof UpdateEmployeeRequest>(k: K, v: UpdateEmployeeRequest[K]) =>
 		setForm((s: UpdateEmployeeRequest) => ({ ...s, [k]: v }));

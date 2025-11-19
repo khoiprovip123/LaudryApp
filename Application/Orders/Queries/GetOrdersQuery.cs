@@ -65,17 +65,18 @@ namespace Application.Orders.Queries
                 orders = orders.Where(o => o.Status == request.Status);
             }
 
-            // Lọc theo DateFrom
+            // Lọc theo DateFrom (từ đầu ngày)
             if (request.DateFrom.HasValue)
             {
-                orders = orders.Where(o => o.DateCreated >= request.DateFrom.Value);
+                var dateFrom = request.DateFrom.Value.Date;
+                orders = orders.Where(o => o.DateCreated >= dateFrom);
             }
 
-            // Lọc theo DateTo
+            // Lọc theo DateTo (đến cuối ngày - bao gồm cả ngày đó)
             if (request.DateTo.HasValue)
             {
-                var dateTo = request.DateTo.Value.Date.AddDays(1);
-                orders = orders.Where(o => o.DateCreated < dateTo);
+                var dateToEnd = request.DateTo.Value.Date.AddDays(1);
+                orders = orders.Where(o => o.DateCreated < dateToEnd);
             }
 
             // Tìm kiếm theo Code hoặc Partner Name

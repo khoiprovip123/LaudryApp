@@ -14,8 +14,8 @@ import {
 	Input,
 	Stack,
 	Switch,
-	useToast,
 } from '@chakra-ui/react';
+import { useToast } from '../hooks/useToast';
 import { getCustomerById, updateCustomer } from '../api/customers';
 import type { UpdateCustomerRequest } from '../api/customers';
 
@@ -56,7 +56,8 @@ const CustomerEditModal: React.FC<Props> = ({ isOpen, onClose, customerId, onSuc
 				}
 			})();
 		}
-	}, [isOpen, customerId, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen, customerId]);
 
 	const update = <K extends keyof UpdateCustomerRequest>(k: K, v: UpdateCustomerRequest[K]) =>
 		setForm((s) => ({ ...s, [k]: v }));
@@ -111,7 +112,7 @@ const CustomerEditModal: React.FC<Props> = ({ isOpen, onClose, customerId, onSuc
 								<Input value={form.address ?? ''} onChange={(e) => update('address', e.target.value)} />
 							</FormControl>
 							<FormControl display="flex" alignItems="center">
-								<FormLabel mb="0">Active</FormLabel>
+								<FormLabel mb="0">Hoạt động</FormLabel>
 								<Switch isChecked={form.active} onChange={(e) => update('active', e.target.checked)} />
 							</FormControl>
 						</Stack>

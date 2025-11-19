@@ -6,9 +6,6 @@ import {
 	Flex,
 	Heading,
 	IconButton,
-	Input,
-	InputGroup,
-	InputLeftElement,
 	Select,
 	Spinner,
 	Table,
@@ -18,14 +15,15 @@ import {
 	Th,
 	Thead,
 	Tr,
-	useToast,
 	Badge,
 } from '@chakra-ui/react';
-import { AddIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from '@chakra-ui/icons';
+import { useToast } from '../../hooks/useToast';
+import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { deleteService, getServices } from '../../api/services';
 import type { ServiceDto } from '../../api/services';
 import ServiceCreateModal from '../../components/ServiceCreateModal';
 import ServiceEditModal from '../../components/ServiceEditModal';
+import SearchInput from '../../components/SearchInput';
 
 const ServicesList: React.FC = () => {
 	const [items, setItems] = useState<ServiceDto[]>([]);
@@ -54,7 +52,7 @@ const ServicesList: React.FC = () => {
 	useEffect(() => {
 		void load();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [offset, pageSize]);
+	}, [offset, pageSize, keyword]);
 
 	// Tính toán phân trang
 	const currentPage = Math.floor(offset / pageSize) + 1;
@@ -124,22 +122,19 @@ const ServicesList: React.FC = () => {
 
 			<div className="p-2 flex-1 w-full overflow-hidden flex flex-col">
 				<div className="bg-white w-full h-full rounded-md flex flex-col overflow-hidden">
-					<InputGroup size="sm" mb={2} px={2} pt={2}>
-						<InputLeftElement pointerEvents="none">
-							<SearchIcon color="gray.400" />
-						</InputLeftElement>
-						<Input
-							placeholder="Tìm theo tên/Mã/Mô tả..."
-							value={keyword}
-							onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKeyword(e.target.value)}
-							onKeyDown={(e) => {
-								if (e.key === 'Enter') {
+					<div className="flex justify-end gap-2 p-2">
+						<div className="max-w-[550px] min-w-[300px]">
+							<SearchInput
+								value={keyword}
+								onChange={(value) => {
+									setKeyword(value);
 									setOffset(0);
-									void load();
-								}
-							}}
-						/>
-					</InputGroup>
+								}}
+								placeholder="Tìm theo tên/Mã/Mô tả..."
+								debounceMs={300}
+							/>
+						</div>
+					</div>
 
 					{loading ? (
 						<Flex justify="center" align="center" className="h-full">

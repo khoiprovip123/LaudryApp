@@ -77,7 +77,8 @@ const PermissionGroupEdit: React.FC = () => {
 			}
 		};
 		void loadData();
-	}, [id, navigate, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [id]);
 
 	const update = <K extends keyof UpdatePermissionGroupRequest>(k: K, v: UpdatePermissionGroupRequest[K]) =>
 		setForm((s: UpdatePermissionGroupRequest) => ({ ...s, [k]: v }));
