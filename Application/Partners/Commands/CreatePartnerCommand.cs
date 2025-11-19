@@ -57,11 +57,26 @@ namespace Application.Partners.Commands
 
 			var partnerRef = await _sequenceService.GetNextRefAsync("Customer", companyId, cancellationToken);
 
+			// Tự động lấy 3 số cuối từ Phone nếu PhoneLastThreeDigits chưa được cung cấp
+			var phoneLastThreeDigits = request.PhoneLastThreeDigits;
+			if (string.IsNullOrEmpty(phoneLastThreeDigits) && !string.IsNullOrEmpty(request.Phone))
+			{
+				var digitsOnly = System.Text.RegularExpressions.Regex.Matches(request.Phone, @"\d+");
+				if (digitsOnly.Count > 0)
+				{
+					var lastMatch = digitsOnly[digitsOnly.Count - 1];
+					if (lastMatch.Value.Length >= 3)
+						phoneLastThreeDigits = lastMatch.Value.Substring(lastMatch.Value.Length - 3);
+					else if (lastMatch.Value.Length > 0)
+						phoneLastThreeDigits = lastMatch.Value;
+				}
+			}
+
 			var partner = new Partner
 			{
 				Name = request.Name,
 				Phone = request.Phone,
-                PhoneLastThreeDigits = request.PhoneLastThreeDigits,
+                PhoneLastThreeDigits = phoneLastThreeDigits,
                 Notes = request.Notes,
 				Address = request.Address,
 				CityCode = request.CityCode,

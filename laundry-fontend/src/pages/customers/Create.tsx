@@ -20,6 +20,34 @@ const CustomerCreate: React.FC = () => {
 	const update = <K extends keyof CreateCustomerRequest>(k: K, v: CreateCustomerRequest[K]) =>
 		setForm((s) => ({ ...s, [k]: v }));
 
+	// Hàm tự động lấy 3 số cuối từ số điện thoại
+	const extractLastThreeDigits = (phone: string): string => {
+		if (!phone) return '';
+		// Tìm tất cả các chuỗi số trong phone
+		const digitsOnly = phone.match(/\d+/g);
+		if (digitsOnly && digitsOnly.length > 0) {
+			const lastMatch = digitsOnly[digitsOnly.length - 1];
+			if (lastMatch.length >= 3) {
+				return lastMatch.substring(lastMatch.length - 3);
+			} else if (lastMatch.length > 0) {
+				return lastMatch;
+			}
+		}
+		return '';
+	};
+
+	// Xử lý khi thay đổi số điện thoại
+	const handlePhoneChange = (value: string) => {
+		update('phone', value);
+		// Nếu chưa có phoneLastThreeDigits hoặc đang rỗng, tự động điền từ phone
+		if (!form.phoneLastThreeDigits || form.phoneLastThreeDigits === '') {
+			const lastThree = extractLastThreeDigits(value);
+			if (lastThree) {
+				update('phoneLastThreeDigits', lastThree);
+			}
+		}
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
@@ -50,7 +78,11 @@ const CustomerCreate: React.FC = () => {
 							</FormControl>
 							<FormControl isRequired>
 								<FormLabel>SĐT</FormLabel>
-								<Input value={form.phone} onChange={(e) => update('phone', e.target.value)} />
+								<Input 
+									value={form.phone} 
+									onChange={(e) => handlePhoneChange(e.target.value)} 
+									placeholder="VD: 0123456789"
+								/>
 							</FormControl>
 							<FormControl>
 								<FormLabel>3 số cuối SĐT (để tìm kiếm nhanh)</FormLabel>
@@ -62,7 +94,8 @@ const CustomerCreate: React.FC = () => {
 										update('phoneLastThreeDigits', value);
 									}}
 									maxLength={3}
-									placeholder="VD: 678"
+									placeholder="Tự động điền từ SĐT hoặc nhập thủ công"
+									disabled={!!form.phone && extractLastThreeDigits(form.phone) === form.phoneLastThreeDigits}
 								/>
 							</FormControl>
 							<FormControl>

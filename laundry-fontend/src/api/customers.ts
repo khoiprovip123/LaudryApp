@@ -4,6 +4,7 @@ export type CustomerDto = {
 	id: string;
 	name: string;
 	ref: string;
+	displayName?: string | null;
 	phone: string;
 	phoneLastThreeDigits?: string | null;
 	address?: string | null;

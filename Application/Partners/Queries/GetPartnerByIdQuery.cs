@@ -1,6 +1,7 @@
 using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
+using System.Text.RegularExpressions;
 
 namespace Application.Partners.Queries
 {
@@ -18,6 +19,47 @@ namespace Application.Partners.Queries
 		{
 			_partnerService = partnerService;
 			_workContext = workContext;
+		}
+		
+		private static string BuildDisplayName(string? refCode, string? name, string? phoneLastThreeDigits, string? phone)
+		{
+			// Format: [mã]tên-3 số cuối
+			var result = string.Empty;
+			
+			// Thêm mã (Ref) trong ngoặc vuông nếu có
+			if (!string.IsNullOrEmpty(refCode))
+			{
+				result = "[" + refCode + "]";
+			}
+			
+			// Thêm tên (không có khoảng trắng sau ngoặc vuông)
+			if (!string.IsNullOrEmpty(name))
+			{
+				result += name;
+			}
+			
+			// Thêm 3 số cuối số điện thoại
+			string? phoneLastThree = phoneLastThreeDigits;
+			if (string.IsNullOrEmpty(phoneLastThree) && !string.IsNullOrEmpty(phone))
+			{
+				// Lấy 3 số cuối từ Phone
+				var digitsOnly = Regex.Matches(phone, @"\d+");
+				if (digitsOnly.Count > 0)
+				{
+					var lastMatch = digitsOnly[digitsOnly.Count - 1];
+					if (lastMatch.Value.Length >= 3)
+						phoneLastThree = lastMatch.Value.Substring(lastMatch.Value.Length - 3);
+					else if (lastMatch.Value.Length > 0)
+						phoneLastThree = lastMatch.Value;
+				}
+			}
+			
+			if (!string.IsNullOrEmpty(phoneLastThree))
+			{
+				result += "-" + phoneLastThree;
+			}
+			
+			return result;
 		}
 
 		public async Task<PartnerDto> Handle(GetPartnerByIdQuery request, CancellationToken cancellationToken)
@@ -40,10 +82,12 @@ namespace Application.Partners.Queries
 				Id = partner.Id,
 				Name = partner.Name,
 				Ref = partner.Ref,
+				DisplayName = BuildDisplayName(partner.Ref, partner.Name, partner.PhoneLastThreeDigits, partner.Phone),
 				NameNoSign = partner.NameNoSign,
 				IsCustomer = partner.IsCustomer,
 				IsCompany = partner.IsCompany,
 				Phone = partner.Phone,
+				PhoneLastThreeDigits = partner.PhoneLastThreeDigits,
 				Notes = partner.Notes,
 				Address = partner.Address,
 				CityCode = partner.CityCode,

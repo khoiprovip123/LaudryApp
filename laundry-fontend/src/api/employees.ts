@@ -17,6 +17,7 @@ export type GetEmployeesQuery = {
 	limit?: number;
 	offset?: number;
 	companyId?: string;
+	search?: string;
 };
 
 export type CreateEmployeeRequest = {

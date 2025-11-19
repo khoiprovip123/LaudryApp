@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, NumberInput, NumberInputField, Stack, Switch, Textarea, useToast } from '@chakra-ui/react';
+import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea, useToast } from '@chakra-ui/react';
 import { createService } from '../../api/services';
 import type { CreateServiceRequest } from '../../api/services';
 import { useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { formatCurrencyInput, parseCurrencyInput } from '../../utils/currencyFormat';
 
 const ServiceCreate: React.FC = () => {
 	const [form, setForm] = useState<CreateServiceRequest>({
@@ -13,6 +14,7 @@ const ServiceCreate: React.FC = () => {
 		defaultCode: '',
 		active: true,
 	});
+	const [unitPriceDisplay, setUnitPriceDisplay] = useState<string>('');
 	const [loading, setLoading] = useState(false);
 	const toast = useToast();
 	const navigate = useNavigate();
@@ -20,6 +22,18 @@ const ServiceCreate: React.FC = () => {
 
 	const update = <K extends keyof CreateServiceRequest>(k: K, v: CreateServiceRequest[K]) =>
 		setForm((s) => ({ ...s, [k]: v }));
+
+	const handleUnitPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		
+		// Format hiển thị với dấu chấm
+		const formatted = formatCurrencyInput(value);
+		setUnitPriceDisplay(formatted);
+		
+		// Parse về số để lưu vào form
+		const parsed = parseCurrencyInput(value);
+		update('unitPrice', parsed);
+	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -60,15 +74,14 @@ const ServiceCreate: React.FC = () => {
 								<Input value={form.defaultCode} onChange={(e) => update('defaultCode', e.target.value)} />
 							</FormControl>
 							<FormControl isRequired>
-								<FormLabel>Đơn giá</FormLabel>
-								<NumberInput
-									value={form.unitPrice}
-									onChange={(_, value) => update('unitPrice', isNaN(value) ? 0 : value)}
-									min={0}
-									precision={2}
-								>
-									<NumberInputField />
-								</NumberInput>
+								<FormLabel>Đơn giá (VND)</FormLabel>
+								<Input
+									value={unitPriceDisplay}
+									onChange={handleUnitPriceChange}
+									placeholder="VD: 1.000.000"
+									type="text"
+									inputMode="numeric"
+								/>
 							</FormControl>
 							<FormControl>
 								<FormLabel>Mô tả</FormLabel>

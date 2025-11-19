@@ -8,6 +8,7 @@ namespace Application.Services.Commands
 		public Guid Id { get; set; }
 		public string Name { get; set; } = string.Empty;
 		public decimal UnitPrice { get; set; }
+		public string UnitOfMeasure { get; set; } = "kg";
 		public string? Description { get; set; }
 		public bool Active { get; set; } = true;
 	}
@@ -27,6 +28,7 @@ namespace Application.Services.Commands
 
 			service.Name = request.Name;
 			service.UnitPrice = request.UnitPrice;
+			service.UnitOfMeasure = request.UnitOfMeasure ?? "kg";
 			service.Description = request.Description ?? string.Empty;
 			// Không cho phép sửa mã dịch vụ - giữ nguyên mã cũ
 			// service.DefaultCode = request.DefaultCode ?? string.Empty;

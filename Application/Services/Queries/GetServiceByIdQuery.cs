@@ -41,6 +41,7 @@ namespace Application.Services.Queries
 				Id = service.Id,
 				Name = service.Name,
 				UnitPrice = service.UnitPrice,
+				UnitOfMeasure = service.UnitOfMeasure,
 				Description = service.Description,
 				DefaultCode = service.DefaultCode,
 				Active = service.Active

@@ -7,8 +7,8 @@ namespace Application.Partners.Commands
 	public class UpdatePartnerCommand : IRequest<Unit>
 	{
 		public Guid Id { get; set; }
-		public string Name { get; set; }
-		public string Phone { get; set; }
+		public required string Name { get; set; }
+		public required string Phone { get; set; }
         public string? PhoneLastThreeDigits { get; set; }
         public string? Notes { get; set; }
 		public string? Address { get; set; }
@@ -36,7 +36,23 @@ namespace Application.Partners.Commands
 
             partner.Name = request.Name ?? string.Empty;
             partner.Phone = request.Phone ?? string.Empty;
-            partner.PhoneLastThreeDigits = request.PhoneLastThreeDigits;
+            
+            // Tự động lấy 3 số cuối từ Phone nếu PhoneLastThreeDigits chưa được cung cấp
+            var phoneLastThreeDigits = request.PhoneLastThreeDigits;
+            if (string.IsNullOrEmpty(phoneLastThreeDigits) && !string.IsNullOrEmpty(request.Phone))
+            {
+                var digitsOnly = System.Text.RegularExpressions.Regex.Matches(request.Phone, @"\d+");
+                if (digitsOnly.Count > 0)
+                {
+                    var lastMatch = digitsOnly[digitsOnly.Count - 1];
+                    if (lastMatch.Value.Length >= 3)
+                        phoneLastThreeDigits = lastMatch.Value.Substring(lastMatch.Value.Length - 3);
+                    else if (lastMatch.Value.Length > 0)
+                        phoneLastThreeDigits = lastMatch.Value;
+                }
+            }
+            
+            partner.PhoneLastThreeDigits = phoneLastThreeDigits;
             partner.Notes = request.Notes;
 			partner.Address = request.Address;
 			partner.CityCode = request.CityCode;

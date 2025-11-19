@@ -10,6 +10,7 @@ namespace Domain.Entity
     {
         public string Name { get; set; }
         public decimal UnitPrice { get; set; }
+        public string UnitOfMeasure { get; set; } = "kg"; // Đơn vị tính: kg, cái, bộ, v.v.
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
         public bool Active { get; set; }

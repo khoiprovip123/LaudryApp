@@ -31,14 +31,19 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { getCustomerById } from '../../api/customers';
 import type { CustomerDto } from '../../api/customers';
+import { getOrders } from '../../api/orders';
+import type { OrderDto } from '../../api/orders';
 import Breadcrumb from '../../components/Breadcrumb';
 import { EditIcon, AddIcon, SearchIcon } from '@chakra-ui/icons';
+import { getOrderStatusLabel, getOrderStatusColor } from '../../constants/orderStatus';
 
 const CustomerDetail: React.FC = () => {
 	const params = useParams<{ id: string }>();
 	const id = params.id!;
 	const [customer, setCustomer] = useState<CustomerDto | null>(null);
+	const [orders, setOrders] = useState<OrderDto[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [loadingOrders, setLoadingOrders] = useState(false);
 	const toast = useToast();
 	const navigate = useNavigate();
 
@@ -59,6 +64,28 @@ const CustomerDetail: React.FC = () => {
 		void loadCustomer();
 	}, [id, toast, navigate]);
 
+	useEffect(() => {
+		const loadOrders = async () => {
+			if (!id) return;
+			
+			setLoadingOrders(true);
+			try {
+				const result = await getOrders({
+					partnerId: id,
+					limit: 1000, // Lấy tất cả đơn hàng của khách hàng
+					offset: 0,
+				});
+				setOrders(result.items);
+			} catch (err: any) {
+				// Toast error đã được xử lý tự động bởi http wrapper
+			} finally {
+				setLoadingOrders(false);
+			}
+		};
+
+		void loadOrders();
+	}, [id]);
+
 	if (loading) {
 		return (
 			<Box className="flex flex-col h-full w-full">
@@ -75,15 +102,14 @@ const CustomerDetail: React.FC = () => {
 
 	const breadcrumbItems = [
 		{ label: 'Khách hàng', to: '/customers' },
-		{ label: `[${customer.ref}] ${customer.name}`, to: undefined },
+		{ label: customer.displayName || `[${customer.ref}] ${customer.name}`, to: undefined },
 	];
 
-	// Mock data - sẽ được thay thế bằng API thực tế
-	const totalOrders = 0;
-	const totalRevenue = 0;
-	const totalDebt = 0;
-	const totalAdvance = 0;
-	const orders: any[] = [];
+	// Tính toán thống kê từ dữ liệu đơn hàng thực tế
+	const totalOrders = orders.length;
+	const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+	const totalDebt = orders.reduce((sum, order) => sum + order.remainingAmount, 0);
+	const totalAdvance = 0; // TODO: Tính từ Payment khi có API Payment
 
 	const formatCurrency = (amount: number) => {
 		return new Intl.NumberFormat('vi-VN', {
@@ -100,7 +126,7 @@ const CustomerDetail: React.FC = () => {
 					<VStack align="start" spacing={1}>
 						<Breadcrumb items={breadcrumbItems} />
 						<Heading size="md" color="gray.800">
-							Thông tin khách hàng [{customer.ref}] {customer.name}
+							Thông tin khách hàng {customer.displayName || `[${customer.ref}] ${customer.name}`}
 						</Heading>
 					</VStack>
 					<HStack spacing={2}>
@@ -141,7 +167,7 @@ const CustomerDetail: React.FC = () => {
 								<VStack align="start" spacing={2} flex="1">
 									<HStack>
 										<Text fontWeight="bold" fontSize="lg">
-											[{customer.ref}] {customer.name}
+											{customer.displayName || `[${customer.ref}] ${customer.name}`}
 										</Text>
 										<Badge colorScheme={customer.active ? 'green' : 'red'} fontSize="xs">
 											{customer.active ? 'Hoạt động' : 'Không hoạt động'}
@@ -235,7 +261,11 @@ const CustomerDetail: React.FC = () => {
 								</Flex>
 								<TabPanels>
 									<TabPanel px={0}>
-										{orders.length === 0 ? (
+										{loadingOrders ? (
+											<Flex justify="center" align="center" py={8}>
+												<Spinner />
+											</Flex>
+										) : orders.length === 0 ? (
 											<Box textAlign="center" py={8} color="gray.500">
 												<Text>Chưa có đơn hàng nào</Text>
 											</Box>
@@ -246,10 +276,9 @@ const CustomerDetail: React.FC = () => {
 														<Tr>
 															<Th>Ngày</Th>
 															<Th>Mã đơn</Th>
-															<Th>Dịch vụ</Th>
-															<Th>Số lượng</Th>
-															<Th>Thành tiền</Th>
-															<Th>Thanh toán</Th>
+															<Th>Số dịch vụ</Th>
+															<Th>Tổng tiền</Th>
+															<Th>Đã thanh toán</Th>
 															<Th>Còn lại</Th>
 															<Th>Trạng thái</Th>
 															<Th>Hành động</Th>
@@ -258,22 +287,38 @@ const CustomerDetail: React.FC = () => {
 													<Tbody>
 														{orders.map((order) => (
 															<Tr key={order.id}>
-																<Td>{new Date(order.dateCreated).toLocaleDateString('vi-VN')}</Td>
-																<Td>{order.code}</Td>
-																<Td>{order.serviceName}</Td>
-																<Td>{order.quantity}</Td>
-																<Td>{formatCurrency(order.totalPrice)}</Td>
-																<Td>{formatCurrency(order.paidAmount || 0)}</Td>
-																<Td>{formatCurrency(order.remainingAmount || 0)}</Td>
+																<Td>{new Date(order.dateCreated).toLocaleDateString('vi-VN', {
+																	year: 'numeric',
+																	month: '2-digit',
+																	day: '2-digit',
+																})}</Td>
 																<Td>
-																	<Badge colorScheme={order.status === 'completed' ? 'green' : 'yellow'}>
-																		{order.status}
+																	<Button
+																		variant="link"
+																		colorScheme="blue"
+																		onClick={() => navigate(`/orders/${order.id}`)}
+																		_focus={{ boxShadow: 'none', outline: 'none' }}
+																		fontWeight="semibold"
+																	>
+																		{order.code}
+																	</Button>
+																</Td>
+																<Td>{order.orderItems.length}</Td>
+																<Td fontWeight="semibold">{formatCurrency(order.totalAmount)}</Td>
+																<Td color="green.600">{formatCurrency(order.paidAmount)}</Td>
+																<Td color={order.remainingAmount > 0 ? 'red.500' : 'green.500'} fontWeight="semibold">
+																	{formatCurrency(order.remainingAmount)}
+																</Td>
+																<Td>
+																	<Badge colorScheme={getOrderStatusColor(order.status)}>
+																		{getOrderStatusLabel(order.status)}
 																	</Badge>
 																</Td>
 																<Td>
 																	<Button
 																		size="sm"
 																		variant="ghost"
+																		colorScheme="blue"
 																		onClick={() => navigate(`/orders/${order.id}`)}
 																		_focus={{ boxShadow: 'none', outline: 'none' }}
 																	>

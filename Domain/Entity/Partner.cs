@@ -15,7 +15,17 @@ namespace Domain.Entity
             Active = true;
         }
 
-        public string Name { get; set; }
+        public string Name 
+        { 
+            get => _name;
+            set
+            {
+                _name = value;
+                UpdateDisplayName();
+            }
+        }
+        private string _name;
+        
         public string Ref
         {
             get
@@ -25,7 +35,7 @@ namespace Domain.Entity
             set
             {
                 _ref = value;
-                DisplayName = _NameGet;
+                UpdateDisplayName();
                 ComputeSplitSequence();
             }
         }
@@ -33,27 +43,88 @@ namespace Domain.Entity
         {
             get
             {
-                var name = Name;
+                // Format: [mã]tên-3 số cuối
+                var result = string.Empty;
+                
+                // Thêm mã (Ref) trong ngoặc vuông nếu có
                 if (!string.IsNullOrEmpty(Ref))
                 {
-                    if (IsCustomer)
-                        name = Name + " [" + Ref + "]";
-                    else
-                        name = "[" + Ref + "] " + Name;
+                    result = "[" + Ref + "]";
                 }
-                return name;
+                
+                // Thêm tên (không có khoảng trắng sau ngoặc vuông)
+                if (!string.IsNullOrEmpty(Name))
+                {
+                    result += Name;
+                }
+                
+                // Thêm 3 số cuối số điện thoại nếu có
+                var phoneLastThree = GetPhoneLastThreeDigits();
+                if (!string.IsNullOrEmpty(phoneLastThree))
+                {
+                    result += "-" + phoneLastThree;
+                }
+                
+                return result;
             }
+        }
+        
+        private string GetPhoneLastThreeDigits()
+        {
+            // Nếu đã có PhoneLastThreeDigits thì dùng nó
+            if (!string.IsNullOrEmpty(PhoneLastThreeDigits))
+                return PhoneLastThreeDigits;
+            
+            // Nếu không có PhoneLastThreeDigits nhưng có Phone thì lấy 3 số cuối từ Phone
+            if (!string.IsNullOrEmpty(Phone))
+            {
+                var digitsOnly = new System.Text.RegularExpressions.Regex(@"\d+").Matches(Phone);
+                if (digitsOnly.Count > 0)
+                {
+                    var lastMatch = digitsOnly[digitsOnly.Count - 1];
+                    if (lastMatch.Value.Length >= 3)
+                        return lastMatch.Value.Substring(lastMatch.Value.Length - 3);
+                    else if (lastMatch.Value.Length > 0)
+                        return lastMatch.Value;
+                }
+            }
+            
+            return string.Empty;
         }
         public string DisplayName { get; set; }
         private string _ref;
         public string SequencePrefix { get; set; }
         public int? SequenceNumber { get; set; }
+        
+        private void UpdateDisplayName()
+        {
+            DisplayName = _NameGet;
+        }
 
         public string NameNoSign { get; set; }
         public bool IsCustomer { get; set; }
         public bool IsCompany { get; set; }
-        public string Phone { get; set; }
-        public string? PhoneLastThreeDigits { get; set; }
+        public string Phone 
+        { 
+            get => _phone;
+            set
+            {
+                _phone = value;
+                UpdateDisplayName();
+            }
+        }
+        private string _phone;
+        
+        public string? PhoneLastThreeDigits 
+        { 
+            get => _phoneLastThreeDigits;
+            set
+            {
+                _phoneLastThreeDigits = value;
+                UpdateDisplayName();
+            }
+        }
+        private string? _phoneLastThreeDigits;
         public string? Notes { get; set; }
         public string? Address { get; set; }
         public string? CityCode { get; set; }

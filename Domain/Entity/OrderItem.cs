@@ -12,8 +12,7 @@ namespace Domain.Entity
         public string ServiceName { get; private set; }
         public decimal UnitPrice { get; private set; } //On Kg
         public decimal Quantity { get; private set; }
-        public decimal TotalPrice => UnitPrice * Quantity;
-        public string State { get; set; }
+        public decimal TotalPrice { get; set; }
         public Guid OrderId { get; set; }
         public Order Order { get; set; }
         public Guid? CompanyId { get; set; }

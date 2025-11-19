@@ -7,9 +7,11 @@ type Props = {
 	onChange: (value: string) => void;
 	placeholder?: string;
 	debounceMs?: number; // Thời gian debounce, mặc định 300ms
+	onFocus?: () => void; // Callback khi focus vào input
+	onBlur?: () => void; // Callback khi blur khỏi input
 };
 
-const SearchInput: React.FC<Props> = ({ value, onChange, placeholder = 'Tìm kiếm...', debounceMs = 300 }) => {
+const SearchInput: React.FC<Props> = ({ value, onChange, placeholder = 'Tìm kiếm...', debounceMs = 300, onFocus, onBlur }) => {
 	const [inputValue, setInputValue] = useState(value);
 	const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 	const onChangeRef = useRef(onChange);
@@ -56,6 +58,8 @@ const SearchInput: React.FC<Props> = ({ value, onChange, placeholder = 'Tìm ki�
 				<Input
 					value={inputValue}
 					onChange={handleChange}
+					onFocus={onFocus}
+					onBlur={onBlur}
 					placeholder={placeholder}
 					_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
 				/>

@@ -1,0 +1,21 @@
+using Application.Service;
+using Domain.Entity;
+using Domain.Interfaces;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Domain.Service
+{
+    public class OrderService : BaseService<Order>, IOrderService
+    {
+        public OrderService(IAsyncRepository<Order> repository, IHttpContextAccessor httpContextAccessor) 
+            : base(repository, httpContextAccessor)
+        {
+        }
+    }
+}
+

@@ -61,6 +61,7 @@ namespace Application.Services.Queries
 					Id = s.Id,
 					Name = s.Name,
 					UnitPrice = s.UnitPrice,
+					UnitOfMeasure = s.UnitOfMeasure,
 					Description = s.Description,
 					DefaultCode = s.DefaultCode,
 					Active = s.Active,
@@ -78,6 +79,7 @@ namespace Application.Services.Queries
 		public Guid Id { get; set; }
 		public string Name { get; set; }
 		public decimal UnitPrice { get; set; }
+		public string UnitOfMeasure { get; set; }
 		public string Description { get; set; }
 		public string DefaultCode { get; set; }
 		public bool Active { get; set; }

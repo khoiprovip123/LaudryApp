@@ -15,6 +15,9 @@ import CustomerDetail from "./pages/customers/Detail";
 import ServicesList from "./pages/services/List";
 import ServiceCreate from "./pages/services/Create";
 import ServiceEdit from "./pages/services/Edit";
+import OrderCreate from "./pages/orders/Create";
+import OrdersList from "./pages/orders/List";
+import OrderDetail from "./pages/orders/Detail";
 import EmployeesList from "./pages/employees/List";
 import EmployeeCreate from "./pages/employees/Create";
 import EmployeeEdit from "./pages/employees/Edit";
@@ -169,6 +172,30 @@ const RootApp: React.FC = () => {
                   element={
                     <ProtectedRoute requirePermission={Permissions.Services_Update}>
                       <ServiceEdit />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="orders" 
+                  element={
+                    <ProtectedRoute requirePermission={Permissions.Orders_View}>
+                      <OrdersList />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="orders/new" 
+                  element={
+                    <ProtectedRoute requirePermission={Permissions.Orders_Create}>
+                      <OrderCreate />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="orders/:id" 
+                  element={
+                    <ProtectedRoute requirePermission={Permissions.Orders_View}>
+                      <OrderDetail />
                     </ProtectedRoute>
                   } 
                 />

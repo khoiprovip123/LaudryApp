@@ -12,6 +12,7 @@ namespace Application.Services.Commands
 	{
 		public string Name { get; set; } = string.Empty;
 		public decimal UnitPrice { get; set; }
+		public string UnitOfMeasure { get; set; } = "kg";
 		public string? Description { get; set; }
 		public bool Active { get; set; } = true;
 	}
@@ -51,6 +52,7 @@ namespace Application.Services.Commands
 			{
 				Name = request.Name,
 				UnitPrice = request.UnitPrice,
+				UnitOfMeasure = request.UnitOfMeasure ?? "kg",
 				Description = request.Description ?? string.Empty,
 				DefaultCode = serviceCode,
 				Active = request.Active,

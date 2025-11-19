@@ -7,7 +7,7 @@ import { Permissions } from '../constants/permissions';
 import logo from '../assets/images/logo-vip-main.png';
 import { HamburgerIcon, CloseIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 // @ts-ignore - react-icons sẽ được cài đặt sau
-import { FaBuilding, FaUsers, FaSignOutAlt, FaUser, FaChevronDown, FaList, FaUserShield } from 'react-icons/fa';
+import { FaBuilding, FaUsers, FaSignOutAlt, FaUser, FaChevronDown, FaList, FaUserShield, FaShoppingCart, FaClipboardList } from 'react-icons/fa';
 
 const AppLayout: React.FC = () => {
 	const navigate = useNavigate();
@@ -22,6 +22,8 @@ const AppLayout: React.FC = () => {
 	const isCompaniesActive = location.pathname.startsWith('/companies');
 	const isCustomersActive = location.pathname.startsWith('/customers');
 	const isServicesActive = location.pathname.startsWith('/services');
+	const isOrdersListActive = location.pathname === '/orders' || (location.pathname.startsWith('/orders') && !location.pathname.includes('/new'));
+	const isOrdersCreateActive = location.pathname === '/orders/new';
 	const isPermissionGroupsActive = location.pathname.startsWith('/permission-groups');
 	
 	// Tự động mở menu Danh mục nếu đang ở trang dịch vụ
@@ -139,6 +141,62 @@ const AppLayout: React.FC = () => {
 								<FaUsers size={18} />
 							</Box>
 							<div className="truncate">Khách hàng</div>
+						</Link>
+					)}
+					
+					{/* Menu Bán hàng - chỉ hiện cho user có permission Orders.Create */}
+					{hasPermission(Permissions.Orders_Create) && (
+						<Link 
+							as={RouterLink} 
+							to="/orders/new" 
+							display="flex" 
+							alignItems="center" 
+							gap={2} 
+							p={2} 
+							borderRadius="md"
+							bg={isOrdersCreateActive ? 'blue.50' : 'transparent'}
+							color={isOrdersCreateActive ? 'blue.600' : 'gray.700'}
+							borderLeft={isOrdersCreateActive ? '3px solid' : '3px solid transparent'}
+							borderLeftColor={isOrdersCreateActive ? 'blue.500' : 'transparent'}
+							_hover={{ bg: isOrdersCreateActive ? 'blue.50' : 'gray.100' }}
+							fontWeight={isOrdersCreateActive ? 'semibold' : 'normal'}
+							onClick={handleMenuLinkClick}
+							whiteSpace="nowrap"
+							overflow="hidden"
+							textOverflow="ellipsis"
+						>
+							<Box flexShrink={0}>
+								<FaShoppingCart size={18} />
+							</Box>
+							<div className="truncate">Bán hàng</div>
+						</Link>
+					)}
+					
+					{/* Menu Đơn hàng - chỉ hiện cho user có permission Orders.View */}
+					{hasPermission(Permissions.Orders_View) && (
+						<Link 
+							as={RouterLink} 
+							to="/orders" 
+							display="flex" 
+							alignItems="center" 
+							gap={2} 
+							p={2} 
+							borderRadius="md"
+							bg={isOrdersListActive ? 'blue.50' : 'transparent'}
+							color={isOrdersListActive ? 'blue.600' : 'gray.700'}
+							borderLeft={isOrdersListActive ? '3px solid' : '3px solid transparent'}
+							borderLeftColor={isOrdersListActive ? 'blue.500' : 'transparent'}
+							_hover={{ bg: isOrdersListActive ? 'blue.50' : 'gray.100' }}
+							fontWeight={isOrdersListActive ? 'semibold' : 'normal'}
+							onClick={handleMenuLinkClick}
+							whiteSpace="nowrap"
+							overflow="hidden"
+							textOverflow="ellipsis"
+						>
+							<Box flexShrink={0}>
+								<FaClipboardList size={18} />
+							</Box>
+							<div className="truncate">Đơn hàng</div>
 						</Link>
 					)}
 					
