@@ -8,3 +8,6 @@ obj/
 # Cursor IDE
 .cursor/
 
+# Node modules
+node_modules/
+**/node_modules/

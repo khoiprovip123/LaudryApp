@@ -41,6 +41,9 @@ import { getPayments, createPayment, deletePayment, type PaymentDto } from '../.
 import Breadcrumb from '../../components/Breadcrumb';
 import { ChevronLeftIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons';
 import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabels } from '../../constants/orderStatus';
+import { getPaymentMethodLabel } from '../../constants/paymentMethod';
+import OrderPrint from '../../components/OrderPrint';
+import { FaPrint } from 'react-icons/fa';
 
 const OrderDetail: React.FC = () => {
 	const params = useParams<{ id: string }>();
@@ -51,9 +54,11 @@ const OrderDetail: React.FC = () => {
 	const [loadingPayments, setLoadingPayments] = useState(false);
 	const [updatingStatus, setUpdatingStatus] = useState(false);
 	const [creatingPayment, setCreatingPayment] = useState(false);
+	const [printType, setPrintType] = useState<'Receive' | 'Delivery'>('Receive');
 	const toast = useToast();
 	const navigate = useNavigate();
 	const { isOpen, onOpen, onClose } = useDisclosure();
+	const { isOpen: isPrintOpen, onOpen: onPrintOpen, onClose: onPrintClose } = useDisclosure();
 	const [paymentForm, setPaymentForm] = useState({
 		amount: '',
 		paymentMethod: 'Cash',
@@ -170,11 +175,23 @@ const OrderDetail: React.FC = () => {
 
 		setCreatingPayment(true);
 		try {
+			// Gửi thời gian hiện tại theo giờ Việt Nam (UTC+7) với đầy đủ giờ phút giây
+			const now = new Date();
+			// Format thời gian theo múi giờ Việt Nam (UTC+7)
+			const year = now.getFullYear();
+			const month = String(now.getMonth() + 1).padStart(2, '0');
+			const day = String(now.getDate()).padStart(2, '0');
+			const hours = String(now.getHours()).padStart(2, '0');
+			const minutes = String(now.getMinutes()).padStart(2, '0');
+			const seconds = String(now.getSeconds()).padStart(2, '0');
+			const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+			// Format: YYYY-MM-DDTHH:mm:ss.sss+07:00
+			const paymentDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}+07:00`;
 			await createPayment({
 				orderId: order.id,
 				amount,
 				paymentMethod: paymentForm.paymentMethod,
-				paymentDate: new Date(paymentForm.paymentDate).toISOString(),
+				paymentDate: paymentDateTime,
 				note: paymentForm.note || null,
 			});
 			toast({
@@ -255,6 +272,32 @@ const OrderDetail: React.FC = () => {
 						</HStack>
 					</VStack>
 					<HStack spacing={2}>
+						<Button
+							leftIcon={<FaPrint />}
+							colorScheme="blue"
+							variant="outline"
+							onClick={() => {
+								setPrintType('Receive');
+								onPrintOpen();
+							}}
+							_focus={{ boxShadow: 'none', outline: 'none' }}
+						>
+							In phiếu nhận
+						</Button>
+						{order.status === OrderStatus.Delivered && (
+							<Button
+								leftIcon={<FaPrint />}
+								colorScheme="green"
+								variant="outline"
+								onClick={() => {
+									setPrintType('Delivery');
+									onPrintOpen();
+								}}
+								_focus={{ boxShadow: 'none', outline: 'none' }}
+							>
+								In phiếu giao
+							</Button>
+						)}
 						<Button
 							leftIcon={<ChevronLeftIcon />}
 							variant="outline"
@@ -469,7 +512,7 @@ const OrderDetail: React.FC = () => {
 															{payment.paymentCode}
 														</Text>
 														<Badge colorScheme="blue" fontSize="xs">
-															{payment.paymentMethod}
+															{getPaymentMethodLabel(payment.paymentMethod)}
 														</Badge>
 													</HStack>
 													<Text fontSize="sm" fontWeight="bold" color="green.600">
@@ -617,6 +660,7 @@ const OrderDetail: React.FC = () => {
 								>
 									<option value="Cash">Tiền mặt</option>
 									<option value="BankTransfer">Chuyển khoản</option>
+									<option value="Bank">Chuyển khoản</option>
 									<option value="Card">Thẻ</option>
 									<option value="Other">Khác</option>
 								</Select>
@@ -626,9 +670,14 @@ const OrderDetail: React.FC = () => {
 								<Input
 									type="date"
 									value={paymentForm.paymentDate}
-									onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
+									isDisabled
 									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+									bg="gray.100"
+									cursor="not-allowed"
 								/>
+								<Text fontSize="xs" color="gray.500" mt={1}>
+									Thời gian thanh toán: {new Date().toLocaleString('vi-VN')}
+								</Text>
 							</FormControl>
 							<FormControl>
 								<FormLabel>Ghi chú</FormLabel>
@@ -655,6 +704,17 @@ const OrderDetail: React.FC = () => {
 							Xác nhận
 						</Button>
 					</ModalFooter>
+				</ModalContent>
+			</Modal>
+
+			{/* Print Modal */}
+			<Modal isOpen={isPrintOpen} onClose={onPrintClose} size="full">
+				<ModalOverlay />
+				<ModalContent>
+					<ModalCloseButton />
+					<ModalBody p={0}>
+						{isPrintOpen && <OrderPrint orderId={id} printType={printType} onClose={onPrintClose} />}
+					</ModalBody>
 				</ModalContent>
 			</Modal>
 		</Box>

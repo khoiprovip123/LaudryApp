@@ -7,7 +7,7 @@ import { Permissions } from '../constants/permissions';
 import logo from '../assets/images/logo-vip-main.png';
 import { HamburgerIcon, CloseIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 // @ts-ignore - react-icons sẽ được cài đặt sau
-import { FaBuilding, FaUsers, FaSignOutAlt, FaUser, FaChevronDown, FaList, FaUserShield, FaShoppingCart, FaClipboardList } from 'react-icons/fa';
+import { FaBuilding, FaUsers, FaSignOutAlt, FaUser, FaChevronDown, FaList, FaUserShield, FaShoppingCart, FaClipboardList, FaChartLine, FaFileAlt } from 'react-icons/fa';
 
 const AppLayout: React.FC = () => {
 	const navigate = useNavigate();
@@ -19,11 +19,13 @@ const AppLayout: React.FC = () => {
 	const [isCatalogOpen, setIsCatalogOpen] = useState(false);
 
 	// Kiểm tra route active
+	const isDashboardActive = location.pathname === '/dashboard' || location.pathname === '/';
 	const isCompaniesActive = location.pathname.startsWith('/companies');
 	const isCustomersActive = location.pathname.startsWith('/customers');
 	const isServicesActive = location.pathname.startsWith('/services');
 	const isOrdersListActive = location.pathname === '/orders' || (location.pathname.startsWith('/orders') && !location.pathname.includes('/new'));
 	const isOrdersCreateActive = location.pathname === '/orders/new';
+	const isReportsActive = location.pathname.startsWith('/reports');
 	const isPermissionGroupsActive = location.pathname.startsWith('/permission-groups');
 	
 	// Tự động mở menu Danh mục nếu đang ở trang dịch vụ
@@ -89,6 +91,33 @@ const AppLayout: React.FC = () => {
 				</div>
 				{/* menu */}
 				<Box>
+					{/* Menu Dashboard */}
+					{hasPermission(Permissions.Orders_View) && (
+						<Link 
+							as={RouterLink} 
+							to="/dashboard" 
+							display="flex" 
+							alignItems="center" 
+							gap={2} 
+							p={2} 
+							borderRadius="md"
+							bg={isDashboardActive ? 'blue.50' : 'transparent'}
+							color={isDashboardActive ? 'blue.600' : 'gray.700'}
+							borderLeft={isDashboardActive ? '3px solid' : '3px solid transparent'}
+							borderLeftColor={isDashboardActive ? 'blue.500' : 'transparent'}
+							_hover={{ bg: isDashboardActive ? 'blue.50' : 'gray.100' }}
+							fontWeight={isDashboardActive ? 'semibold' : 'normal'}
+							onClick={handleMenuLinkClick}
+							whiteSpace="nowrap"
+							overflow="hidden"
+							textOverflow="ellipsis"
+						>
+							<Box flexShrink={0}>
+								<FaChartLine size={18} />
+							</Box>
+							<div className="truncate">Dashboard</div>
+						</Link>
+					)}
 					{/* Menu Cửa hàng - chỉ hiện cho SuperAdmin */}
 					{isSuperAdmin && (
 						<Link 
@@ -197,6 +226,34 @@ const AppLayout: React.FC = () => {
 								<FaClipboardList size={18} />
 							</Box>
 							<div className="truncate">Đơn hàng</div>
+						</Link>
+					)}
+					
+					{/* Menu Báo cáo - chỉ hiện cho user có permission Orders.View */}
+					{hasPermission(Permissions.Orders_View) && (
+						<Link 
+							as={RouterLink} 
+							to="/reports" 
+							display="flex" 
+							alignItems="center" 
+							gap={2} 
+							p={2} 
+							borderRadius="md"
+							bg={isReportsActive ? 'blue.50' : 'transparent'}
+							color={isReportsActive ? 'blue.600' : 'gray.700'}
+							borderLeft={isReportsActive ? '3px solid' : '3px solid transparent'}
+							borderLeftColor={isReportsActive ? 'blue.500' : 'transparent'}
+							_hover={{ bg: isReportsActive ? 'blue.50' : 'gray.100' }}
+							fontWeight={isReportsActive ? 'semibold' : 'normal'}
+							onClick={handleMenuLinkClick}
+							whiteSpace="nowrap"
+							overflow="hidden"
+							textOverflow="ellipsis"
+						>
+							<Box flexShrink={0}>
+								<FaFileAlt size={18} />
+							</Box>
+							<div className="truncate">Báo cáo</div>
 						</Link>
 					)}
 					

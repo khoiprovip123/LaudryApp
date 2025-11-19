@@ -90,7 +90,10 @@ namespace Application.Dashboard.Queries
             var overdueOrders = ordersList.Count(o => o.Status == Domain.Constants.OrderStatus.Completed && o.DateCreated < overdueDate);
 
             // Tính công nợ - group payments theo OrderId trước
-            var paymentsByOrder = paymentsList.GroupBy(p => p.OrderId).ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+            var paymentsByOrder = paymentsList
+                .Where(p => p.OrderId.HasValue)
+                .GroupBy(p => p.OrderId!.Value)
+                .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
             var orderTotals = orderItemsList.GroupBy(oi => oi.Id).ToDictionary(g => g.Key, g => g.Sum(oi => oi.Quantity * oi.UnitPrice));
 
             decimal totalDebt = 0;
@@ -111,15 +114,23 @@ namespace Application.Dashboard.Queries
 
             // Top khách hàng - cần load thông tin Partner
             var monthOrdersFiltered = ordersList.Where(o => o.DateCreated >= monthStart && o.DateCreated < tomorrowStart).ToList();
-            var partnerIds = monthOrdersFiltered.Where(o => o.PartnerId.HasValue).Select(o => o.PartnerId.Value).Distinct().ToList();
+            var partnerIds = monthOrdersFiltered
+                .Where(o => o.PartnerId.HasValue)
+                .Select(o => o.PartnerId!.Value)
+                .Distinct()
+                .ToList();
 
-            var partnersDict = await _partnerService.SearchQuery(p => partnerIds.Contains(p.Id))
-                .Select(p => new { p.Id, p.Name, p.DisplayName })
-                .ToDictionaryAsync(p => p.Id, cancellationToken);
+            Dictionary<Guid, (string Name, string DisplayName)> partnersDict = new();
+            if (partnerIds.Any())
+            {
+                partnersDict = await _partnerService.SearchQuery(p => partnerIds.Contains(p.Id))
+                    .Select(p => new { p.Id, p.Name, p.DisplayName })
+                    .ToDictionaryAsync(p => p.Id, p => (p.Name ?? "", p.DisplayName ?? ""), cancellationToken);
+            }
 
             var topCustomersData = monthOrdersFiltered
                 .Where(o => o.PartnerId.HasValue)
-                .GroupBy(o => o.PartnerId.Value)
+                .GroupBy(o => o.PartnerId!.Value)
                 .Select(g => new
                 {
                     PartnerId = g.Key,
@@ -133,8 +144,8 @@ namespace Application.Dashboard.Queries
             var topCustomers = topCustomersData.Select(x => new TopCustomerDto
             {
                 PartnerId = x.PartnerId,
-                PartnerName = partnersDict.ContainsKey(x.PartnerId) ? partnersDict[x.PartnerId].Name : "",
-                PartnerDisplayName = partnersDict.ContainsKey(x.PartnerId) ? partnersDict[x.PartnerId].DisplayName : "",
+                PartnerName = partnersDict.ContainsKey(x.PartnerId) ? partnersDict[x.PartnerId].Name : string.Empty,
+                PartnerDisplayName = partnersDict.ContainsKey(x.PartnerId) ? partnersDict[x.PartnerId].DisplayName : string.Empty,
                 TotalRevenue = x.TotalRevenue,
                 OrderCount = x.OrderCount
             }).ToList();

@@ -19,7 +19,7 @@ namespace Application.Payments.Commands
     {
         public Guid OrderId { get; set; }
         public decimal Amount { get; set; }
-        public string PaymentMethod { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
         public DateTime PaymentDate { get; set; }
         public string? Note { get; set; }
     }

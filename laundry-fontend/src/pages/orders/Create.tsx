@@ -16,13 +16,26 @@ import {
 	Textarea,
 	SimpleGrid,
 	Input,
+	Modal,
+	ModalOverlay,
+	ModalContent,
+	ModalHeader,
+	ModalFooter,
+	ModalBody,
+	ModalCloseButton,
+	FormControl,
+	FormLabel,
+	Stack,
+	Switch,
+	useDisclosure,
 } from '@chakra-ui/react';
-import { DeleteIcon, CloseIcon } from '@chakra-ui/icons';
+import { DeleteIcon, CloseIcon, AddIcon } from '@chakra-ui/icons';
 // @ts-ignore
 import { FaUser, FaList, FaFilter, FaPlus, FaChevronDown, FaExchangeAlt } from 'react-icons/fa';
 import { useSearchParams } from 'react-router-dom';
 import { getServices } from '../../api/services';
-import { getCustomers, getCustomerById } from '../../api/customers';
+import { getCustomers, getCustomerById, createCustomer } from '../../api/customers';
+import type { CreateCustomerRequest } from '../../api/customers';
 import { createOrder } from '../../api/orders';
 import type { ServiceDto } from '../../api/services';
 import type { CustomerDto } from '../../api/customers';
@@ -68,7 +81,6 @@ const OrderCreate: React.FC = () => {
 	const [serviceSearch, setServiceSearch] = useState('');
 	const [loadingServices, setLoadingServices] = useState(false);
 	const [loadingCustomers, setLoadingCustomers] = useState(false);
-	const [loadingCustomerFromUrl, setLoadingCustomerFromUrl] = useState(false);
 	const [isCreating, setIsCreating] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [servicesPerPage] = useState(12);
@@ -78,6 +90,18 @@ const OrderCreate: React.FC = () => {
 	const [isResizing, setIsResizing] = useState(false);
 	const containerRef = React.useRef<HTMLDivElement>(null);
 	const toast = useToast();
+	
+	// Modal tạo khách hàng mới
+	const { isOpen: isCreateCustomerOpen, onOpen: onCreateCustomerOpen, onClose: onCreateCustomerClose } = useDisclosure();
+	const [newCustomerForm, setNewCustomerForm] = useState<CreateCustomerRequest>({
+		name: '',
+		phone: '',
+		phoneLastThreeDigits: '',
+		address: '',
+		isCompany: false,
+	});
+	const [newCustomerActive, setNewCustomerActive] = useState(true);
+	const [creatingCustomer, setCreatingCustomer] = useState(false);
 
 	// Lấy tab hiện tại
 	const activeTab = useMemo(() => {
@@ -109,7 +133,7 @@ const OrderCreate: React.FC = () => {
 			const res = await getCustomers({
 				limit: 10,
 				offset: 0,
-				search: searchTerm && searchTerm.length >= 2 ? searchTerm : undefined,
+				search: searchTerm && searchTerm.length >= 1 ? searchTerm : undefined,
 			});
 			setCustomers(res.items.filter(c => c.active));
 		} catch (err: any) {
@@ -157,7 +181,6 @@ const OrderCreate: React.FC = () => {
 	useEffect(() => {
 		const loadCustomerFromUrl = async () => {
 			if (customerIdFromUrl) {
-				setLoadingCustomerFromUrl(true);
 				try {
 					const customer = await getCustomerById(customerIdFromUrl);
 					if (customer) {
@@ -174,8 +197,6 @@ const OrderCreate: React.FC = () => {
 						duration: 3000,
 						isClosable: true,
 					});
-				} finally {
-					setLoadingCustomerFromUrl(false);
 				}
 			}
 		};
@@ -189,14 +210,14 @@ const OrderCreate: React.FC = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [serviceSearch]);
 
-	// Chỉ search khi có từ khóa >= 2 ký tự
+	// Chỉ search khi có từ khóa >= 1 ký tự để phản hồi nhanh hơn
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			if (activeTab.customerSearch && activeTab.customerSearch.length >= 2) {
+			if (activeTab.customerSearch && activeTab.customerSearch.length >= 1) {
 				void loadCustomers(activeTab.customerSearch);
 			} else if (activeTab.customerSearch.length === 0) {
-				// Nếu xóa hết text, xóa danh sách
-				setCustomers([]);
+				// Nếu xóa hết text, load lại danh sách ban đầu (limit 10)
+				void loadCustomers();
 			}
 		}, 300);
 		return () => clearTimeout(timer);
@@ -311,10 +332,115 @@ const OrderCreate: React.FC = () => {
 	const handleSelectCustomer = (customer: CustomerDto) => {
 		updateTab(activeTabId, {
 			selectedCustomer: customer,
-			customerSearch: customer.name,
+			customerSearch: customer.displayName || customer.name,
 		});
 		setCustomers([]);
 		setShowCustomerDropdown(false);
+	};
+
+	// Hàm tự động lấy 3 số cuối từ số điện thoại
+	const extractLastThreeDigits = (phone: string): string => {
+		if (!phone) return '';
+		const digitsOnly = phone.match(/\d+/g);
+		if (digitsOnly && digitsOnly.length > 0) {
+			const lastMatch = digitsOnly[digitsOnly.length - 1];
+			if (lastMatch.length >= 3) {
+				return lastMatch.substring(lastMatch.length - 3);
+			} else if (lastMatch.length > 0) {
+				return lastMatch;
+			}
+		}
+		return '';
+	};
+
+	// Xử lý khi thay đổi số điện thoại trong form tạo khách hàng
+	const handleNewCustomerPhoneChange = (value: string) => {
+		setNewCustomerForm(prev => {
+			const updated = { ...prev, phone: value };
+			// Tự động điền 3 số cuối nếu chưa có
+			if (!updated.phoneLastThreeDigits || updated.phoneLastThreeDigits === '') {
+				const lastThree = extractLastThreeDigits(value);
+				if (lastThree) {
+					updated.phoneLastThreeDigits = lastThree;
+				}
+			}
+			return updated;
+		});
+	};
+
+	// Tạo khách hàng mới
+	const handleCreateCustomer = async () => {
+		if (!newCustomerForm.name || !newCustomerForm.phone) {
+			toast({
+				status: 'error',
+				title: 'Vui lòng nhập đầy đủ thông tin',
+				description: 'Tên khách hàng và SĐT là bắt buộc',
+				duration: 3000,
+				isClosable: true,
+			});
+			return;
+		}
+
+		setCreatingCustomer(true);
+		try {
+			await createCustomer({
+				...newCustomerForm,
+				isCompany: false,
+			});
+			
+			// Load lại danh sách khách hàng với số điện thoại để tìm khách hàng vừa tạo
+			const refreshedCustomers = await getCustomers({ 
+				limit: 10, 
+				offset: 0, 
+				search: newCustomerForm.phone 
+			});
+			
+			// Tìm khách hàng vừa tạo trong danh sách
+			let foundCustomer = refreshedCustomers.items.find(c => c.phone === newCustomerForm.phone);
+			
+			if (foundCustomer) {
+				// Tự động chọn khách hàng vừa tạo
+				handleSelectCustomer(foundCustomer);
+			} else {
+				// Nếu không tìm thấy bằng số điện thoại, thử tìm bằng tên
+				foundCustomer = refreshedCustomers.items.find(c => 
+					c.name.toLowerCase() === newCustomerForm.name.toLowerCase()
+				);
+				if (foundCustomer) {
+					handleSelectCustomer(foundCustomer);
+				} else {
+					// Load lại danh sách ban đầu và chọn khách hàng đầu tiên nếu có
+					await loadCustomers();
+					if (customers.length > 0) {
+						foundCustomer = customers[0];
+						handleSelectCustomer(foundCustomer);
+					}
+				}
+			}
+
+			toast({
+				status: 'success',
+				title: 'Tạo khách hàng thành công',
+				description: foundCustomer ? 'Khách hàng đã được chọn tự động' : 'Vui lòng chọn khách hàng từ danh sách',
+				duration: 3000,
+				isClosable: true,
+			});
+
+			// Reset form và đóng modal
+			setNewCustomerForm({
+				name: '',
+				phone: '',
+				phoneLastThreeDigits: '',
+				address: '',
+				isCompany: false,
+			});
+			setNewCustomerActive(true);
+			onCreateCustomerClose();
+		} catch (err: any) {
+			// Toast error đã được xử lý tự động bởi http wrapper
+		} finally {
+			setCreatingCustomer(false);
+		}
 	};
 
 	// Tính tổng tiền cho tab hiện tại
@@ -468,7 +594,7 @@ const OrderCreate: React.FC = () => {
 				{/* Left Column - Selected Services */}
 				<Box 
 					w={`${leftColumnWidth}px`} 
-					minW="200px"
+					minW="300px"
 					maxW="50%"
 					className="bg-white rounded-lg flex flex-col overflow-hidden shadow-sm"
 					flexShrink={0}
@@ -547,7 +673,7 @@ const OrderCreate: React.FC = () => {
 																	</Text>
 																	<Input
 																		type="number"
-																		size="xs"
+																		size="md"
 																		value={item.customPrice !== undefined ? item.customPrice : item.service.unitPrice}
 																		onChange={(e) => {
 																			const newPrice = parseFloat(e.target.value);
@@ -564,11 +690,11 @@ const OrderCreate: React.FC = () => {
 																		}}
 																		min={0}
 																		step={1000}
-																		w="100px"
-																		fontSize="xs"
+																		className="min-h-[30px]"
+																		fontSize="md"
 																		_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
 																	/>
-																	<Text fontSize="xs" color="gray.500">
+																	<Text fontSize="md" color="gray.500">
 																		đ
 																	</Text>
 																</HStack>
@@ -659,65 +785,79 @@ const OrderCreate: React.FC = () => {
 					{/* Customer Selection Section */}
 					<Box p={4} borderBottom="1px solid" borderColor="gray.200" bg="gray.50">
 						{!activeTab.selectedCustomer ? (
-							<Box position="relative" ref={customerDropdownRef}>
-								<SearchInput
-									value={activeTab.customerSearch}
-									onChange={(value) => updateTab(activeTabId, { customerSearch: value })}
-									onFocus={handleCustomerSearchFocus}
-									onBlur={handleCustomerSearchBlur}
-									placeholder="Tìm khách hàng..."
-									debounceMs={300}
-								/>
-								{/* Customer Dropdown */}
-								{showCustomerDropdown && customers.length > 0 && (
-									<Box
-										position="absolute"
-										top="100%"
-										left={0}
-										right={0}
-										mt={1}
-										bg="white"
-										border="1px solid"
-										borderColor="gray.200"
-										borderRadius="md"
-										boxShadow="lg"
-										zIndex={1000}
-										maxH="300px"
-										overflowY="auto"
-									>
-										{customers.map((customer) => (
-											<Box
-												key={customer.id}
-												p={3}
-												cursor="pointer"
-												_hover={{ bg: 'blue.50' }}
-												onClick={() => handleSelectCustomer(customer)}
-												borderBottom="1px solid"
-												borderColor="gray.100"
-												_last={{ borderBottom: 'none' }}
-											>
-												<VStack align="start" spacing={1}>
-													<HStack>
-														<Text fontWeight="semibold" fontSize="sm">
-															{customer.displayName || `[${customer.ref}] ${customer.name}`}
+							<HStack spacing={2} align="center">
+								<Box position="relative" ref={customerDropdownRef} flex="1">
+									<SearchInput
+										value={activeTab.customerSearch}
+										onChange={(value) => updateTab(activeTabId, { customerSearch: value })}
+										onFocus={handleCustomerSearchFocus}
+										onBlur={handleCustomerSearchBlur}
+										placeholder="Tìm khách hàng..."
+										debounceMs={300}
+									/>
+									{/* Customer Dropdown */}
+									{showCustomerDropdown && customers.length > 0 && (
+										<Box
+											position="absolute"
+											top="100%"
+											left={0}
+											right={0}
+											mt={1}
+											bg="white"
+											border="1px solid"
+											borderColor="gray.200"
+											borderRadius="md"
+											boxShadow="lg"
+											zIndex={1000}
+											maxH="300px"
+											overflowY="auto"
+										>
+											{customers.map((customer) => (
+												<Box
+													key={customer.id}
+													p={3}
+													cursor="pointer"
+													_hover={{ bg: 'blue.50' }}
+													onClick={() => handleSelectCustomer(customer)}
+													borderBottom="1px solid"
+													borderColor="gray.100"
+													_last={{ borderBottom: 'none' }}
+												>
+													<VStack align="start" spacing={1}>
+														<HStack>
+															<Text fontWeight="semibold" fontSize="sm">
+																{customer.displayName || `[${customer.ref}] ${customer.name}`}
+															</Text>
+														</HStack>
+														<Text fontSize="xs" color="gray.600">
+															📞 {customer.phone}
 														</Text>
-													</HStack>
-													<Text fontSize="xs" color="gray.600">
-														📞 {customer.phone}
-													</Text>
-												</VStack>
-											</Box>
-										))}
-									</Box>
-								)}
-								{showCustomerDropdown && loadingCustomers && (
-									<Box position="absolute" top="100%" left={0} right={0} mt={1} p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md" boxShadow="lg" zIndex={1000}>
-										<Flex justify="center" align="center" p={2}>
-											<Spinner size="sm" />
-										</Flex>
-									</Box>
-								)}
-							</Box>
+													</VStack>
+												</Box>
+											))}
+										</Box>
+									)}
+									{showCustomerDropdown && loadingCustomers && (
+										<Box position="absolute" top="100%" left={0} right={0} mt={1} p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md" boxShadow="lg" zIndex={1000}>
+											<Flex justify="center" align="center" p={2}>
+												<Spinner size="sm" />
+											</Flex>
+										</Box>
+									)}
+								</Box>
+								<Button
+									leftIcon={<AddIcon />}
+									colorScheme="green"
+									size="sm"
+									variant="outline"
+									onClick={onCreateCustomerOpen}
+									_focus={{ boxShadow: 'none', outline: 'none' }}
+									flexShrink={0}
+									whiteSpace="nowrap"
+								>
+									Thêm khách hàng mới
+								</Button>
+							</HStack>
 						) : (
 							<HStack justify="space-between" align="center">
 								<HStack spacing={3}>
@@ -897,6 +1037,85 @@ const OrderCreate: React.FC = () => {
 					</Box>
 				</Box>
 			</Flex>
+
+			{/* Modal Tạo khách hàng mới */}
+			<Modal isOpen={isCreateCustomerOpen} onClose={onCreateCustomerClose} size="md">
+				<ModalOverlay />
+				<ModalContent>
+					<ModalHeader>Thêm khách hàng mới</ModalHeader>
+					<ModalCloseButton />
+					<ModalBody>
+						<Stack spacing={4}>
+							<FormControl isRequired>
+								<FormLabel>Tên khách hàng</FormLabel>
+								<Input
+									value={newCustomerForm.name}
+									onChange={(e) => setNewCustomerForm({ ...newCustomerForm, name: e.target.value })}
+									placeholder="Nhập tên khách hàng"
+									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+								/>
+							</FormControl>
+							<FormControl isRequired>
+								<FormLabel>SĐT</FormLabel>
+								<Input
+									value={newCustomerForm.phone}
+									onChange={(e) => handleNewCustomerPhoneChange(e.target.value)}
+									placeholder="VD: 0123456789"
+									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+								/>
+							</FormControl>
+							<FormControl>
+								<FormLabel>3 số cuối SĐT (để tìm kiếm nhanh)</FormLabel>
+								<Input
+									value={newCustomerForm.phoneLastThreeDigits ?? ''}
+									onChange={(e) => {
+										const value = e.target.value.replace(/[^\d]/g, '').slice(0, 3);
+										setNewCustomerForm({ ...newCustomerForm, phoneLastThreeDigits: value });
+									}}
+									maxLength={3}
+									placeholder="Tự động điền từ SĐT"
+									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+								/>
+							</FormControl>
+							<FormControl>
+								<FormLabel>Địa chỉ</FormLabel>
+								<Input
+									value={newCustomerForm.address ?? ''}
+									onChange={(e) => setNewCustomerForm({ ...newCustomerForm, address: e.target.value })}
+									placeholder="Nhập địa chỉ (tùy chọn)"
+									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+								/>
+							</FormControl>
+							<FormControl display="flex" alignItems="center">
+								<FormLabel mb="0">Hoạt động</FormLabel>
+								<Switch
+									isChecked={newCustomerActive}
+									onChange={(e) => setNewCustomerActive(e.target.checked)}
+								/>
+							</FormControl>
+						</Stack>
+					</ModalBody>
+					<ModalFooter>
+						<Button
+							variant="ghost"
+							mr={3}
+							onClick={onCreateCustomerClose}
+							_focus={{ boxShadow: 'none', outline: 'none' }}
+						>
+							Hủy
+						</Button>
+						<Button
+							colorScheme="green"
+							onClick={handleCreateCustomer}
+							isLoading={creatingCustomer}
+							loadingText="Đang tạo..."
+							_focus={{ boxShadow: 'none', outline: 'none' }}
+						>
+							Tạo khách hàng
+						</Button>
+					</ModalFooter>
+				</ModalContent>
+			</Modal>
 		</Box>
 	);
 };

@@ -69,6 +69,35 @@ export type UpdateOrderRequest = {
 	status?: string;
 };
 
+export type OrderPrintDto = {
+	orderId: string;
+	orderCode: string;
+	orderDate: string;
+	partnerName: string;
+	partnerDisplayName: string;
+	partnerPhone: string;
+	partnerAddress: string;
+	companyName: string;
+	companyPhone: string;
+	companyAddress: string;
+	items: OrderItemPrintDto[];
+	totalAmount: number;
+	paidAmount: number;
+	remainingAmount: number;
+	status: string;
+	paymentStatus: string;
+	notes: string;
+	printType: string;
+};
+
+export type OrderItemPrintDto = {
+	serviceName: string;
+	quantity: number;
+	unitOfMeasure: string;
+	unitPrice: number;
+	totalPrice: number;
+};
+
 export const getOrders = async (query: GetOrdersQuery) => {
 	const { data } = await httpGet<PagedResult<OrderDto>>('/orders', {
 		params: query,
@@ -98,3 +127,9 @@ export const updateOrderStatus = async (orderId: string, status: string) => {
 	await httpPut(`/orders/${orderId}/status`, { orderId, status });
 };
 
+export const getOrderPrint = async (orderId: string, printType: 'Receive' | 'Delivery' = 'Receive') => {
+	const { data } = await httpGet<OrderPrintDto>(`/orders/${orderId}/print`, {
+		params: { printType },
+	});
+	return data;
+};

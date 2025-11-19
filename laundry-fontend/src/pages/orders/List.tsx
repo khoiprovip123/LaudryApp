@@ -39,13 +39,15 @@ import { getOrders, deleteOrder } from '../../api/orders';
 import type { OrderDto } from '../../api/orders';
 import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabels } from '../../constants/orderStatus';
 import { createPayment } from '../../api/payments';
+import { exportOrdersToExcel } from '../../api/export';
+import { FaFileExcel } from 'react-icons/fa';
 
 const OrdersList: React.FC = () => {
 	const [items, setItems] = useState<OrderDto[]>([]);
 	const [totalItems, setTotalItems] = useState(0);
 	const [offset, setOffset] = useState(0);
 	const [pageSize, setPageSize] = useState(10);
-	const [keyword, setKeyword] = useState('');
+	const keyword = ''; // TODO: Implement search input if needed
 	const [statusFilter, setStatusFilter] = useState<string>('');
 	const [loading, setLoading] = useState(false);
 	const [selectedOrder, setSelectedOrder] = useState<OrderDto | null>(null);
@@ -180,11 +182,23 @@ const OrdersList: React.FC = () => {
 
 		setCreatingPayment(true);
 		try {
+			// Gửi thời gian hiện tại theo giờ Việt Nam (UTC+7) với đầy đủ giờ phút giây
+			const now = new Date();
+			// Format thời gian theo múi giờ Việt Nam (UTC+7)
+			const year = now.getFullYear();
+			const month = String(now.getMonth() + 1).padStart(2, '0');
+			const day = String(now.getDate()).padStart(2, '0');
+			const hours = String(now.getHours()).padStart(2, '0');
+			const minutes = String(now.getMinutes()).padStart(2, '0');
+			const seconds = String(now.getSeconds()).padStart(2, '0');
+			const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+			// Format: YYYY-MM-DDTHH:mm:ss.sss+07:00
+			const paymentDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}+07:00`;
 			await createPayment({
 				orderId: selectedOrder.id,
 				amount,
 				paymentMethod: paymentForm.paymentMethod,
-				paymentDate: new Date(paymentForm.paymentDate).toISOString(),
+				paymentDate: paymentDateTime,
 				note: paymentForm.note || null,
 			});
 			toast({
@@ -210,18 +224,48 @@ const OrdersList: React.FC = () => {
 		}
 	};
 
+	const handleExportExcel = async () => {
+		try {
+			await exportOrdersToExcel({
+				limit: pageSize,
+				offset,
+				search: keyword || undefined,
+				status: statusFilter || undefined,
+			});
+			toast({
+				status: 'success',
+				title: 'Xuất Excel thành công',
+				duration: 2000,
+				isClosable: true,
+			});
+		} catch (err: any) {
+			// Toast error đã được xử lý tự động bởi http wrapper
+		}
+	};
+
 	return (
 		<Box className="flex flex-col h-full w-full">
 			<Flex justify="space-between" className="bg-white border-b border-gray-200" align="center" p={2}>
 				<Heading size="md">Đơn hàng</Heading>
-				<Button 
-					leftIcon={<AddIcon />} 
-					colorScheme="blue" 
-					onClick={() => navigate('/orders/new')}
-					_focus={{ boxShadow: 'none', outline: 'none' }}
-				>
-					Tạo đơn hàng
-				</Button>
+				<HStack spacing={2}>
+					<Button
+						leftIcon={<FaFileExcel />}
+						colorScheme="green"
+						variant="outline"
+						onClick={handleExportExcel}
+						_focus={{ boxShadow: 'none', outline: 'none' }}
+					>
+						Xuất Excel
+					</Button>
+					<Button 
+						leftIcon={<AddIcon />} 
+						colorScheme="blue" 
+						onClick={() => navigate('/orders/new')}
+						_focus={{ boxShadow: 'none', outline: 'none' }}
+					>
+						Tạo đơn hàng
+					</Button>
+				</HStack>
 			</Flex>
 
 			<div className="p-2 flex-1 w-full overflow-hidden flex flex-col">
@@ -551,6 +595,7 @@ const OrdersList: React.FC = () => {
 										>
 											<option value="Cash">Tiền mặt</option>
 											<option value="BankTransfer">Chuyển khoản</option>
+											<option value="Bank">Chuyển khoản</option>
 											<option value="Card">Thẻ</option>
 											<option value="Other">Khác</option>
 										</Select>
@@ -561,10 +606,15 @@ const OrdersList: React.FC = () => {
 										<Input
 											type="date"
 											value={paymentForm.paymentDate}
-											onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
+											isDisabled
 											size="lg"
 											focusBorderColor="green.500"
+											bg="gray.100"
+											cursor="not-allowed"
 										/>
+										<Text fontSize="xs" color="gray.500" mt={1}>
+											Thời gian thanh toán: {new Date().toLocaleString('vi-VN')}
+										</Text>
 									</FormControl>
 
 									<FormControl>

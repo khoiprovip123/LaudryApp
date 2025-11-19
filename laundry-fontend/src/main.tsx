@@ -18,6 +18,8 @@ import ServiceEdit from "./pages/services/Edit";
 import OrderCreate from "./pages/orders/Create";
 import OrdersList from "./pages/orders/List";
 import OrderDetail from "./pages/orders/Detail";
+import Dashboard from "./pages/dashboard/Dashboard";
+import Reports from "./pages/reports/Reports";
 import EmployeesList from "./pages/employees/List";
 import EmployeeCreate from "./pages/employees/Create";
 import EmployeeEdit from "./pages/employees/Edit";
@@ -95,6 +97,22 @@ const RootApp: React.FC = () => {
                 }
               >
                 <Route index element={<IndexRedirect />} />
+                <Route 
+                  path="dashboard" 
+                  element={
+                    <ProtectedRoute requirePermission={Permissions.Orders_View}>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="reports" 
+                  element={
+                    <ProtectedRoute requirePermission={Permissions.Orders_View}>
+                      <Reports />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route 
                   path="companies" 
                   element={
