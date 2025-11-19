@@ -15,12 +15,14 @@ import {
 	Avatar,
 	Textarea,
 	SimpleGrid,
+	Input,
 } from '@chakra-ui/react';
 import { DeleteIcon, CloseIcon } from '@chakra-ui/icons';
 // @ts-ignore
 import { FaUser, FaList, FaFilter, FaPlus, FaChevronDown, FaExchangeAlt } from 'react-icons/fa';
+import { useSearchParams } from 'react-router-dom';
 import { getServices } from '../../api/services';
-import { getCustomers } from '../../api/customers';
+import { getCustomers, getCustomerById } from '../../api/customers';
 import { createOrder } from '../../api/orders';
 import type { ServiceDto } from '../../api/services';
 import type { CustomerDto } from '../../api/customers';
@@ -29,6 +31,7 @@ import SearchInput from '../../components/SearchInput';
 type SelectedService = {
 	service: ServiceDto;
 	quantity: number;
+	customPrice?: number; // Giá tùy chỉnh, nếu không có thì dùng service.unitPrice
 };
 
 type OrderTab = {
@@ -40,7 +43,15 @@ type OrderTab = {
 	customerSearch: string;
 };
 
+// Lấy giá của dịch vụ (ưu tiên customPrice nếu có)
+const getServicePrice = (item: SelectedService): number => {
+	return item.customPrice !== undefined ? item.customPrice : item.service.unitPrice;
+};
+
 const OrderCreate: React.FC = () => {
+	const [searchParams] = useSearchParams();
+	const customerIdFromUrl = searchParams.get('customerId');
+	
 	const [services, setServices] = useState<ServiceDto[]>([]);
 	const [tabs, setTabs] = useState<OrderTab[]>([
 		{
@@ -57,6 +68,7 @@ const OrderCreate: React.FC = () => {
 	const [serviceSearch, setServiceSearch] = useState('');
 	const [loadingServices, setLoadingServices] = useState(false);
 	const [loadingCustomers, setLoadingCustomers] = useState(false);
+	const [loadingCustomerFromUrl, setLoadingCustomerFromUrl] = useState(false);
 	const [isCreating, setIsCreating] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [servicesPerPage] = useState(12);
@@ -140,6 +152,37 @@ const OrderCreate: React.FC = () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, [showCustomerDropdown]);
+
+	// Load customer từ URL nếu có customerId
+	useEffect(() => {
+		const loadCustomerFromUrl = async () => {
+			if (customerIdFromUrl) {
+				setLoadingCustomerFromUrl(true);
+				try {
+					const customer = await getCustomerById(customerIdFromUrl);
+					if (customer) {
+						// Tự động điền khách hàng vào tab đầu tiên
+						updateTab(activeTabId, {
+							selectedCustomer: customer,
+							customerSearch: customer.displayName || customer.name,
+						});
+					}
+				} catch (err: any) {
+					toast({
+						status: 'error',
+						title: 'Không thể tải thông tin khách hàng',
+						duration: 3000,
+						isClosable: true,
+					});
+				} finally {
+					setLoadingCustomerFromUrl(false);
+				}
+			}
+		};
+
+		void loadCustomerFromUrl();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [customerIdFromUrl]);
 
 	useEffect(() => {
 		void loadServices();
@@ -226,6 +269,26 @@ const OrderCreate: React.FC = () => {
 		updateTab(activeTabId, { selectedServices: newServices });
 	};
 
+	// Cập nhật giá dịch vụ
+	const handleUpdatePrice = (serviceId: string, price: number) => {
+		if (price < 0) return; // Không cho phép giá âm
+		const service = activeTab.selectedServices.find(s => s.service.id === serviceId);
+		if (!service) return;
+		
+		// Nếu giá mới bằng giá gốc, xóa customPrice để dùng giá gốc
+		const newServices = activeTab.selectedServices.map(s => {
+			if (s.service.id === serviceId) {
+				if (price === s.service.unitPrice) {
+					const { customPrice, ...rest } = s;
+					return rest;
+				}
+				return { ...s, customPrice: price };
+			}
+			return s;
+		});
+		updateTab(activeTabId, { selectedServices: newServices });
+	};
+
 	// Xóa dịch vụ khỏi tab hiện tại
 	const handleRemoveService = (serviceId: string) => {
 		const newServices = activeTab.selectedServices.filter(s => s.service.id !== serviceId);
@@ -257,7 +320,7 @@ const OrderCreate: React.FC = () => {
 	// Tính tổng tiền cho tab hiện tại
 	const totalAmount = useMemo(() => {
 		return activeTab.selectedServices.reduce((sum, item) => {
-			return sum + item.service.unitPrice * item.quantity;
+			return sum + getServicePrice(item) * item.quantity;
 		}, 0);
 	}, [activeTab.selectedServices]);
 
@@ -477,12 +540,47 @@ const OrderCreate: React.FC = () => {
 																	<Text fontSize="xs">+</Text>
 																</IconButton>
 															</HStack>
-															<Text fontSize="xs" color="gray.500">
-																{item.service.unitPrice.toLocaleString('vi-VN')} đ
-															</Text>
+															<VStack spacing={1} align="start" flex="1">
+																<HStack spacing={1} align="center">
+																	<Text fontSize="xs" color="gray.500" minW="50px">
+																		Giá:
+																	</Text>
+																	<Input
+																		type="number"
+																		size="xs"
+																		value={item.customPrice !== undefined ? item.customPrice : item.service.unitPrice}
+																		onChange={(e) => {
+																			const newPrice = parseFloat(e.target.value);
+																			if (!isNaN(newPrice)) {
+																				handleUpdatePrice(item.service.id, newPrice);
+																			}
+																		}}
+																		onBlur={(e) => {
+																			const newPrice = parseFloat(e.target.value);
+																			if (isNaN(newPrice) || newPrice < 0) {
+																				// Reset về giá gốc nếu giá không hợp lệ
+																				handleUpdatePrice(item.service.id, item.service.unitPrice);
+																			}
+																		}}
+																		min={0}
+																		step={1000}
+																		w="100px"
+																		fontSize="xs"
+																		_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+																	/>
+																	<Text fontSize="xs" color="gray.500">
+																		đ
+																	</Text>
+																</HStack>
+																{item.customPrice !== undefined && item.customPrice !== item.service.unitPrice && (
+																	<Text fontSize="xs" color="gray.400" fontStyle="italic">
+																		Giá gốc: {item.service.unitPrice.toLocaleString('vi-VN')} đ
+																	</Text>
+																)}
+															</VStack>
 														</HStack>
 														<Text fontSize="sm" fontWeight="bold" color="blue.600">
-															{formatCurrency(item.service.unitPrice * item.quantity)}
+															{formatCurrency(getServicePrice(item) * item.quantity)}
 														</Text>
 													</VStack>
 												</Flex>
@@ -635,20 +733,6 @@ const OrderCreate: React.FC = () => {
 								</HStack>
 								<HStack spacing={2}>
 									<IconButton
-										aria-label="Danh sách"
-										icon={<FaList />}
-										size="sm"
-										variant="ghost"
-										_focus={{ boxShadow: 'none', outline: 'none' }}
-									/>
-									<IconButton
-										aria-label="Lọc"
-										icon={<FaFilter />}
-										size="sm"
-										variant="ghost"
-										_focus={{ boxShadow: 'none', outline: 'none' }}
-									/>
-									<IconButton
 										aria-label="Đóng"
 										icon={<CloseIcon />}
 										size="sm"
@@ -772,7 +856,7 @@ const OrderCreate: React.FC = () => {
 									const orderItems = activeTab.selectedServices.map(item => ({
 										serviceId: item.service.id,
 										quantity: item.quantity,
-										unitPrice: item.service.unitPrice,
+										unitPrice: getServicePrice(item),
 									}));
 
 									await createOrder({

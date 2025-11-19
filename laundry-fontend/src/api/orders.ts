@@ -12,6 +12,7 @@ export type OrderDto = {
 	paidAmount: number;
 	remainingAmount: number;
 	status: string;
+	paymentStatus?: string;
 	notes?: string | null;
 	dateCreated: string;
 	dateUpdated?: string | null;

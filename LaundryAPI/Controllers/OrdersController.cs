@@ -46,6 +46,15 @@ namespace LaundryAPI.Controllers
             await Mediator.Send(command);
             return Ok(new { message = "Cập nhật trạng thái đơn hàng thành công." });
         }
+
+        [Uow]
+        [HttpDelete("{id}")]
+        [CheckAccess(Actions = Permissions.Orders_Delete)]
+        public async Task<IActionResult> DeleteOrder(Guid id)
+        {
+            await Mediator.Send(new DeleteOrderCommand { Id = id });
+            return Ok(new { message = "Xóa đơn hàng thành công." });
+        }
     }
 }
 

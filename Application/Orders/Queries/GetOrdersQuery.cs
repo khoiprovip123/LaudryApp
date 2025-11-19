@@ -28,12 +28,18 @@ namespace Application.Orders.Queries
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IOrderService _orderService;
         private readonly IWorkContext? _workContext;
+        private readonly IAsyncRepository<Domain.Entity.Payment>? _paymentRepository;
 
-        public GetOrdersQueryHandler(IHttpContextAccessor httpContextAccessor, IOrderService orderService, IWorkContext? workContext = null)
+        public GetOrdersQueryHandler(
+            IHttpContextAccessor httpContextAccessor, 
+            IOrderService orderService, 
+            IWorkContext? workContext = null,
+            IAsyncRepository<Domain.Entity.Payment>? paymentRepository = null)
         {
             _httpContextAccessor = httpContextAccessor;
             _orderService = orderService;
             _workContext = workContext;
+            _paymentRepository = paymentRepository;
         }
 
         public async Task<PagedResult<OrderDto>> Handle(GetOrdersQuery request, CancellationToken cancellationToken)
@@ -88,11 +94,61 @@ namespace Application.Orders.Queries
                 .AsNoTracking()
                 .Include(o => o.Partner)
                 .Include(o => o.OrderItem)
-                .ThenInclude(oi => oi.Order)
                 .OrderByDescending(x => x.DateCreated)
                 .Skip(request.Offset)
                 .Take(request.Limit)
-                .Select(o => new OrderDto
+                .ToListAsync(cancellationToken);
+
+            // Lấy danh sách OrderIds để tính PaidAmount
+            var orderIds = items.Select(o => o.Id).ToList();
+            var paymentsByOrder = new Dictionary<Guid, decimal>();
+            
+            if (_paymentRepository != null && orderIds.Any())
+            {
+                var payments = await _paymentRepository.Table
+                    .Where(p => p.OrderId.HasValue && orderIds.Contains(p.OrderId.Value))
+                    .GroupBy(p => p.OrderId!.Value)
+                    .Select(g => new { OrderId = g.Key, TotalPaid = g.Sum(p => p.Amount) })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var payment in payments)
+                {
+                    paymentsByOrder[payment.OrderId] = payment.TotalPaid;
+                }
+            }
+
+            // Map sang DTO và tính TotalAmount từ OrderItems
+            var orderDtos = items.Select(o =>
+            {
+                var orderItems = o.OrderItem.Select(oi => new OrderItemDto
+                {
+                    Id = oi.Id,
+                    OrderId = oi.OrderId,
+                    ServiceId = oi.ServiceId,
+                    ServiceName = oi.ServiceName,
+                    ServiceCode = string.Empty, // TODO: Lấy từ Service nếu cần
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice,
+                    TotalPrice = oi.TotalPrice
+                }).ToList();
+
+                // Tính TotalAmount từ tổng OrderItems (ưu tiên) hoặc dùng TotalPrice nếu OrderItems rỗng
+                // Đảm bảo tính từ quantity * unitPrice để chính xác
+                decimal totalAmount = 0;
+                if (orderItems.Count > 0)
+                {
+                    totalAmount = orderItems.Sum(oi => oi.Quantity * oi.UnitPrice);
+                }
+                else
+                {
+                    totalAmount = o.TotalPrice;
+                }
+
+                // Tính PaidAmount từ Payments
+                var paidAmount = paymentsByOrder.ContainsKey(o.Id) ? paymentsByOrder[o.Id] : 0;
+                var remainingAmount = totalAmount - paidAmount;
+
+                return new OrderDto
                 {
                     Id = o.Id,
                     Code = o.Code,
@@ -101,32 +157,23 @@ namespace Application.Orders.Queries
                     PartnerRef = o.Partner != null ? o.Partner.Ref : string.Empty,
                     PartnerDisplayName = o.Partner != null ? o.Partner.DisplayName : string.Empty,
                     PartnerPhone = o.Partner != null ? o.Partner.Phone : string.Empty,
-                    TotalAmount = o.TotalPrice,
-                    PaidAmount = 0, // TODO: Tính từ Payment khi có
-                    RemainingAmount = o.TotalPrice, // TODO: Tính từ Payment khi có
+                    TotalAmount = totalAmount,
+                    PaidAmount = paidAmount,
+                    RemainingAmount = remainingAmount,
                     Status = o.Status ?? string.Empty,
                     PaymentStatus = o.PaymentStatus ?? string.Empty,
-                    Notes = o.Notes,
+                    Notes = o.Notes ?? string.Empty,
                     DateCreated = o.DateCreated,
                     DateUpdated = o.LastUpdated,
                     CreatedBy = o.CreatedBy,
                     UpdatedBy = o.UpdatedBy,
-                    OrderItems = o.OrderItem.Select(oi => new OrderItemDto
-                    {
-                        Id = oi.Id,
-                        OrderId = oi.OrderId,
-                        ServiceId = oi.ServiceId,
-                        ServiceName = oi.ServiceName,
-                        ServiceCode = string.Empty, // TODO: Lấy từ Service nếu cần
-                        Quantity = oi.Quantity,
-                        UnitPrice = oi.UnitPrice,
-                        TotalPrice = oi.TotalPrice
-                    }).ToList()
-                }).ToListAsync(cancellationToken);
+                    OrderItems = orderItems
+                };
+            }).ToList();
 
             return new PagedResult<OrderDto>(totalItems, request.Offset, request.Limit)
             {
-                Items = items,
+                Items = orderDtos,
             };
         }
     }

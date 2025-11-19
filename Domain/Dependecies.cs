@@ -20,6 +20,7 @@ namespace Domain
 			services.AddScoped<IServiceService, ServiceService>();
 			services.AddScoped<IPermissionGroupService, PermissionGroupService>();
 			services.AddScoped<IOrderService, OrderService>();
+			services.AddScoped<IPaymentService, PaymentService>();
 			
 			// Đăng ký WorkContext để quản lý IServiceProvider và ICurrentUser
 			services.AddScoped<IWorkContext, WorkContext>();

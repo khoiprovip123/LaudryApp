@@ -19,12 +19,26 @@ import {
 	Badge,
 	Text,
 	HStack,
+	Drawer,
+	DrawerBody,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerOverlay,
+	DrawerContent,
+	DrawerCloseButton,
+	FormControl,
+	FormLabel,
+	Input,
+	Textarea,
+	VStack,
+	useDisclosure,
 } from '@chakra-ui/react';
 import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { getOrders, deleteOrder } from '../../api/orders';
 import type { OrderDto } from '../../api/orders';
 import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabels } from '../../constants/orderStatus';
+import { createPayment } from '../../api/payments';
 
 const OrdersList: React.FC = () => {
 	const [items, setItems] = useState<OrderDto[]>([]);
@@ -34,6 +48,15 @@ const OrdersList: React.FC = () => {
 	const [keyword, setKeyword] = useState('');
 	const [statusFilter, setStatusFilter] = useState<string>('');
 	const [loading, setLoading] = useState(false);
+	const [selectedOrder, setSelectedOrder] = useState<OrderDto | null>(null);
+	const [creatingPayment, setCreatingPayment] = useState(false);
+	const [paymentForm, setPaymentForm] = useState({
+		amount: '',
+		paymentMethod: 'Cash',
+		paymentDate: new Date().toISOString().split('T')[0],
+		note: '',
+	});
+	const { isOpen, onOpen, onClose } = useDisclosure();
 	const toast = useToast();
 	const navigate = useNavigate();
 
@@ -120,6 +143,71 @@ const OrdersList: React.FC = () => {
 			hour: '2-digit',
 			minute: '2-digit',
 		});
+	};
+
+	const handleOpenPaymentDrawer = (order: OrderDto) => {
+		setSelectedOrder(order);
+		setPaymentForm({
+			amount: order.remainingAmount > 0 ? order.remainingAmount.toString() : '',
+			paymentMethod: 'Cash',
+			paymentDate: new Date().toISOString().split('T')[0],
+			note: '',
+		});
+		onOpen();
+	};
+
+	const handleCreatePayment = async () => {
+		if (!selectedOrder || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0) {
+			toast({
+				status: 'error',
+				title: 'Vui lòng nhập số tiền hợp lệ',
+				duration: 2000,
+				isClosable: true,
+			});
+			return;
+		}
+
+		const amount = parseFloat(paymentForm.amount);
+		if (amount > selectedOrder.remainingAmount) {
+			toast({
+				status: 'error',
+				title: `Số tiền không được vượt quá số tiền còn lại (${formatCurrency(selectedOrder.remainingAmount)})`,
+				duration: 3000,
+				isClosable: true,
+			});
+			return;
+		}
+
+		setCreatingPayment(true);
+		try {
+			await createPayment({
+				orderId: selectedOrder.id,
+				amount,
+				paymentMethod: paymentForm.paymentMethod,
+				paymentDate: new Date(paymentForm.paymentDate).toISOString(),
+				note: paymentForm.note || null,
+			});
+			toast({
+				status: 'success',
+				title: 'Thanh toán thành công',
+				description: 'Đơn hàng đã được cập nhật trạng thái',
+				duration: 3000,
+				isClosable: true,
+			});
+			onClose();
+			setPaymentForm({
+				amount: '',
+				paymentMethod: 'Cash',
+				paymentDate: new Date().toISOString().split('T')[0],
+				note: '',
+			});
+			setSelectedOrder(null);
+			await load();
+		} catch (err: any) {
+			// Toast error đã được xử lý tự động bởi http wrapper
+		} finally {
+			setCreatingPayment(false);
+		}
 	};
 
 	return (
@@ -231,7 +319,7 @@ const OrdersList: React.FC = () => {
 													</Td>
 													<Td>{formatDate(order.dateCreated)}</Td>
 													<Td>
-														<ButtonGroup size="sm" variant="outline">
+														<ButtonGroup size="sm" variant="outline" spacing={1}>
 															<Button 
 																colorScheme="blue" 
 																onClick={() => navigate(`/orders/${order.id}`)}
@@ -239,8 +327,22 @@ const OrdersList: React.FC = () => {
 															>
 																Xem
 															</Button>
+															{order.remainingAmount > 0 && (
+																<Button
+																	colorScheme="green"
+																	onClick={() => handleOpenPaymentDrawer(order)}
+																	_focus={{ boxShadow: 'none', outline: 'none' }}
+																>
+																	Thanh toán
+																</Button>
+															)}
 															<Button
 																colorScheme="red"
+																isDisabled={
+																	order.paymentStatus === 'Paid' || 
+																	order.paymentStatus === 'Đã thanh toán' ||
+																	(order.remainingAmount <= 0 && order.totalAmount > 0)
+																}
 																onClick={async () => {
 																	try {
 																		await deleteOrder(order.id);
@@ -251,6 +353,13 @@ const OrdersList: React.FC = () => {
 																	}
 																}}
 																_focus={{ boxShadow: 'none', outline: 'none' }}
+																title={
+																	order.paymentStatus === 'Paid' || 
+																	order.paymentStatus === 'Đã thanh toán' ||
+																	(order.remainingAmount <= 0 && order.totalAmount > 0)
+																		? 'Không thể xóa đơn hàng đã thanh toán'
+																		: 'Xóa đơn hàng'
+																}
 															>
 																Xóa
 															</Button>
@@ -362,6 +471,142 @@ const OrdersList: React.FC = () => {
 					)}
 				</div>
 			</div>
+
+			{/* Drawer Thanh toán nhanh */}
+			<Drawer
+				isOpen={isOpen}
+				placement="right"
+				onClose={onClose}
+				size="md"
+			>
+				<DrawerOverlay bg="blackAlpha.300" backdropFilter="blur(4px)" />
+				<DrawerContent>
+					<DrawerCloseButton />
+					<DrawerHeader borderBottomWidth="1px" bg="green.50">
+						<Text fontSize="xl" fontWeight="bold" color="green.700">
+							Thanh toán nhanh
+						</Text>
+						{selectedOrder && (
+							<Text fontSize="sm" color="gray.600" mt={1}>
+								Đơn hàng: <strong>{selectedOrder.code}</strong>
+							</Text>
+						)}
+					</DrawerHeader>
+
+					<DrawerBody p={6}>
+						{selectedOrder && (
+							<VStack spacing={6} align="stretch">
+								{/* Thông tin đơn hàng */}
+								<Box p={4} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.200">
+									<VStack align="stretch" spacing={2}>
+										<Flex justify="space-between">
+											<Text fontSize="sm" color="gray.600">Khách hàng:</Text>
+											<Text fontSize="sm" fontWeight="semibold">{selectedOrder.partnerName}</Text>
+										</Flex>
+										<Flex justify="space-between">
+											<Text fontSize="sm" color="gray.600">Tổng tiền:</Text>
+											<Text fontSize="sm" fontWeight="semibold" color="blue.600">
+												{formatCurrency(selectedOrder.totalAmount)}
+											</Text>
+										</Flex>
+										<Flex justify="space-between">
+											<Text fontSize="sm" color="gray.600">Đã thanh toán:</Text>
+											<Text fontSize="sm" fontWeight="semibold" color="green.600">
+												{formatCurrency(selectedOrder.paidAmount)}
+											</Text>
+										</Flex>
+										<Flex justify="space-between" pt={2} borderTop="1px solid" borderColor="gray.300">
+											<Text fontSize="md" fontWeight="bold" color="gray.700">Còn lại:</Text>
+											<Text fontSize="md" fontWeight="bold" color="red.600">
+												{formatCurrency(selectedOrder.remainingAmount)}
+											</Text>
+										</Flex>
+									</VStack>
+								</Box>
+
+								{/* Form thanh toán */}
+								<VStack spacing={4} align="stretch">
+									<FormControl isRequired>
+										<FormLabel>Số tiền thanh toán</FormLabel>
+										<Input
+											type="number"
+											value={paymentForm.amount}
+											onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+											placeholder="Nhập số tiền"
+											size="lg"
+											focusBorderColor="green.500"
+										/>
+										<Text fontSize="xs" color="gray.500" mt={1}>
+											Tối đa: {formatCurrency(selectedOrder.remainingAmount)}
+										</Text>
+									</FormControl>
+
+									<FormControl isRequired>
+										<FormLabel>Phương thức thanh toán</FormLabel>
+										<Select
+											value={paymentForm.paymentMethod}
+											onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value })}
+											size="lg"
+											focusBorderColor="green.500"
+										>
+											<option value="Cash">Tiền mặt</option>
+											<option value="BankTransfer">Chuyển khoản</option>
+											<option value="Card">Thẻ</option>
+											<option value="Other">Khác</option>
+										</Select>
+									</FormControl>
+
+									<FormControl isRequired>
+										<FormLabel>Ngày thanh toán</FormLabel>
+										<Input
+											type="date"
+											value={paymentForm.paymentDate}
+											onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
+											size="lg"
+											focusBorderColor="green.500"
+										/>
+									</FormControl>
+
+									<FormControl>
+										<FormLabel>Ghi chú</FormLabel>
+										<Textarea
+											value={paymentForm.note}
+											onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })}
+											placeholder="Nhập ghi chú (tùy chọn)"
+											size="lg"
+											rows={3}
+											focusBorderColor="green.500"
+										/>
+									</FormControl>
+								</VStack>
+							</VStack>
+						)}
+					</DrawerBody>
+
+					<DrawerFooter borderTopWidth="1px" bg="gray.50">
+						<ButtonGroup spacing={3} w="full">
+							<Button
+								variant="outline"
+								onClick={onClose}
+								flex={1}
+								_focus={{ boxShadow: 'none', outline: 'none' }}
+							>
+								Hủy
+							</Button>
+							<Button
+								colorScheme="green"
+								onClick={handleCreatePayment}
+								isLoading={creatingPayment}
+								loadingText="Đang xử lý..."
+								flex={1}
+								_focus={{ boxShadow: 'none', outline: 'none' }}
+							>
+								Xác nhận thanh toán
+							</Button>
+						</ButtonGroup>
+					</DrawerFooter>
+				</DrawerContent>
+			</Drawer>
 		</Box>
 	);
 };

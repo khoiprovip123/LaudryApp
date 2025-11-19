@@ -21,38 +21,75 @@ import {
 	Tr,
 	Select,
 	IconButton,
+	Modal,
+	ModalOverlay,
+	ModalContent,
+	ModalHeader,
+	ModalFooter,
+	ModalBody,
+	ModalCloseButton,
+	FormControl,
+	FormLabel,
+	Input,
+	Textarea,
+	useDisclosure,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getOrderById, updateOrderStatus } from '../../api/orders';
 import type { OrderDto } from '../../api/orders';
+import { getPayments, createPayment, deletePayment, type PaymentDto } from '../../api/payments';
 import Breadcrumb from '../../components/Breadcrumb';
-import { ChevronLeftIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons';
 import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabels } from '../../constants/orderStatus';
 
 const OrderDetail: React.FC = () => {
 	const params = useParams<{ id: string }>();
 	const id = params.id!;
 	const [order, setOrder] = useState<OrderDto | null>(null);
+	const [payments, setPayments] = useState<PaymentDto[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [loadingPayments, setLoadingPayments] = useState(false);
 	const [updatingStatus, setUpdatingStatus] = useState(false);
+	const [creatingPayment, setCreatingPayment] = useState(false);
 	const toast = useToast();
 	const navigate = useNavigate();
+	const { isOpen, onOpen, onClose } = useDisclosure();
+	const [paymentForm, setPaymentForm] = useState({
+		amount: '',
+		paymentMethod: 'Cash',
+		paymentDate: new Date().toISOString().split('T')[0],
+		note: '',
+	});
+
+	const loadOrder = async () => {
+		setLoading(true);
+		try {
+			const data = await getOrderById(id);
+			setOrder(data);
+		} catch (err: any) {
+			// Toast error đã được xử lý tự động bởi http wrapper
+			navigate('/orders');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const loadPayments = async () => {
+		if (!id) return;
+		setLoadingPayments(true);
+		try {
+			const res = await getPayments({ orderId: id, limit: 100 });
+			setPayments(res.items);
+		} catch (err: any) {
+			// Toast error đã được xử lý tự động bởi http wrapper
+		} finally {
+			setLoadingPayments(false);
+		}
+	};
 
 	useEffect(() => {
-		const loadOrder = async () => {
-			setLoading(true);
-			try {
-				const data = await getOrderById(id);
-				setOrder(data);
-			} catch (err: any) {
-				// Toast error đã được xử lý tự động bởi http wrapper
-				navigate('/orders');
-			} finally {
-				setLoading(false);
-			}
-		};
-
 		void loadOrder();
+		void loadPayments();
 	}, [id, navigate]);
 
 	const handleStatusChange = async (newStatus: string) => {
@@ -107,6 +144,77 @@ const OrderDetail: React.FC = () => {
 			hour: '2-digit',
 			minute: '2-digit',
 		});
+	};
+
+	const handleCreatePayment = async () => {
+		if (!order || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0) {
+			toast({
+				status: 'error',
+				title: 'Vui lòng nhập số tiền hợp lệ',
+				duration: 2000,
+				isClosable: true,
+			});
+			return;
+		}
+
+		const amount = parseFloat(paymentForm.amount);
+		if (amount > order.remainingAmount) {
+			toast({
+				status: 'error',
+				title: `Số tiền không được vượt quá số tiền còn lại (${formatCurrency(order.remainingAmount)})`,
+				duration: 3000,
+				isClosable: true,
+			});
+			return;
+		}
+
+		setCreatingPayment(true);
+		try {
+			await createPayment({
+				orderId: order.id,
+				amount,
+				paymentMethod: paymentForm.paymentMethod,
+				paymentDate: new Date(paymentForm.paymentDate).toISOString(),
+				note: paymentForm.note || null,
+			});
+			toast({
+				status: 'success',
+				title: 'Tạo thanh toán thành công',
+				duration: 2000,
+				isClosable: true,
+			});
+			onClose();
+			setPaymentForm({
+				amount: '',
+				paymentMethod: 'Cash',
+				paymentDate: new Date().toISOString().split('T')[0],
+				note: '',
+			});
+			await loadOrder();
+			await loadPayments();
+		} catch (err: any) {
+			// Toast error đã được xử lý tự động bởi http wrapper
+		} finally {
+			setCreatingPayment(false);
+		}
+	};
+
+	const handleDeletePayment = async (paymentId: string) => {
+		if (!confirm('Bạn có chắc chắn muốn xóa thanh toán này?')) return;
+
+		try {
+			await deletePayment(paymentId);
+			toast({
+				status: 'success',
+				title: 'Xóa thanh toán thành công',
+				duration: 2000,
+				isClosable: true,
+			});
+			await loadOrder();
+			await loadPayments();
+		} catch (err: any) {
+			// Toast error đã được xử lý tự động bởi http wrapper
+		}
 	};
 
 	if (loading) {
@@ -314,7 +422,82 @@ const OrderDetail: React.FC = () => {
 										{formatCurrency(order.remainingAmount)}
 									</Text>
 								</Flex>
+								{order.remainingAmount > 0 && (
+									<Button
+										leftIcon={<AddIcon />}
+										colorScheme="green"
+										mt={2}
+										onClick={onOpen}
+										_focus={{ boxShadow: 'none', outline: 'none' }}
+									>
+										Thêm thanh toán
+									</Button>
+								)}
 							</VStack>
+						</CardBody>
+					</Card>
+
+					{/* Payments History Card */}
+					<Card mt={4}>
+						<CardBody>
+							<Heading size="sm" mb={4} color="gray.700">
+								Lịch sử thanh toán
+							</Heading>
+							{loadingPayments ? (
+								<Flex justify="center" py={4}>
+									<Spinner size="sm" />
+								</Flex>
+							) : payments.length === 0 ? (
+								<Text color="gray.400" fontSize="sm" textAlign="center" py={4}>
+									Chưa có thanh toán nào
+								</Text>
+							) : (
+								<VStack align="stretch" spacing={2}>
+									{payments.map((payment) => (
+										<Box
+											key={payment.id}
+											p={3}
+											bg="gray.50"
+											borderRadius="md"
+											border="1px solid"
+											borderColor="gray.200"
+										>
+											<Flex justify="space-between" align="start">
+												<VStack align="start" spacing={1} flex="1">
+													<HStack>
+														<Text fontSize="xs" color="gray.500" fontWeight="semibold">
+															{payment.paymentCode}
+														</Text>
+														<Badge colorScheme="blue" fontSize="xs">
+															{payment.paymentMethod}
+														</Badge>
+													</HStack>
+													<Text fontSize="sm" fontWeight="bold" color="green.600">
+														{formatCurrency(payment.amount)}
+													</Text>
+													<Text fontSize="xs" color="gray.500">
+														{formatDate(payment.paymentDate)}
+													</Text>
+													{payment.note && (
+														<Text fontSize="xs" color="gray.600" fontStyle="italic">
+															{payment.note}
+														</Text>
+													)}
+												</VStack>
+												<IconButton
+													aria-label="Xóa"
+													icon={<DeleteIcon />}
+													size="xs"
+													colorScheme="red"
+													variant="ghost"
+													onClick={() => handleDeletePayment(payment.id)}
+													_focus={{ boxShadow: 'none', outline: 'none' }}
+												/>
+											</Flex>
+										</Box>
+									))}
+								</VStack>
+							)}
 						</CardBody>
 					</Card>
 
@@ -325,7 +508,7 @@ const OrderDetail: React.FC = () => {
 								Trạng thái đơn hàng
 							</Heading>
 							<VStack align="stretch" spacing={2}>
-								{Object.values(OrderStatus).map((status, index) => {
+								{Object.values(OrderStatus).map((status) => {
 									const isCompleted = 
 										status === order.status ||
 										(order.status === OrderStatus.Processing && status === OrderStatus.Received) ||
@@ -365,6 +548,115 @@ const OrderDetail: React.FC = () => {
 					</Card>
 				</Box>
 			</Flex>
+
+			{/* Create Payment Modal */}
+			<Modal isOpen={isOpen} onClose={onClose} size="md">
+				<ModalOverlay />
+				<ModalContent>
+					<ModalHeader>Thêm thanh toán</ModalHeader>
+					<ModalCloseButton />
+					<ModalBody>
+						<VStack spacing={4}>
+							<FormControl isRequired>
+								<FormLabel>Số tiền</FormLabel>
+								<HStack spacing={2}>
+									<Input
+										type="number"
+										value={paymentForm.amount}
+										min="0"
+										max={order?.remainingAmount || 0}
+										step="1000"
+										onChange={(e) => {
+											const value = e.target.value;
+											const numValue = parseFloat(value);
+											if (value === '' || (!isNaN(numValue) && numValue >= 0)) {
+												// Giới hạn giá trị không vượt quá số tiền còn lại
+												if (order && !isNaN(numValue) && numValue > order.remainingAmount) {
+													setPaymentForm({ ...paymentForm, amount: order.remainingAmount.toString() });
+												} else {
+													setPaymentForm({ ...paymentForm, amount: value });
+												}
+											}
+										}}
+										placeholder="Nhập số tiền"
+										_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+										flex="1"
+									/>
+									{order && order.remainingAmount > 0 && (
+										<Button
+											size="sm"
+											variant="outline"
+											onClick={() => {
+												setPaymentForm({ ...paymentForm, amount: order.remainingAmount.toString() });
+											}}
+											_focus={{ boxShadow: 'none', outline: 'none' }}
+										>
+											Tất cả
+										</Button>
+									)}
+								</HStack>
+								{order && (
+									<>
+										<Text fontSize="xs" color="gray.500" mt={1}>
+											Số tiền còn lại: {formatCurrency(order.remainingAmount)}
+										</Text>
+										{paymentForm.amount && parseFloat(paymentForm.amount) > order.remainingAmount && (
+											<Text fontSize="xs" color="red.500" mt={1}>
+												Số tiền không được vượt quá số tiền còn lại
+											</Text>
+										)}
+									</>
+								)}
+							</FormControl>
+							<FormControl isRequired>
+								<FormLabel>Phương thức thanh toán</FormLabel>
+								<Select
+									value={paymentForm.paymentMethod}
+									onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value })}
+									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+								>
+									<option value="Cash">Tiền mặt</option>
+									<option value="BankTransfer">Chuyển khoản</option>
+									<option value="Card">Thẻ</option>
+									<option value="Other">Khác</option>
+								</Select>
+							</FormControl>
+							<FormControl isRequired>
+								<FormLabel>Ngày thanh toán</FormLabel>
+								<Input
+									type="date"
+									value={paymentForm.paymentDate}
+									onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
+									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+								/>
+							</FormControl>
+							<FormControl>
+								<FormLabel>Ghi chú</FormLabel>
+								<Textarea
+									value={paymentForm.note}
+									onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })}
+									placeholder="Nhập ghi chú (tùy chọn)"
+									rows={3}
+									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+								/>
+							</FormControl>
+						</VStack>
+					</ModalBody>
+					<ModalFooter>
+						<Button variant="ghost" mr={3} onClick={onClose} _focus={{ boxShadow: 'none', outline: 'none' }}>
+							Hủy
+						</Button>
+						<Button
+							colorScheme="blue"
+							onClick={handleCreatePayment}
+							isLoading={creatingPayment}
+							_focus={{ boxShadow: 'none', outline: 'none' }}
+						>
+							Xác nhận
+						</Button>
+					</ModalFooter>
+				</ModalContent>
+			</Modal>
 		</Box>
 	);
 };

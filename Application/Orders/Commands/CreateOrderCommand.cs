@@ -100,10 +100,7 @@ namespace Application.Orders.Commands
                 if (service == null)
                     throw new UserFriendlyException($"Dịch vụ với ID {itemRequest.ServiceId} không tồn tại.", "SERVICE_NOT_FOUND");
 
-                // Validate unitPrice từ FE phải khớp với giá trong DB
-                if (service.UnitPrice != itemRequest.UnitPrice)
-                    throw new UserFriendlyException($"Giá dịch vụ {service.Name} đã thay đổi. Vui lòng làm mới trang.", "PRICE_MISMATCH");
-
+                // Lưu giá mà FE gửi xuống (có thể đã được chỉnh sửa khi tạo order)
                 var orderItem = new OrderItem(
                     itemRequest.ServiceId,
                     service.Name,

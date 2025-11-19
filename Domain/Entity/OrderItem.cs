@@ -27,6 +27,7 @@ namespace Domain.Entity
             ServiceName = serviceName;
             UnitPrice = unitPrice;
             Quantity = quantity;
+            TotalPrice = quantity * unitPrice; // Tính tổng tiền = số lượng × đơn giá
         }
     }
 }
