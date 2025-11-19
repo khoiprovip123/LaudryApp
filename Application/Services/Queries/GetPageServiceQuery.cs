@@ -5,7 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Services.Queries
+namespace Domain.Services.Queries
 {
 	public class GetPageServiceQuery : IRequest<PagedResult<ServiceDto>>
 	{

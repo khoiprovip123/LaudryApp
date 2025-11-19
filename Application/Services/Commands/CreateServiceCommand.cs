@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using ServiceEntity = Domain.Entity.Service;
 using IServiceService = Domain.Service.IServiceService;
 
-namespace Application.Services.Commands
+namespace Domain.Services.Commands
 {
 	public class CreateServiceCommand : IRequest<Unit>
 	{

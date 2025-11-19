@@ -1,7 +1,7 @@
 using Domain.Service;
 using MediatR;
 
-namespace Application.Services.Commands
+namespace Domain.Services.Commands
 {
 	public class UpdateServiceCommand : IRequest<Unit>
 	{

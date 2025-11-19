@@ -32,24 +32,24 @@ namespace Application.Partners.Queries
             _partnerService = partnerService;
             _workContext = workContext;
         }
-        
+
         private static string BuildDisplayName(string? refCode, string? name, string? phoneLastThreeDigits, string? phone)
         {
             // Format: [mã]tên-3 số cuối
             var result = string.Empty;
-            
+
             // Thêm mã (Ref) trong ngoặc vuông nếu có
             if (!string.IsNullOrEmpty(refCode))
             {
                 result = "[" + refCode + "]";
             }
-            
+
             // Thêm tên (không có khoảng trắng sau ngoặc vuông)
             if (!string.IsNullOrEmpty(name))
             {
                 result += name;
             }
-            
+
             // Thêm 3 số cuối số điện thoại
             string? phoneLastThree = phoneLastThreeDigits;
             if (string.IsNullOrEmpty(phoneLastThree) && !string.IsNullOrEmpty(phone))
@@ -65,12 +65,12 @@ namespace Application.Partners.Queries
                         phoneLastThree = lastMatch.Value;
                 }
             }
-            
+
             if (!string.IsNullOrEmpty(phoneLastThree))
             {
                 result += "-" + phoneLastThree;
             }
-            
+
             return result;
         }
         public async Task<PagedResult<PartnerDto>> Handle(GetPagePartnerQuery request, CancellationToken cancellationToken)
@@ -89,12 +89,20 @@ namespace Application.Partners.Queries
             if (!string.IsNullOrWhiteSpace(request.Search))
             {
                 var kw = request.Search.Trim().ToLower();
-                partners = partners.Where(p =>
-                    (p.Name != null && p.Name.ToLower().Contains(kw)) ||
-                    (p.Phone != null && p.Phone.Contains(kw)) ||
-                    (p.PhoneLastThreeDigits != null && p.PhoneLastThreeDigits.Contains(kw)) ||
-                    (p.Ref != null && p.Ref.ToLower().Contains(kw)) ||
-                    (p.NameNoSign != null && p.NameNoSign.ToLower().Contains(kw)));
+
+                bool isThreeDigit = kw.Length <= 3 && kw.All(char.IsDigit);
+
+                if (isThreeDigit)
+                {
+                    partners = partners.Where(p => p.PhoneLastThreeDigits == kw);
+                }
+                else
+                {
+                    partners = partners.Where(p =>
+                        (p.Name != null && p.Name.ToLower().Contains(kw)) ||
+                        (p.Ref != null && p.Ref.ToLower().Contains(kw)) ||
+                        (p.NameNoSign != null && p.NameNoSign.ToLower().Contains(kw)));
+                }
             }
             var totalItems = await partners.CountAsync(cancellationToken);
 

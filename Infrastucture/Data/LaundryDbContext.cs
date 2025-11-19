@@ -36,6 +36,7 @@ namespace Infrastucture.Data
 		public DbSet<IRSequence> IRSequences { get; set; }
         public DbSet<PermissionGroup> PermissionGroups { get; set; }
         public DbSet<EmployeePermissionGroup> EmployeePermissionGroups { get; set; }
+        public DbSet<PrintTemplate> PrintTemplates { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -49,6 +50,7 @@ namespace Infrastucture.Data
 			builder.ApplyConfiguration(new IRSequenceConfiguration());
             builder.ApplyConfiguration(new PermissionGroupConfiguration());
             builder.ApplyConfiguration(new EmployeePermissionGroupConfiguration());
+            builder.ApplyConfiguration(new PrintTemplateConfiguration());
 
             base.OnModelCreating(builder);
         }

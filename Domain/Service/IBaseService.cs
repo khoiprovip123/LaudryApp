@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Service
+namespace Domain.Service
 {
     public interface IBaseService<T> where T : BaseEntity
     {

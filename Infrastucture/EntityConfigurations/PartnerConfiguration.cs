@@ -13,7 +13,7 @@ namespace Infrastucture.EntityConfigurations
     {
         public void Configure(EntityTypeBuilder<Partner> builder)
         {
-            builder.HasIndex(x => new { x.Name, x.Ref, x.Phone });
+            builder.HasIndex(x => new { x.Name, x.Ref, x.Phone, x.PhoneLastThreeDigits });
 
             builder.HasOne(x => x.Company)
                    .WithMany()

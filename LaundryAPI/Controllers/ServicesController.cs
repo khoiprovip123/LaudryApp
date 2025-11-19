@@ -1,5 +1,5 @@
-using Application.Services.Queries;
-using Application.Services.Commands;
+using Domain.Services.Queries;
+using Domain.Services.Commands;
 using Domain.Constants;
 using LaundryAPI.Attributes;
 using Microsoft.AspNetCore.Http;

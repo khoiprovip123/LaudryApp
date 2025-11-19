@@ -4,7 +4,7 @@ using Domain.Service;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Services.Commands
+namespace Domain.Services.Commands
 {
 	public class DeleteServiceCommand : IRequest<Unit>
 	{

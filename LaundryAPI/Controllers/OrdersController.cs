@@ -55,6 +55,31 @@ namespace LaundryAPI.Controllers
             await Mediator.Send(new DeleteOrderCommand { Id = id });
             return Ok(new { message = "Xóa đơn hàng thành công." });
         }
+
+        [HttpGet("{id}/print")]
+        [CheckAccess(Actions = Permissions.Orders_View)]
+        public async Task<IActionResult> GetOrderPrint(Guid id, [FromQuery] string printType = "Receive", [FromQuery] Guid? templateId = null)
+        {
+            // Nếu có templateId, render với template
+            if (templateId.HasValue)
+            {
+                var res = await Mediator.Send(new Application.Orders.Queries.GetOrderPrintWithTemplateQuery
+                {
+                    OrderId = id,
+                    PrintType = printType,
+                    TemplateId = templateId
+                });
+                return Ok(res);
+            }
+
+            // Nếu không có templateId, trả về dữ liệu raw
+            var res2 = await Mediator.Send(new Application.Orders.Queries.GetOrderPrintQuery 
+            { 
+                OrderId = id, 
+                PrintType = printType 
+            });
+            return Ok(res2);
+        }
     }
 }
 

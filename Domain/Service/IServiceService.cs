@@ -1,4 +1,4 @@
-using Application.Service;
+using Domain.Service;
 using Domain.Entity;
 
 namespace Domain.Service

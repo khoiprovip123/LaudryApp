@@ -1,9 +1,9 @@
-using Application.Services.Queries;
+using Domain.Services.Queries;
 using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
 
-namespace Application.Services.Queries
+namespace Domain.Services.Queries
 {
 	public class GetServiceByIdQuery : IRequest<ServiceDto>
 	{
