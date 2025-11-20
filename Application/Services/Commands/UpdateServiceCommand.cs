@@ -9,6 +9,8 @@ namespace Domain.Services.Commands
 		public string Name { get; set; } = string.Empty;
 		public decimal UnitPrice { get; set; }
 		public string UnitOfMeasure { get; set; } = "kg";
+		public decimal? MinimumWeight { get; set; }
+		public decimal? MinimumPrice { get; set; }
 		public string? Description { get; set; }
 		public bool Active { get; set; } = true;
 	}
@@ -29,6 +31,8 @@ namespace Domain.Services.Commands
 			service.Name = request.Name;
 			service.UnitPrice = request.UnitPrice;
 			service.UnitOfMeasure = request.UnitOfMeasure ?? "kg";
+			service.MinimumWeight = request.MinimumWeight;
+			service.MinimumPrice = request.MinimumPrice;
 			service.Description = request.Description ?? string.Empty;
 			// Không cho phép sửa mã dịch vụ - giữ nguyên mã cũ
 			// service.DefaultCode = request.DefaultCode ?? string.Empty;

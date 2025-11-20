@@ -4,6 +4,9 @@ export type ServiceDto = {
 	id: string;
 	name: string;
 	unitPrice: number;
+	unitOfMeasure: string;
+	minimumWeight?: number | null;
+	minimumPrice?: number | null;
 	description: string;
 	defaultCode: string;
 	active: boolean;
@@ -29,6 +32,9 @@ export const getServiceById = async (id: string) => {
 export type CreateServiceRequest = {
 	name: string;
 	unitPrice: number;
+	unitOfMeasure?: string;
+	minimumWeight?: number | null;
+	minimumPrice?: number | null;
 	description: string;
 	defaultCode?: string; // Optional, sẽ tự sinh ở backend
 	active: boolean;
@@ -42,6 +48,9 @@ export type UpdateServiceRequest = {
 	id: string;
 	name: string;
 	unitPrice: number;
+	unitOfMeasure?: string;
+	minimumWeight?: number | null;
+	minimumPrice?: number | null;
 	description: string;
 	defaultCode?: string; // Optional, không được sửa
 	active: boolean;

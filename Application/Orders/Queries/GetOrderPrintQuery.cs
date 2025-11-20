@@ -78,7 +78,7 @@ namespace Application.Orders.Queries
             {
                 ServiceName = oi.ServiceName,
                 Quantity = oi.Quantity,
-                UnitOfMeasure = "kg", // TODO: Lấy từ Service nếu có
+                UnitOfMeasure = oi.UnitOfMeasure ?? "kg", // Lấy từ OrderItem đã lưu khi tạo đơn hàng
                 UnitPrice = oi.UnitPrice,
                 TotalPrice = oi.TotalPrice
             }).ToList() ?? new List<OrderItemPrintDto>();

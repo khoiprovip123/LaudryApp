@@ -101,11 +101,13 @@ namespace Application.Orders.Commands
                     throw new UserFriendlyException($"Dịch vụ với ID {itemRequest.ServiceId} không tồn tại.", "SERVICE_NOT_FOUND");
 
                 // Lưu giá mà FE gửi xuống (có thể đã được chỉnh sửa khi tạo order)
+                // Lưu UnitOfMeasure từ Service để đảm bảo tính nhất quán khi in đơn hàng
                 var orderItem = new OrderItem(
                     itemRequest.ServiceId,
                     service.Name,
                     itemRequest.UnitPrice,
-                    itemRequest.Quantity
+                    itemRequest.Quantity,
+                    service.UnitOfMeasure ?? "kg"
                 )
                 {
                     CompanyId = companyId

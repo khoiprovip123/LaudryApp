@@ -44,6 +44,7 @@ import SearchInput from '../../components/SearchInput';
 type SelectedService = {
 	service: ServiceDto;
 	quantity: number;
+	weightInKg?: number; // Số kg của khách, chỉ dùng khi UnitOfMeasure === "kg"
 	customPrice?: number; // Giá tùy chỉnh, nếu không có thì dùng service.unitPrice
 };
 
@@ -59,6 +60,17 @@ type OrderTab = {
 // Lấy giá của dịch vụ (ưu tiên customPrice nếu có)
 const getServicePrice = (item: SelectedService): number => {
 	return item.customPrice !== undefined ? item.customPrice : item.service.unitPrice;
+};
+
+// Tính tổng tiền cho một dịch vụ
+const getServiceTotal = (item: SelectedService): number => {
+	const price = getServicePrice(item);
+	// Nếu UnitOfMeasure là "kg" và có weightInKg, tính theo số kg
+	if (item.service.unitOfMeasure?.toLowerCase() === 'kg' && item.weightInKg !== undefined && item.weightInKg > 0) {
+		return price * item.weightInKg;
+	}
+	// Ngược lại, tính theo số lượng bình thường
+	return price * item.quantity;
 };
 
 const OrderCreate: React.FC = () => {
@@ -328,6 +340,33 @@ const OrderCreate: React.FC = () => {
 		updateTab(activeTabId, { selectedServices: newServices });
 	};
 
+	// Cập nhật số kg cho dịch vụ tính theo kg
+	const handleUpdateWeightInKg = (serviceId: string, weightInKg: number) => {
+		if (weightInKg < 0) return; // Không cho phép số kg âm
+		const newServices = activeTab.selectedServices.map(s => {
+			if (s.service.id === serviceId) {
+				const updated = { ...s, weightInKg };
+				// Tự động điền giá tối thiểu nếu số kg nhỏ hơn khối lượng tối thiểu
+				if (
+					s.service.minimumWeight !== null && 
+					s.service.minimumWeight !== undefined &&
+					s.service.minimumPrice !== null &&
+					s.service.minimumPrice !== undefined &&
+					weightInKg > 0 &&
+					weightInKg < s.service.minimumWeight
+				) {
+					// Nếu chưa có customPrice hoặc customPrice bằng giá tính theo kg, thì điền giá tối thiểu
+					if (s.customPrice === undefined || s.customPrice === s.service.unitPrice * weightInKg) {
+						updated.customPrice = s.service.minimumPrice;
+					}
+				}
+				return updated;
+			}
+			return s;
+		});
+		updateTab(activeTabId, { selectedServices: newServices });
+	};
+
 	// Chọn khách hàng
 	const handleSelectCustomer = (customer: CustomerDto) => {
 		updateTab(activeTabId, {
@@ -446,7 +485,7 @@ const OrderCreate: React.FC = () => {
 	// Tính tổng tiền cho tab hiện tại
 	const totalAmount = useMemo(() => {
 		return activeTab.selectedServices.reduce((sum, item) => {
-			return sum + getServicePrice(item) * item.quantity;
+			return sum + getServiceTotal(item);
 		}, 0);
 	}, [activeTab.selectedServices]);
 
@@ -643,29 +682,63 @@ const OrderCreate: React.FC = () => {
 															{item.service.name}
 														</Text>
 														<HStack spacing={4}>
-															<HStack spacing={2}>
-																<IconButton
-																	aria-label="Giảm"
-																	size="xs"
-																	variant="outline"
-																	onClick={() => handleUpdateQuantity(item.service.id, item.quantity - 1)}
-																	_focus={{ boxShadow: 'none', outline: 'none' }}
-																>
-																	<Text fontSize="xs">-</Text>
-																</IconButton>
-																<Text minW="30px" textAlign="center" fontWeight="semibold" fontSize="sm">
-																	{item.quantity}
-																</Text>
-																<IconButton
-																	aria-label="Tăng"
-																	size="xs"
-																	variant="outline"
-																	onClick={() => handleUpdateQuantity(item.service.id, item.quantity + 1)}
-																	_focus={{ boxShadow: 'none', outline: 'none' }}
-																>
-																	<Text fontSize="xs">+</Text>
-																</IconButton>
-															</HStack>
+															{/* Hiển thị số lượng hoặc số kg tùy theo UnitOfMeasure */}
+															{item.service.unitOfMeasure?.toLowerCase() === 'kg' ? (
+																<VStack spacing={1} align="start">
+																	<Text fontSize="xs" color="gray.500">
+																		Số kg:
+																	</Text>
+																	<Input
+																		type="number"
+																		size="sm"
+																		value={item.weightInKg !== undefined ? item.weightInKg : ''}
+																		onChange={(e) => {
+																			const value = parseFloat(e.target.value);
+																			if (!isNaN(value)) {
+																				handleUpdateWeightInKg(item.service.id, value);
+																			} else if (e.target.value === '') {
+																				handleUpdateWeightInKg(item.service.id, 0);
+																			}
+																		}}
+																		onBlur={(e) => {
+																			const value = parseFloat(e.target.value);
+																			if (isNaN(value) || value < 0) {
+																				handleUpdateWeightInKg(item.service.id, 0);
+																			}
+																		}}
+																		placeholder="Nhập số kg"
+																		min={0}
+																		step={0.1}
+																		w="100px"
+																		fontSize="sm"
+																		_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+																	/>
+																</VStack>
+															) : (
+																<HStack spacing={2}>
+																	<IconButton
+																		aria-label="Giảm"
+																		size="xs"
+																		variant="outline"
+																		onClick={() => handleUpdateQuantity(item.service.id, item.quantity - 1)}
+																		_focus={{ boxShadow: 'none', outline: 'none' }}
+																	>
+																		<Text fontSize="xs">-</Text>
+																	</IconButton>
+																	<Text minW="30px" textAlign="center" fontWeight="semibold" fontSize="sm">
+																		{item.quantity}
+																	</Text>
+																	<IconButton
+																		aria-label="Tăng"
+																		size="xs"
+																		variant="outline"
+																		onClick={() => handleUpdateQuantity(item.service.id, item.quantity + 1)}
+																		_focus={{ boxShadow: 'none', outline: 'none' }}
+																	>
+																		<Text fontSize="xs">+</Text>
+																	</IconButton>
+																</HStack>
+															)}
 															<VStack spacing={1} align="start" flex="1">
 																<HStack spacing={1} align="center">
 																	<Text fontSize="xs" color="gray.500" minW="50px">
@@ -706,7 +779,7 @@ const OrderCreate: React.FC = () => {
 															</VStack>
 														</HStack>
 														<Text fontSize="sm" fontWeight="bold" color="blue.600">
-															{formatCurrency(getServicePrice(item) * item.quantity)}
+															{formatCurrency(getServiceTotal(item))}
 														</Text>
 													</VStack>
 												</Flex>
@@ -993,11 +1066,18 @@ const OrderCreate: React.FC = () => {
 								
 								setIsCreating(true);
 								try {
-									const orderItems = activeTab.selectedServices.map(item => ({
-										serviceId: item.service.id,
-										quantity: item.quantity,
-										unitPrice: getServicePrice(item),
-									}));
+									const orderItems = activeTab.selectedServices.map(item => {
+										// Nếu UnitOfMeasure là "kg" và có weightInKg, dùng weightInKg làm quantity
+										let quantity = item.quantity;
+										if (item.service.unitOfMeasure?.toLowerCase() === 'kg' && item.weightInKg !== undefined && item.weightInKg > 0) {
+											quantity = item.weightInKg;
+										}
+										return {
+											serviceId: item.service.id,
+											quantity: quantity,
+											unitPrice: getServicePrice(item),
+										};
+									});
 
 									await createOrder({
 										partnerId: activeTab.selectedCustomer.id,

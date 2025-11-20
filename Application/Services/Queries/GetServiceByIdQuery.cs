@@ -42,6 +42,8 @@ namespace Domain.Services.Queries
 				Name = service.Name,
 				UnitPrice = service.UnitPrice,
 				UnitOfMeasure = service.UnitOfMeasure,
+				MinimumWeight = service.MinimumWeight,
+				MinimumPrice = service.MinimumPrice,
 				Description = service.Description,
 				DefaultCode = service.DefaultCode,
 				Active = service.Active

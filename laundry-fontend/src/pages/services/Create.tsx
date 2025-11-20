@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea } from '@chakra-ui/react';
+import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea, Select, Divider } from '@chakra-ui/react';
 import { useToast } from '../../hooks/useToast';
 import { createService } from '../../api/services';
 import type { CreateServiceRequest } from '../../api/services';
@@ -11,11 +11,15 @@ const ServiceCreate: React.FC = () => {
 	const [form, setForm] = useState<CreateServiceRequest>({
 		name: '',
 		unitPrice: 0,
+		unitOfMeasure: 'kg',
+		minimumWeight: null,
+		minimumPrice: null,
 		description: '',
 		defaultCode: '',
 		active: true,
 	});
 	const [unitPriceDisplay, setUnitPriceDisplay] = useState<string>('');
+	const [minimumPriceDisplay, setMinimumPriceDisplay] = useState<string>('');
 	const [loading, setLoading] = useState(false);
 	const toast = useToast();
 	const navigate = useNavigate();
@@ -36,11 +40,34 @@ const ServiceCreate: React.FC = () => {
 		update('unitPrice', parsed);
 	};
 
+	const handleMinimumPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		
+		// Format hiển thị với dấu chấm
+		const formatted = formatCurrencyInput(value);
+		setMinimumPriceDisplay(formatted);
+		
+		// Parse về số để lưu vào form
+		const parsed = parseCurrencyInput(value);
+		update('minimumPrice', parsed || null);
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
 		try {
-			await createService(form);
+			// Đảm bảo gửi đầy đủ các trường, kể cả khi không phải kg
+			const payload: CreateServiceRequest = {
+				name: form.name,
+				unitPrice: form.unitPrice,
+				unitOfMeasure: form.unitOfMeasure || 'kg',
+				minimumWeight: form.unitOfMeasure === 'kg' ? form.minimumWeight : null,
+				minimumPrice: form.unitOfMeasure === 'kg' ? form.minimumPrice : null,
+				description: form.description,
+				defaultCode: form.defaultCode,
+				active: form.active,
+			};
+			await createService(payload);
 			toast({ 
 				status: 'success', 
 				title: 'Tạo dịch vụ thành công',
@@ -74,20 +101,79 @@ const ServiceCreate: React.FC = () => {
 								<FormLabel>Mã dịch vụ</FormLabel>
 								<Input value={form.defaultCode} onChange={(e) => update('defaultCode', e.target.value)} />
 							</FormControl>
-							<FormControl isRequired>
-								<FormLabel>Đơn giá (VND)</FormLabel>
-								<Input
-									value={unitPriceDisplay}
-									onChange={handleUnitPriceChange}
-									placeholder="VD: 1.000.000"
-									type="text"
-									inputMode="numeric"
-								/>
-							</FormControl>
 							<FormControl>
 								<FormLabel>Mô tả</FormLabel>
 								<Textarea value={form.description} onChange={(e) => update('description', e.target.value)} rows={4} />
 							</FormControl>
+
+							<Divider />
+
+							<Box>
+								<Heading size="sm" mb={4} color="gray.700">
+									🔧 Cấu hình nâng cao cho dịch vụ
+								</Heading>
+								<Stack spacing={4}>
+									<FormControl isRequired>
+										<FormLabel>Loại tính</FormLabel>
+										<Select 
+											value={form.unitOfMeasure || 'kg'} 
+											onChange={(e) => {
+												const newUnitOfMeasure = e.target.value;
+												update('unitOfMeasure', newUnitOfMeasure);
+												// Reset minimumWeight và minimumPrice khi không phải kg
+												if (newUnitOfMeasure !== 'kg') {
+													update('minimumWeight', null);
+													update('minimumPrice', null);
+													setMinimumPriceDisplay('');
+												}
+											}}
+										>
+											<option value="kg">kg</option>
+											<option value="chiếc">chiếc</option>
+											<option value="bộ">bộ</option>
+										</Select>
+									</FormControl>
+									<FormControl isRequired>
+										<FormLabel>Giá theo đơn vị (VND)</FormLabel>
+										<Input
+											value={unitPriceDisplay}
+											onChange={handleUnitPriceChange}
+											placeholder="VD: 1.000.000"
+											type="text"
+											inputMode="numeric"
+										/>
+									</FormControl>
+									{form.unitOfMeasure === 'kg' && (
+										<>
+											<FormControl>
+												<FormLabel>Khối lượng tối thiểu (kg)</FormLabel>
+												<Input
+													type="number"
+													value={form.minimumWeight ?? ''}
+													onChange={(e) => update('minimumWeight', e.target.value ? parseFloat(e.target.value) : null)}
+													placeholder="VD: 2.5"
+													step="0.1"
+													min="0"
+												/>
+											</FormControl>
+											<FormControl>
+												<FormLabel>Giá tối thiểu (VNĐ)</FormLabel>
+												<Input
+													value={minimumPriceDisplay}
+													onChange={handleMinimumPriceChange}
+													placeholder="VD: 50.000"
+													type="text"
+													inputMode="numeric"
+												/>
+												<Box mt={1} fontSize="xs" color="gray.500">
+													Tự động điền trên FE, có thể tùy chỉnh khi tạo đơn hàng
+												</Box>
+											</FormControl>
+										</>
+									)}
+								</Stack>
+							</Box>
+
 							<FormControl display="flex" alignItems="center">
 								<FormLabel mb="0">Active</FormLabel>
 								<Switch isChecked={form.active} onChange={(e) => update('active', e.target.checked)} />
