@@ -140,15 +140,15 @@ namespace Application.Payments.Commands
 
             if (newRemainingAmount <= 0)
             {
+                // Tự động cập nhật PaymentStatus = "Paid" khi thanh toán xong
                 order.PaymentStatus = "Paid";
-                // Khi thanh toán xong, chuyển trạng thái order thành "Delivered" (Đã giao cho khách)
-                if (order.Status != OrderStatus.Delivered)
-                {
-                    order.Status = OrderStatus.Delivered;
-                }
+                // Lưu ý: PaymentStatus ("đã thanh toán") khác với Status ("đã giao cho khách")
+                // Status không tự động chuyển sang Delivered, sẽ được quản lý độc lập
+                // FE có thể chuyển Status tự do theo nhu cầu business
             }
             else if (newPaidAmount > 0)
             {
+                // Tự động cập nhật PaymentStatus = "PartiallyPaid" khi thanh toán một phần
                 order.PaymentStatus = "PartiallyPaid";
             }
 

@@ -56,7 +56,7 @@ namespace Application.Orders.Commands
                 throw new UserFriendlyException("Bạn không có quyền truy cập đơn hàng này.", "ORDER_ACCESS_DENIED");
 
             // Validate chuyển đổi trạng thái hợp lệ
-            ValidateStatusTransition(order.Status, request.Status);
+            ValidateStatusTransition(request.Status);
 
             // Lấy UserId từ claim
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
@@ -80,62 +80,11 @@ namespace Application.Orders.Commands
             return Unit.Value;
         }
 
-        private void ValidateStatusTransition(string? currentStatus, string newStatus)
+        private void ValidateStatusTransition(string newStatus)
         {
             // Cho phép chuyển từ null hoặc bất kỳ trạng thái nào sang Received (nếu cần reset)
             if (newStatus == OrderStatus.Received)
                 return;
-
-            // Quy tắc chuyển đổi trạng thái:
-            // Received → Processing → Completed → Delivered
-            switch (currentStatus)
-            {
-                case OrderStatus.Received:
-                    // Received chỉ có thể chuyển sang Processing
-                    if (newStatus != OrderStatus.Processing)
-                    {
-                        throw new UserFriendlyException(
-                            $"Không thể chuyển từ '{OrderStatus.Received}' sang '{newStatus}'. Chỉ có thể chuyển sang '{OrderStatus.Processing}'.",
-                            "INVALID_STATUS_TRANSITION");
-                    }
-                    break;
-
-                case OrderStatus.Processing:
-                    // Processing chỉ có thể chuyển sang Completed
-                    if (newStatus != OrderStatus.Completed)
-                    {
-                        throw new UserFriendlyException(
-                            $"Không thể chuyển từ '{OrderStatus.Processing}' sang '{newStatus}'. Chỉ có thể chuyển sang '{OrderStatus.Completed}'.",
-                            "INVALID_STATUS_TRANSITION");
-                    }
-                    break;
-
-                case OrderStatus.Completed:
-                    // Completed chỉ có thể chuyển sang Delivered
-                    if (newStatus != OrderStatus.Delivered)
-                    {
-                        throw new UserFriendlyException(
-                            $"Không thể chuyển từ '{OrderStatus.Completed}' sang '{newStatus}'. Chỉ có thể chuyển sang '{OrderStatus.Delivered}'.",
-                            "INVALID_STATUS_TRANSITION");
-                    }
-                    break;
-
-                case OrderStatus.Delivered:
-                    // Delivered là trạng thái cuối, không thể chuyển sang trạng thái khác
-                    throw new UserFriendlyException(
-                        $"Đơn hàng đã ở trạng thái '{OrderStatus.Delivered}' và không thể thay đổi trạng thái.",
-                        "ORDER_ALREADY_DELIVERED");
-
-                default:
-                    // Nếu trạng thái hiện tại là null hoặc không hợp lệ, chỉ cho phép chuyển sang Received
-                    if (newStatus != OrderStatus.Received)
-                    {
-                        throw new UserFriendlyException(
-                            $"Đơn hàng có trạng thái không hợp lệ. Vui lòng đặt lại trạng thái thành '{OrderStatus.Received}'.",
-                            "INVALID_CURRENT_STATUS");
-                    }
-                    break;
-            }
         }
     }
 }

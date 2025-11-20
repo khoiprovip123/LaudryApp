@@ -18,14 +18,12 @@ import {
 	Th,
 	Thead,
 	Tr,
-	FormControl,
-	FormLabel,
-	Input,
 	SimpleGrid,
 } from '@chakra-ui/react';
 import { getRevenueReport, type RevenueReportDto } from '../../api/reports';
 import { exportRevenueToExcel } from '../../api/export';
 import { FaFileExcel } from 'react-icons/fa';
+import DateRangePicker from '../../components/DateRangePicker';
 import {
 	XAxis,
 	YAxis,
@@ -72,7 +70,7 @@ const Reports: React.FC = () => {
 	useEffect(() => {
 		void loadReport();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [dateFrom, dateTo]);
 
 	const handleExport = async () => {
 		if (!dateFrom || !dateTo) {
@@ -117,24 +115,16 @@ const Reports: React.FC = () => {
 					<Flex justify="space-between" align="center" flexWrap="wrap" gap={4}>
 						<Heading size="lg">Báo cáo Doanh thu</Heading>
 						<HStack>
-							<FormControl w="150px">
-								<FormLabel fontSize="sm">Từ ngày</FormLabel>
-								<Input
-									type="date"
-									value={dateFrom}
-									onChange={(e) => setDateFrom(e.target.value)}
-									size="sm"
-								/>
-							</FormControl>
-							<FormControl w="150px">
-								<FormLabel fontSize="sm">Đến ngày</FormLabel>
-								<Input
-									type="date"
-									value={dateTo}
-									onChange={(e) => setDateTo(e.target.value)}
-									size="sm"
-								/>
-							</FormControl>
+							<DateRangePicker
+								dateFrom={dateFrom}
+								dateTo={dateTo}
+								onDateFromChange={setDateFrom}
+								onDateToChange={setDateTo}
+								labelFrom="Từ ngày"
+								labelTo="Đến ngày"
+								size="sm"
+								w="280px"
+							/>
 							<Button
 								colorScheme="blue"
 								onClick={loadReport}

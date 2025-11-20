@@ -44,6 +44,7 @@ import { createPayment } from '../../api/payments';
 import { exportOrdersToExcel } from '../../api/export';
 import { FaFileExcel } from 'react-icons/fa';
 import SearchInput from '../../components/SearchInput';
+import DateRangePicker from '../../components/DateRangePicker';
 import { useToast } from '../../hooks/useToast';
 
 const OrdersList: React.FC = () => {
@@ -325,54 +326,22 @@ const OrdersList: React.FC = () => {
 										debounceMs={300}
 									/>
 								</Box>
-								<Box>
-									<FormLabel fontSize="sm" color="gray.600">
-										Từ ngày
-									</FormLabel>
-									<Input
-										type="date"
-										size="sm"
-										value={dateFrom}
-										onChange={(e) => {
-											setDateFrom(e.target.value);
-											setOffset(0);
-										}}
-										w="150px"
-										_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
-									/>
-								</Box>
-								<Box>
-									<FormLabel fontSize="sm" color="gray.600">
-										Đến ngày
-									</FormLabel>
-									<Input
-										type="date"
-										size="sm"
-										value={dateTo}
-										onChange={(e) => {
-											setDateTo(e.target.value);
-											setOffset(0);
-										}}
-										w="150px"
-										_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
-									/>
-								</Box>
-								{(dateFrom || dateTo || searchKeyword) && (
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => {
-											setDateFrom('');
-											setDateTo('');
-											setSearchKeyword('');
-											setOffset(0);
-										}}
-										mt={6}
-										_focus={{ boxShadow: 'none', outline: 'none' }}
-									>
-										Xóa bộ lọc
-									</Button>
-								)}
+								<DateRangePicker
+									dateFrom={dateFrom}
+									dateTo={dateTo}
+									onDateFromChange={(date) => {
+										setDateFrom(date);
+										setOffset(0);
+									}}
+									onDateToChange={(date) => {
+										setDateTo(date);
+										setOffset(0);
+									}}
+									labelFrom="Từ ngày"
+									labelTo="Đến ngày"
+									size="sm"
+									w="240px"
+								/>
 							</HStack>
 						</VStack>
 					</Box>

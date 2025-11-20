@@ -82,6 +82,7 @@ const CompanyCreate: React.FC = () => {
 										type="date"
 										value={form.subscriptionStartDate}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => update('subscriptionStartDate', e.target.value)}
+										lang="vi-VN"
 									/>
 								</FormControl>
 								<FormControl>
@@ -90,6 +91,7 @@ const CompanyCreate: React.FC = () => {
 										type="date"
 										value={form.periodLockDate ?? ''}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => update('periodLockDate', e.target.value || null)}
+										lang="vi-VN"
 									/>
 								</FormControl>
 							</HStack>

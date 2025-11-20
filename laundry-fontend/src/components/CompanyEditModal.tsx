@@ -112,6 +112,7 @@ const CompanyEditModal: React.FC<Props> = ({ isOpen, onClose, companyId, onSucce
 										type="date"
 										value={form.subscriptionStartDate}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => update('subscriptionStartDate', e.target.value)}
+										lang="vi-VN"
 									/>
 								</FormControl>
 								<FormControl>
@@ -120,6 +121,7 @@ const CompanyEditModal: React.FC<Props> = ({ isOpen, onClose, companyId, onSucce
 										type="date"
 										value={form.periodLockDate ?? ''}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => update('periodLockDate', e.target.value || null)}
+										lang="vi-VN"
 									/>
 								</FormControl>
 							</HStack>

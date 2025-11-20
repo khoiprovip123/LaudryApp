@@ -119,19 +119,9 @@ const OrderDetail: React.FC = () => {
 		}
 	};
 
-	const getNextStatusOptions = (currentStatus: string): string[] => {
-		switch (currentStatus) {
-			case OrderStatus.Received:
-				return [OrderStatus.Processing];
-			case OrderStatus.Processing:
-				return [OrderStatus.Completed];
-			case OrderStatus.Completed:
-				return [OrderStatus.Delivered];
-			case OrderStatus.Delivered:
-				return [];
-			default:
-				return [OrderStatus.Received];
-		}
+	// Cho phép chuyển trạng thái tự do - trả về tất cả các trạng thái hợp lệ (trừ trạng thái hiện tại)
+	const getAllStatusOptions = (currentStatus: string): string[] => {
+		return Object.values(OrderStatus).filter(status => status !== currentStatus);
 	};
 
 	const formatCurrency = (amount: number) => {
@@ -146,8 +136,6 @@ const OrderDetail: React.FC = () => {
 			year: 'numeric',
 			month: '2-digit',
 			day: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit',
 		});
 	};
 
@@ -253,7 +241,7 @@ const OrderDetail: React.FC = () => {
 		{ label: order.code, to: undefined },
 	];
 
-	const nextStatusOptions = getNextStatusOptions(order.status);
+	const availableStatusOptions = getAllStatusOptions(order.status);
 
 	return (
 		<Box className="flex flex-col h-full w-full bg-gray-50">
@@ -306,23 +294,23 @@ const OrderDetail: React.FC = () => {
 						>
 							Quay lại
 						</Button>
-						{nextStatusOptions.length > 0 && (
-							<Select
-								value={order.status}
-								onChange={(e) => handleStatusChange(e.target.value)}
-								size="md"
-								w="200px"
-								isDisabled={updatingStatus}
-								_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
-							>
-								<option value={order.status}>{OrderStatusLabels[order.status as keyof typeof OrderStatusLabels]}</option>
-								{nextStatusOptions.map((status) => (
-									<option key={status} value={status}>
-										Chuyển sang: {OrderStatusLabels[status as keyof typeof OrderStatusLabels]}
-									</option>
-								))}
-							</Select>
-						)}
+						<Select
+							value={order.status}
+							onChange={(e) => handleStatusChange(e.target.value)}
+							size="md"
+							w="220px"
+							isDisabled={updatingStatus}
+							_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+						>
+							<option value={order.status}>
+								{OrderStatusLabels[order.status as keyof typeof OrderStatusLabels]} (hiện tại)
+							</option>
+							{availableStatusOptions.map((status) => (
+								<option key={status} value={status}>
+									{OrderStatusLabels[status as keyof typeof OrderStatusLabels]}
+								</option>
+							))}
+						</Select>
 					</HStack>
 				</Flex>
 			</Box>
@@ -671,6 +659,7 @@ const OrderDetail: React.FC = () => {
 									type="date"
 									value={paymentForm.paymentDate}
 									isDisabled
+									lang="vi-VN"
 									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
 									bg="gray.100"
 									cursor="not-allowed"
