@@ -45,7 +45,7 @@ namespace Infrastucture.Services
 
             foreach (var roleName in roles)
             {
-                var roleExists = await roleManager.RoleExistsAsync(roleName);
+                    var roleExists = await roleManager.RoleExistsAsync(roleName);
                 if (!roleExists)
                 {
                     var role = new ApplicationRole { Name = roleName };

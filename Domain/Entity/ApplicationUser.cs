@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entity
 {
-    public class ApplicationUser : IdentityUser<Guid>, IEntity<Guid>
+    public class ApplicationUser : IdentityUser, IEntity<string>
     {
         public ApplicationUser()
         {

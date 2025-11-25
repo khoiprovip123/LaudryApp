@@ -9,7 +9,7 @@ namespace Application.Employees.Queries
 {
     public class GetEmployeeByIdQuery : IRequest<EmployeeDto>
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
     }
 
     public class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery, EmployeeDto>
@@ -25,7 +25,7 @@ namespace Application.Employees.Queries
 
         public async Task<EmployeeDto> Handle(GetEmployeeByIdQuery request, CancellationToken cancellationToken)
         {
-            var user = await _userManager.FindByIdAsync(request.Id.ToString());
+            var user = await _userManager.FindByIdAsync(request.Id);
             if (user == null)
                 throw new Exception("Không tìm thấy nhân viên");
 

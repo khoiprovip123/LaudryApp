@@ -136,9 +136,9 @@ namespace Domain.Entity
         public bool Active { get; set; }
         public ICollection<Order> Orders { get; set; } = new List<Order>();
         public Guid? CompanyId { get; set; }
-        public Company Company { get; set; }
-        public string UserId { get; set; }
-        public ApplicationUser User { get; set; }
+        public Company? Company { get; set; }
+        public string? UserId { get; set; }
+        public ApplicationUser? User { get; set; }
 
 
         public void ComputeSplitSequence()

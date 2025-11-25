@@ -54,6 +54,16 @@ namespace Application.Companies.Commands
 
 			// Tạo partner đại diện cửa hàng (IsCompany = true)
 			var partnerRef = await _sequenceService.GetNextRefAsync("Company", company.Id, cancellationToken);
+					// Tạo user gốc cho cửa hàng (IsUserRoot = true nghĩa là UserRoot)
+			var user = new ApplicationUser()
+			{
+				UserName = request.UserName,
+				CompanyId = company.Id,
+				IsUserRoot = true, // Đánh dấu là chủ cửa hàng (UserRoot)
+				Active = true,
+				IsSuperAdmin = false
+			};
+
 			var partner = new Partner()
 			{
 				Active = request.IsActive,
@@ -64,21 +74,13 @@ namespace Application.Companies.Commands
 				Phone = request.Phone,
 				CompanyId = company.Id,
 				Ref = partnerRef,
-				UserId = string.Empty
+				UserId = user.Id
 			};
 
-			// Tạo user gốc cho cửa hàng (IsUserRoot = true nghĩa là UserRoot)
-			var user = new ApplicationUser()
-			{
-				UserName = request.UserName,
-				CompanyId = company.Id,
-				IsUserRoot = true, // Đánh dấu là chủ cửa hàng (UserRoot)
-				Active = true,
-				IsSuperAdmin = false
-			};
+	
 
-			await _partnerService.CreateAsync(partner);
 			var createResult = await _userManager.CreateAsync(user, request.Password);
+			await _partnerService.CreateAsync(partner);
 			
 			if (createResult.Succeeded)
 			{

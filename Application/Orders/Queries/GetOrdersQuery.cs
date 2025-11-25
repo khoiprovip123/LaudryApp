@@ -166,8 +166,8 @@ namespace Application.Orders.Queries
                     Notes = o.Notes ?? string.Empty,
                     DateCreated = o.DateCreated,
                     DateUpdated = o.LastUpdated,
-                    CreatedBy = o.CreatedBy,
-                    UpdatedBy = o.UpdatedBy,
+                    CreatedById = o.CreatedById,
+                    UpdatedById = o.UpdateById,
                     OrderItems = orderItems
                 };
             }).ToList();

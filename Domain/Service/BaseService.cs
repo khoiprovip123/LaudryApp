@@ -1,13 +1,14 @@
 ﻿using Domain.Entity;
 using Domain.Interfaces;
 using Domain.Specifications;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
-using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,6 +25,20 @@ namespace Domain.Service
             _httpContextAccessor = httpContextAccessor;
         }
 
+        protected string UserId
+        {
+            get
+            {
+                if (_httpContextAccessor.HttpContext == null)
+                    return null;
+
+                if (!_httpContextAccessor.HttpContext.User.Identity?.IsAuthenticated ?? true)
+                    return null;
+
+                return _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            }
+        }
+
         protected T GetService<T>()
         {
             return (T)_httpContextAccessor.HttpContext?.RequestServices.GetService(typeof(T));
@@ -31,12 +46,16 @@ namespace Domain.Service
 
         public TEntity Create(TEntity entity)
         {
+            entity.CreatedById = UserId;
+            entity.UpdateById = UserId;
             _repository.Insert(entity);
             return entity;
         }
 
         public virtual async Task<TEntity> CreateAsync(TEntity entity)
         {
+            entity.CreatedById = UserId;
+            entity.UpdateById = UserId;
             await CreateAsync(new List<TEntity>() { entity });
             return entity;
         }
@@ -45,6 +64,15 @@ namespace Domain.Service
         {
             if (!entities.Any())
                 return entities;
+
+            if (!string.IsNullOrEmpty(UserId))
+            {
+                foreach (var entity in entities)
+                {
+                    entity.CreatedById = UserId;
+                    entity.UpdateById = UserId;
+                }
+            }
 
             await _repository.InsertAsync(entities, autoSave: false);
 
@@ -145,6 +173,15 @@ namespace Domain.Service
         {
             if (!entities.Any())
                 return;
+
+            if (!string.IsNullOrEmpty(UserId))
+            {
+                foreach (var entity in entities)
+                {
+                    entity.UpdateById = UserId;
+                    entity.LastUpdated = DateTime.Now;
+                }
+            }
 
             await _repository.UpdateAsync(entities, autoSave: false);
 

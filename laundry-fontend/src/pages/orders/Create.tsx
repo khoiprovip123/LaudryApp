@@ -42,10 +42,12 @@ import type { CustomerDto } from '../../api/customers';
 import SearchInput from '../../components/SearchInput';
 
 type SelectedService = {
+	id: string; // ID duy nhất cho mỗi dòng dịch vụ
 	service: ServiceDto;
 	quantity: number;
 	weightInKg?: number; // Số kg của khách, chỉ dùng khi UnitOfMeasure === "kg"
 	customPrice?: number; // Giá tùy chỉnh, nếu không có thì dùng service.unitPrice
+	customTotalPrice?: number; // Tổng tiền tùy chỉnh, nếu có thì dùng giá này thay vì tính toán
 };
 
 type OrderTab = {
@@ -64,9 +66,14 @@ const getServicePrice = (item: SelectedService): number => {
 
 // Tính tổng tiền cho một dịch vụ
 const getServiceTotal = (item: SelectedService): number => {
+	// Nếu có tổng tiền tùy chỉnh, dùng giá đó
+	if (item.customTotalPrice !== undefined) {
+		return item.customTotalPrice;
+	}
+	
 	const price = getServicePrice(item);
-	// Nếu UnitOfMeasure là "kg" và có weightInKg, tính theo số kg
-	if (item.service.unitOfMeasure?.toLowerCase() === 'kg' && item.weightInKg !== undefined && item.weightInKg > 0) {
+	// Nếu dịch vụ có tính theo kg và có weightInKg, tính theo số kg
+	if (item.service.isWeightBased && item.weightInKg !== undefined && item.weightInKg > 0) {
 		return price * item.weightInKg;
 	}
 	// Ngược lại, tính theo số lượng bình thường
@@ -287,30 +294,26 @@ const OrderCreate: React.FC = () => {
 		setTabs(newTabs);
 	};
 
-	// Thêm dịch vụ vào tab hiện tại
+	// Thêm dịch vụ vào tab hiện tại - luôn thêm dòng mới
 	const handleAddService = (service: ServiceDto) => {
-		const existingIndex = activeTab.selectedServices.findIndex(s => s.service.id === service.id);
-		let newServices: SelectedService[];
-
-		if (existingIndex >= 0) {
-			newServices = [...activeTab.selectedServices];
-			newServices[existingIndex].quantity += 1;
-		} else {
-			newServices = [...activeTab.selectedServices, { service, quantity: 1 }];
-		}
-
+		const newService: SelectedService = {
+			id: `${service.id}-${Date.now()}-${Math.random()}`, // ID duy nhất cho mỗi dòng
+			service,
+			quantity: 1,
+		};
+		const newServices = [...activeTab.selectedServices, newService];
 		updateTab(activeTabId, { selectedServices: newServices });
 	};
 
 	// Cập nhật giá dịch vụ
-	const handleUpdatePrice = (serviceId: string, price: number) => {
+	const handleUpdatePrice = (serviceEntryId: string, price: number) => {
 		if (price < 0) return; // Không cho phép giá âm
-		const service = activeTab.selectedServices.find(s => s.service.id === serviceId);
+		const service = activeTab.selectedServices.find(s => s.id === serviceEntryId);
 		if (!service) return;
 		
 		// Nếu giá mới bằng giá gốc, xóa customPrice để dùng giá gốc
 		const newServices = activeTab.selectedServices.map(s => {
-			if (s.service.id === serviceId) {
+			if (s.id === serviceEntryId) {
 				if (price === s.service.unitPrice) {
 					const { customPrice, ...rest } = s;
 					return rest;
@@ -323,44 +326,45 @@ const OrderCreate: React.FC = () => {
 	};
 
 	// Xóa dịch vụ khỏi tab hiện tại
-	const handleRemoveService = (serviceId: string) => {
-		const newServices = activeTab.selectedServices.filter(s => s.service.id !== serviceId);
+	const handleRemoveService = (serviceEntryId: string) => {
+		const newServices = activeTab.selectedServices.filter(s => s.id !== serviceEntryId);
 		updateTab(activeTabId, { selectedServices: newServices });
 	};
 
 	// Cập nhật số lượng dịch vụ
-	const handleUpdateQuantity = (serviceId: string, quantity: number) => {
+	const handleUpdateQuantity = (serviceEntryId: string, quantity: number) => {
 		if (quantity < 1) {
-			handleRemoveService(serviceId);
+			handleRemoveService(serviceEntryId);
 			return;
 		}
 		const newServices = activeTab.selectedServices.map(s =>
-			s.service.id === serviceId ? { ...s, quantity } : s
+			s.id === serviceEntryId ? { ...s, quantity } : s
 		);
 		updateTab(activeTabId, { selectedServices: newServices });
 	};
 
 	// Cập nhật số kg cho dịch vụ tính theo kg
-	const handleUpdateWeightInKg = (serviceId: string, weightInKg: number) => {
+	const handleUpdateWeightInKg = (serviceEntryId: string, weightInKg: number) => {
 		if (weightInKg < 0) return; // Không cho phép số kg âm
+		const newServices = activeTab.selectedServices.map(s =>
+			s.id === serviceEntryId ? { ...s, weightInKg } : s
+		);
+		updateTab(activeTabId, { selectedServices: newServices });
+	};
+
+	// Cập nhật giá tổng cho dịch vụ (không tự động điều chỉnh giá đơn vị)
+	const handleUpdateTotalPrice = (serviceEntryId: string, totalPrice: number) => {
+		if (totalPrice < 0) return; // Không cho phép giá tổng âm
 		const newServices = activeTab.selectedServices.map(s => {
-			if (s.service.id === serviceId) {
-				const updated = { ...s, weightInKg };
-				// Tự động điền giá tối thiểu nếu số kg nhỏ hơn khối lượng tối thiểu
-				if (
-					s.service.minimumWeight !== null && 
-					s.service.minimumWeight !== undefined &&
-					s.service.minimumPrice !== null &&
-					s.service.minimumPrice !== undefined &&
-					weightInKg > 0 &&
-					weightInKg < s.service.minimumWeight
-				) {
-					// Nếu chưa có customPrice hoặc customPrice bằng giá tính theo kg, thì điền giá tối thiểu
-					if (s.customPrice === undefined || s.customPrice === s.service.unitPrice * weightInKg) {
-						updated.customPrice = s.service.minimumPrice;
-					}
+			if (s.id === serviceEntryId) {
+				// Nếu tổng tiền bằng giá tính toán tự động, xóa customTotalPrice để dùng giá tính toán
+				const calculatedTotal = getServiceTotal({ ...s, customTotalPrice: undefined });
+				if (Math.abs(totalPrice - calculatedTotal) < 0.01) {
+					const { customTotalPrice, ...rest } = s;
+					return rest;
 				}
-				return updated;
+				// Ngược lại, set customTotalPrice mà không thay đổi customPrice
+				return { ...s, customTotalPrice: totalPrice };
 			}
 			return s;
 		});
@@ -660,7 +664,7 @@ const OrderCreate: React.FC = () => {
 							<Box flex="1" overflowY="auto" p={4}>
 								<VStack align="stretch" spacing={3}>
 									{activeTab.selectedServices.map((item) => (
-										<Card key={item.service.id} size="sm" border="1px solid" borderColor="gray.200">
+										<Card key={item.id} size="sm" border="1px solid" borderColor="gray.200">
 											<CardBody p={3}>
 												<Flex justify="space-between" align="start">
 													<VStack align="start" spacing={1} flex="1">
@@ -674,7 +678,7 @@ const OrderCreate: React.FC = () => {
 																size="xs"
 																colorScheme="red"
 																variant="ghost"
-																onClick={() => handleRemoveService(item.service.id)}
+																onClick={() => handleRemoveService(item.id)}
 																_focus={{ boxShadow: 'none', outline: 'none' }}
 															/>
 														</HStack>
@@ -682,8 +686,8 @@ const OrderCreate: React.FC = () => {
 															{item.service.name}
 														</Text>
 														<HStack spacing={4}>
-															{/* Hiển thị số lượng hoặc số kg tùy theo UnitOfMeasure */}
-															{item.service.unitOfMeasure?.toLowerCase() === 'kg' ? (
+															{/* Hiển thị số lượng hoặc số kg tùy theo dịch vụ có tính theo kg không */}
+															{item.service.isWeightBased ? (
 																<VStack spacing={1} align="start">
 																	<Text fontSize="xs" color="gray.500">
 																		Số kg:
@@ -695,15 +699,15 @@ const OrderCreate: React.FC = () => {
 																		onChange={(e) => {
 																			const value = parseFloat(e.target.value);
 																			if (!isNaN(value)) {
-																				handleUpdateWeightInKg(item.service.id, value);
+																				handleUpdateWeightInKg(item.id, value);
 																			} else if (e.target.value === '') {
-																				handleUpdateWeightInKg(item.service.id, 0);
+																				handleUpdateWeightInKg(item.id, 0);
 																			}
 																		}}
 																		onBlur={(e) => {
 																			const value = parseFloat(e.target.value);
 																			if (isNaN(value) || value < 0) {
-																				handleUpdateWeightInKg(item.service.id, 0);
+																				handleUpdateWeightInKg(item.id, 0);
 																			}
 																		}}
 																		placeholder="Nhập số kg"
@@ -720,7 +724,7 @@ const OrderCreate: React.FC = () => {
 																		aria-label="Giảm"
 																		size="xs"
 																		variant="outline"
-																		onClick={() => handleUpdateQuantity(item.service.id, item.quantity - 1)}
+																		onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
 																		_focus={{ boxShadow: 'none', outline: 'none' }}
 																	>
 																		<Text fontSize="xs">-</Text>
@@ -732,7 +736,7 @@ const OrderCreate: React.FC = () => {
 																		aria-label="Tăng"
 																		size="xs"
 																		variant="outline"
-																		onClick={() => handleUpdateQuantity(item.service.id, item.quantity + 1)}
+																		onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
 																		_focus={{ boxShadow: 'none', outline: 'none' }}
 																	>
 																		<Text fontSize="xs">+</Text>
@@ -751,14 +755,14 @@ const OrderCreate: React.FC = () => {
 																		onChange={(e) => {
 																			const newPrice = parseFloat(e.target.value);
 																			if (!isNaN(newPrice)) {
-																				handleUpdatePrice(item.service.id, newPrice);
+																				handleUpdatePrice(item.id, newPrice);
 																			}
 																		}}
 																		onBlur={(e) => {
 																			const newPrice = parseFloat(e.target.value);
 																			if (isNaN(newPrice) || newPrice < 0) {
 																				// Reset về giá gốc nếu giá không hợp lệ
-																				handleUpdatePrice(item.service.id, item.service.unitPrice);
+																				handleUpdatePrice(item.id, item.service.unitPrice);
 																			}
 																		}}
 																		min={0}
@@ -778,9 +782,39 @@ const OrderCreate: React.FC = () => {
 																)}
 															</VStack>
 														</HStack>
-														<Text fontSize="sm" fontWeight="bold" color="blue.600">
-															{formatCurrency(getServiceTotal(item))}
-														</Text>
+														<VStack spacing={1} align="start" w="100%">
+															<Text fontSize="xs" color="gray.500">
+																Tổng tiền:
+															</Text>
+															<HStack spacing={1} align="center" w="100%">
+																<Input
+																	type="number"
+																	size="md"
+																	value={getServiceTotal(item)}
+																	onChange={(e) => {
+																		const newTotal = parseFloat(e.target.value);
+																		if (!isNaN(newTotal)) {
+																			handleUpdateTotalPrice(item.id, newTotal);
+																		}
+																	}}
+																	onBlur={(e) => {
+																		const newTotal = parseFloat(e.target.value);
+																		if (isNaN(newTotal) || newTotal < 0) {
+																			// Không làm gì, để giá hiện tại
+																		}
+																	}}
+																	min={0}
+																	step={1000}
+																	fontSize="sm"
+																	fontWeight="bold"
+																	color="blue.600"
+																	_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
+																/>
+																<Text fontSize="sm" fontWeight="bold" color="blue.600">
+																	đ
+																</Text>
+															</HStack>
+														</VStack>
 													</VStack>
 												</Flex>
 											</CardBody>
@@ -1067,9 +1101,9 @@ const OrderCreate: React.FC = () => {
 								setIsCreating(true);
 								try {
 									const orderItems = activeTab.selectedServices.map(item => {
-										// Nếu UnitOfMeasure là "kg" và có weightInKg, dùng weightInKg làm quantity
+										// Nếu dịch vụ có tính theo kg và có weightInKg, dùng weightInKg làm quantity
 										let quantity = item.quantity;
-										if (item.service.unitOfMeasure?.toLowerCase() === 'kg' && item.weightInKg !== undefined && item.weightInKg > 0) {
+										if (item.service.isWeightBased && item.weightInKg !== undefined && item.weightInKg > 0) {
 											quantity = item.weightInKg;
 										}
 										return {

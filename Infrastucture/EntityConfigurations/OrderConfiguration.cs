@@ -1,4 +1,5 @@
 ﻿using Domain.Entity;
+using Infrastucture.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -24,6 +25,8 @@ namespace Infrastucture.EntityConfigurations
                .WithMany()
                .HasForeignKey(x => x.CompanyId)
                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.ConfigureBaseEntity();
         }
     }
 }

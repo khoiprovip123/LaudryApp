@@ -20,13 +20,11 @@ namespace Domain.Entity
         public string? Status { get; set; }
         public string? PaymentStatus { get; set; }
         public decimal TotalPrice { get; set; }
-        public Guid? CreatedBy { get; set; }
-        public Guid? UpdatedBy { get; set; }
         public string? Notes { get; set; }
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
 
-        public Order(string code, Guid? partnerId, string? addressText, DateTime? requestedPickupTime, DateTime? receivedTime, string? status, string? paymentStatus, decimal totalPrice, Guid? createdBy, Guid? updatedBy, string? notes)
+        public Order(string code, Guid? partnerId, string? addressText, DateTime? requestedPickupTime, DateTime? receivedTime, string? status, string? paymentStatus, decimal totalPrice, string? notes)
         {
             Code = code;
             PartnerId = partnerId;
@@ -36,8 +34,6 @@ namespace Domain.Entity
             Status = status;
             PaymentStatus = paymentStatus;
             TotalPrice = totalPrice;
-            CreatedBy = createdBy;
-            UpdatedBy = updatedBy;
             Notes = notes;
         }
     }

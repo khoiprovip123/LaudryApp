@@ -9,6 +9,7 @@ namespace Domain.Services.Commands
 		public string Name { get; set; } = string.Empty;
 		public decimal UnitPrice { get; set; }
 		public string UnitOfMeasure { get; set; } = "kg";
+		public bool IsWeightBased { get; set; } = false;
 		public decimal? MinimumWeight { get; set; }
 		public decimal? MinimumPrice { get; set; }
 		public string? Description { get; set; }
@@ -31,6 +32,7 @@ namespace Domain.Services.Commands
 			service.Name = request.Name;
 			service.UnitPrice = request.UnitPrice;
 			service.UnitOfMeasure = request.UnitOfMeasure ?? "kg";
+			service.IsWeightBased = request.IsWeightBased;
 			service.MinimumWeight = request.MinimumWeight;
 			service.MinimumPrice = request.MinimumPrice;
 			service.Description = request.Description ?? string.Empty;

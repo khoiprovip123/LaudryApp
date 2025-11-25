@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea, Select, Divider } from '@chakra-ui/react';
+import { Box, Button, Flex, FormControl, FormLabel, Heading, HStack, Input, Stack, Switch, Textarea, Divider } from '@chakra-ui/react';
 import { useToast } from '../../hooks/useToast';
 import { getServiceById, updateService } from '../../api/services';
 import type { UpdateServiceRequest } from '../../api/services';
@@ -13,7 +13,8 @@ const ServiceEdit: React.FC = () => {
 		id,
 		name: '',
 		unitPrice: 0,
-		unitOfMeasure: 'kg',
+		unitOfMeasure: 'chiếc',
+		isWeightBased: false,
 		minimumWeight: null,
 		minimumPrice: null,
 		description: '',
@@ -34,7 +35,8 @@ const ServiceEdit: React.FC = () => {
 					id,
 					name: data.name,
 					unitPrice: data.unitPrice,
-					unitOfMeasure: data.unitOfMeasure || 'kg',
+					unitOfMeasure: data.unitOfMeasure || 'chiếc',
+					isWeightBased: data.isWeightBased ?? false,
 					minimumWeight: data.minimumWeight ?? null,
 					minimumPrice: data.minimumPrice ?? null,
 					description: data.description,
@@ -85,9 +87,10 @@ const ServiceEdit: React.FC = () => {
 				id: form.id,
 				name: form.name,
 				unitPrice: form.unitPrice,
-				unitOfMeasure: form.unitOfMeasure || 'kg',
-				minimumWeight: form.unitOfMeasure === 'kg' ? form.minimumWeight : null,
-				minimumPrice: form.unitOfMeasure === 'kg' ? form.minimumPrice : null,
+				unitOfMeasure: form.unitOfMeasure || 'chiếc',
+				isWeightBased: form.isWeightBased,
+				minimumWeight: form.isWeightBased ? form.minimumWeight : null,
+				minimumPrice: form.isWeightBased ? form.minimumPrice : null,
 				description: form.description,
 				defaultCode: form.defaultCode,
 				active: form.active,
@@ -133,26 +136,6 @@ const ServiceEdit: React.FC = () => {
 								</Heading>
 								<Stack spacing={4}>
 									<FormControl isRequired>
-										<FormLabel>Loại tính</FormLabel>
-										<Select 
-											value={form.unitOfMeasure || 'kg'} 
-											onChange={(e) => {
-												const newUnitOfMeasure = e.target.value;
-												update('unitOfMeasure', newUnitOfMeasure);
-												// Reset minimumWeight và minimumPrice khi không phải kg
-												if (newUnitOfMeasure !== 'kg') {
-													update('minimumWeight', null);
-													update('minimumPrice', null);
-													setMinimumPriceDisplay('');
-												}
-											}}
-										>
-											<option value="kg">kg</option>
-											<option value="chiếc">chiếc</option>
-											<option value="bộ">bộ</option>
-										</Select>
-									</FormControl>
-									<FormControl isRequired>
 										<FormLabel>Giá theo đơn vị (VND)</FormLabel>
 										<Input
 											value={unitPriceDisplay}
@@ -162,10 +145,28 @@ const ServiceEdit: React.FC = () => {
 											inputMode="numeric"
 										/>
 									</FormControl>
-									{form.unitOfMeasure === 'kg' && (
+									<FormControl display="flex" alignItems="center">
+										<FormLabel mb="0">Tính trên kg</FormLabel>
+										<Switch 
+											isChecked={form.isWeightBased}
+											onChange={(e) => {
+												const checked = e.target.checked;
+												update('isWeightBased', checked);
+												if (checked) {
+													update('unitOfMeasure', 'kg');
+												} else {
+													update('unitOfMeasure', 'chiếc');
+													update('minimumWeight', null);
+													update('minimumPrice', null);
+													setMinimumPriceDisplay('');
+												}
+											}}
+										/>
+									</FormControl>
+									{form.isWeightBased && (
 										<>
 											<FormControl>
-												<FormLabel>Khối lượng tối thiểu (kg)</FormLabel>
+												<FormLabel>Số kg tối thiểu</FormLabel>
 												<Input
 													type="number"
 													value={form.minimumWeight ?? ''}
@@ -176,7 +177,7 @@ const ServiceEdit: React.FC = () => {
 												/>
 											</FormControl>
 											<FormControl>
-												<FormLabel>Giá tối thiểu (VNĐ)</FormLabel>
+												<FormLabel>Số tiền tối thiểu (VNĐ)</FormLabel>
 												<Input
 													value={minimumPriceDisplay}
 													onChange={(e) => handleMinimumPriceChange(e.target.value)}

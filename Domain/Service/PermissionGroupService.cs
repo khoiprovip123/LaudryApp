@@ -47,7 +47,7 @@ namespace Domain.Service
             return employees;
         }
 
-        public async Task AddEmployeesToPermissionGroupAsync(Guid permissionGroupId, List<Guid> employeeIds)
+        public async Task AddEmployeesToPermissionGroupAsync(Guid permissionGroupId, List<string> employeeIds)
         {
             if (!employeeIds.Any())
                 return;
@@ -77,7 +77,7 @@ namespace Domain.Service
             await _employeePermissionGroupRepository.DbContext.SaveChangesAsync();
         }
 
-        public async Task RemoveEmployeesFromPermissionGroupAsync(Guid permissionGroupId, List<Guid> employeeIds)
+        public async Task RemoveEmployeesFromPermissionGroupAsync(Guid permissionGroupId, List<string> employeeIds)
         {
             if (!employeeIds.Any())
                 return;
@@ -106,7 +106,7 @@ namespace Domain.Service
             return await query.AnyAsync();
         }
 
-        public async Task<List<ApplicationUser>> ValidateEmployeesBelongToCompanyAsync(List<Guid> employeeIds, Guid companyId)
+        public async Task<List<ApplicationUser>> ValidateEmployeesBelongToCompanyAsync(List<string> employeeIds, Guid companyId)
         {
             if (!employeeIds.Any())
                 return new List<ApplicationUser>();
@@ -118,7 +118,7 @@ namespace Domain.Service
             return employees;
         }
 
-        public async Task<PermissionList> GetPermissionGroupsByUserIdAsync(Guid userId)
+        public async Task<PermissionList> GetPermissionGroupsByUserIdAsync(string userId)
         {
             var listPermissions = await _permissionGroupRepository
                 .SearchQuery(pg => pg.EmployeePermissionGroups.Any(epg => epg.EmployeeId == userId))
@@ -128,7 +128,7 @@ namespace Domain.Service
             return listPermissions ?? new PermissionList();
         }
 
-        public async Task<List<string>> GetUserPermissionsAsync(Guid userId)
+        public async Task<List<string>> GetUserPermissionsAsync(string userId)
         {
             // Query từ PermissionGroup thông qua EmployeePermissionGroup để lấy tất cả permissions
             var permissionGroups = await _permissionGroupRepository
@@ -153,7 +153,7 @@ namespace Domain.Service
             return permissions.Distinct().ToList();
         }
 
-        public async Task<AccessResult> HasAccess(Guid userId, string[] permissions)
+        public async Task<AccessResult> HasAccess(string userId, string[] permissions)
         {
             if (permissions == null || permissions.Length == 0)
             {

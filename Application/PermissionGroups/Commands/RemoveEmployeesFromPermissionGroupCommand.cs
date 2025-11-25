@@ -7,7 +7,7 @@ namespace Application.PermissionGroups.Commands
     public class RemoveEmployeesFromPermissionGroupCommand : IRequest<Unit>
     {
         public Guid PermissionGroupId { get; set; }
-        public List<Guid> EmployeeIds { get; set; } = new List<Guid>();
+        public List<string> EmployeeIds { get; set; } = new List<string>();
     }
 
     public class RemoveEmployeesFromPermissionGroupCommandHandler : IRequestHandler<RemoveEmployeesFromPermissionGroupCommand, Unit>

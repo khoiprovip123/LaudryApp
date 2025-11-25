@@ -48,7 +48,7 @@ namespace LaundryAPI.Controllers
 		}
 
 		[Uow]
-		[HttpPut("{id:guid}")]
+		[HttpPut("{id}")]
 		public async Task<IActionResult> Update(Guid id, [FromBody] IRSequence dto)
 		{
 			var exist = await _sequenceService.GetByIdAsync(id);

@@ -26,6 +26,7 @@ namespace Application.Orders.Commands
         public Guid ServiceId { get; set; }
         public decimal Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public decimal TotalPrice{ get; set; }
     }
 
     public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Guid>
@@ -107,7 +108,8 @@ namespace Application.Orders.Commands
                     service.Name,
                     itemRequest.UnitPrice,
                     itemRequest.Quantity,
-                    service.UnitOfMeasure ?? "kg"
+                    service.UnitOfMeasure ?? "kg",
+                    itemRequest.TotalPrice
                 )
                 {
                     CompanyId = companyId
@@ -131,8 +133,6 @@ namespace Application.Orders.Commands
                 status: OrderStatus.Received, // Trạng thái khởi tạo: Đã nhận đồ
                 paymentStatus: "Unpaid", // Trạng thái thanh toán mặc định
                 totalPrice: totalPrice,
-                createdBy: userId,
-                updatedBy: null,
                 notes: request.Notes
             )
             {

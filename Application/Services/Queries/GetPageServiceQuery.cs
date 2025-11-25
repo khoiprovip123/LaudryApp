@@ -62,6 +62,7 @@ namespace Domain.Services.Queries
 					Name = s.Name,
 					UnitPrice = s.UnitPrice,
 					UnitOfMeasure = s.UnitOfMeasure,
+					IsWeightBased = s.IsWeightBased,
 					MinimumWeight = s.MinimumWeight,
 					MinimumPrice = s.MinimumPrice,
 					Description = s.Description,
@@ -82,6 +83,7 @@ namespace Domain.Services.Queries
 		public string Name { get; set; }
 		public decimal UnitPrice { get; set; }
 		public string UnitOfMeasure { get; set; }
+		public bool IsWeightBased { get; set; }
 		public decimal? MinimumWeight { get; set; }
 		public decimal? MinimumPrice { get; set; }
 		public string Description { get; set; }

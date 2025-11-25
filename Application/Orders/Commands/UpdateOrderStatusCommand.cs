@@ -68,7 +68,6 @@ namespace Application.Orders.Commands
 
             // Cập nhật trạng thái
             order.Status = request.Status;
-            order.UpdatedBy = userId;
 
             // Tự động cập nhật ReceivedTime khi chuyển sang Received (nếu chưa có)
             if (request.Status == OrderStatus.Received && order.ReceivedTime == null)

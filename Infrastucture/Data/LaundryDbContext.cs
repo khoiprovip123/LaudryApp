@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Infrastucture.Data
 {
-    public class LaundryDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>, IDbContext
+    public class LaundryDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>, IDbContext
     {
         private readonly IConfiguration _configuration;
 
@@ -41,6 +41,7 @@ namespace Infrastucture.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            builder.ApplyConfiguration(new ApplicationUserConfiguration());
             builder.ApplyConfiguration(new OrderConfiguration());
             builder.ApplyConfiguration(new OrderItemConfiguration());
             builder.ApplyConfiguration(new CompanyConfiguration());

@@ -1,4 +1,5 @@
 using Domain.Entity;
+using Infrastucture.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -24,6 +25,8 @@ namespace Infrastucture.EntityConfigurations
 
             builder.HasIndex(epg => new { epg.EmployeeId, epg.PermissionGroupId })
                 .IsUnique();
+
+            builder.ConfigureBaseEntity();
         }
     }
 }

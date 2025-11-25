@@ -23,8 +23,8 @@ namespace Application.DTOs
         public string Notes { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime? DateUpdated { get; set; }
-        public Guid? CreatedBy { get; set; }
-        public Guid? UpdatedBy { get; set; }
+        public string? CreatedById { get; set; }
+        public string? UpdatedById { get; set; }
         public List<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
     }
 

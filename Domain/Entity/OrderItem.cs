@@ -22,14 +22,14 @@ namespace Domain.Entity
         private OrderItem() { }
 
 
-        public OrderItem(Guid serviceId, string serviceName, decimal unitPrice, decimal quantity, string unitOfMeasure = "kg")
+        public OrderItem(Guid serviceId, string serviceName, decimal unitPrice, decimal quantity, string? unitOfMeasure, decimal totalPrice)
         {
             ServiceId = serviceId;
             ServiceName = serviceName;
             UnitPrice = unitPrice;
             Quantity = quantity;
-            UnitOfMeasure = unitOfMeasure ?? "kg";
-            TotalPrice = quantity * unitPrice; // Tính tổng tiền = số lượng × đơn giá
+            UnitOfMeasure = unitOfMeasure ?? null;
+            TotalPrice = totalPrice; // Tính tổng tiền = số lượng × đơn giá
         }
     }
 }

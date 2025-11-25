@@ -91,7 +91,7 @@ namespace Application.Partners.Commands
 				IsCompany = request.IsCompany,
 				Ref = partnerRef,
 				NameNoSign = string.Empty,
-                UserId = string.Empty // cột NOT NULL trong DB, không liên kết user
+                UserId = null // Không liên kết user
 			};
 
 			await _partnerService.CreateAsync(partner);

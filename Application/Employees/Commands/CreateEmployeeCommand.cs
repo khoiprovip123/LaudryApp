@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Application.Employees.Commands
 {
-    public class CreateEmployeeCommand : IRequest<Guid>
+    public class CreateEmployeeCommand : IRequest<Unit>
     {
         public string UserName { get; set; }
         public string Email { get; set; }
@@ -16,7 +16,7 @@ namespace Application.Employees.Commands
         public bool Active { get; set; } = true;
     }
 
-    public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeCommand, Guid>
+    public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeCommand, Unit>
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWorkContext _workContext;
@@ -27,7 +27,7 @@ namespace Application.Employees.Commands
             _workContext = workContext;
         }
 
-        public async Task<Guid> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
         {
             // Xác định CompanyId: SuperAdmin có thể chỉ định, UserRoot dùng company của mình
             var companyId = request.CompanyId;
@@ -62,7 +62,7 @@ namespace Application.Employees.Commands
                 throw new Exception($"Không thể tạo nhân viên: {errors}");
             }
 
-            return user.Id;
+            return Unit.Value;
         }
     }
 }

@@ -105,8 +105,6 @@ namespace Application.Orders.Queries
                 Notes = order.Notes ?? string.Empty,
                 DateCreated = order.DateCreated,
                 DateUpdated = order.LastUpdated,
-                CreatedBy = order.CreatedBy,
-                UpdatedBy = order.UpdatedBy,
                 OrderItems = orderItems
             };
         }

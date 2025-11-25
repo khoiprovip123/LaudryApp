@@ -67,7 +67,7 @@ namespace LaundryAPI.Attributes
 
             // Lấy UserId từ claims
             var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            if (userIdClaim == null || string.IsNullOrWhiteSpace(userIdClaim.Value))
             {
                 context.Result = new UnauthorizedObjectResult(new ErrorResponse
                 {
@@ -94,7 +94,7 @@ namespace LaundryAPI.Attributes
             }
 
             // Kiểm tra quyền truy cập
-            var accessResult = await permissionGroupService.HasAccess(userId, permissions);
+            var accessResult = await permissionGroupService.HasAccess(userIdClaim.Value, permissions);
 
             if (!accessResult.Access)
             {

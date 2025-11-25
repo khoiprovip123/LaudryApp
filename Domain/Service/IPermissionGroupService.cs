@@ -16,12 +16,12 @@ namespace Domain.Service
         /// <summary>
         /// Thêm nhân viên vào nhóm quyền
         /// </summary>
-        Task AddEmployeesToPermissionGroupAsync(Guid permissionGroupId, List<Guid> employeeIds);
+        Task AddEmployeesToPermissionGroupAsync(Guid permissionGroupId, List<string> employeeIds);
 
         /// <summary>
         /// Xóa nhân viên khỏi nhóm quyền
         /// </summary>
-        Task RemoveEmployeesFromPermissionGroupAsync(Guid permissionGroupId, List<Guid> employeeIds);
+        Task RemoveEmployeesFromPermissionGroupAsync(Guid permissionGroupId, List<string> employeeIds);
 
         /// <summary>
         /// Kiểm tra tên nhóm quyền đã tồn tại trong công ty chưa
@@ -31,22 +31,22 @@ namespace Domain.Service
         /// <summary>
         /// Kiểm tra các nhân viên có thuộc cùng công ty không
         /// </summary>
-        Task<List<ApplicationUser>> ValidateEmployeesBelongToCompanyAsync(List<Guid> employeeIds, Guid companyId);
+        Task<List<ApplicationUser>> ValidateEmployeesBelongToCompanyAsync(List<string> employeeIds, Guid companyId);
 
         /// <summary>
         /// Lấy PermissionList của user từ PermissionGroup đầu tiên
         /// </summary>
-        Task<PermissionList> GetPermissionGroupsByUserIdAsync(Guid userId);
+        Task<PermissionList> GetPermissionGroupsByUserIdAsync(string userId);
 
         /// <summary>
         /// Lấy tất cả permissions của user từ các PermissionGroup
         /// </summary>
-        Task<List<string>> GetUserPermissionsAsync(Guid userId);
+        Task<List<string>> GetUserPermissionsAsync(string userId);
 
         /// <summary>
         /// Kiểm tra user có quyền truy cập các actions được chỉ định không
         /// </summary>
-        Task<AccessResult> HasAccess(Guid userId, string[] permissions);
+        Task<AccessResult> HasAccess(string userId, string[] permissions);
     }
 
     /// <summary>

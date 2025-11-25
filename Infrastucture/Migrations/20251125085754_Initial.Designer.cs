@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastucture.Migrations
 {
     [DbContext(typeof(LaundryDbContext))]
-    [Migration("20251119103437_add-print-template")]
-    partial class addprinttemplate
+    [Migration("20251125085754_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,9 +27,8 @@ namespace Infrastucture.Migrations
 
             modelBuilder.Entity("Domain.Entity.ApplicationRole", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -55,9 +54,8 @@ namespace Infrastucture.Migrations
 
             modelBuilder.Entity("Domain.Entity.ApplicationUser", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
@@ -133,9 +131,7 @@ namespace Infrastucture.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.HasIndex("PartnerId")
-                        .IsUnique()
-                        .HasFilter("[PartnerId] IS NOT NULL");
+                    b.HasIndex("PartnerId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -151,6 +147,10 @@ namespace Infrastucture.Migrations
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -172,7 +172,15 @@ namespace Infrastucture.Migrations
                     b.Property<DateTime>("SubscriptionStartDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("UpdateById");
 
                     b.ToTable("Companies");
                 });
@@ -182,11 +190,16 @@ namespace Infrastucture.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("EmployeeId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
@@ -194,9 +207,17 @@ namespace Infrastucture.Migrations
                     b.Property<Guid>("PermissionGroupId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedById");
+
                     b.HasIndex("PermissionGroupId");
+
+                    b.HasIndex("UpdateById");
 
                     b.HasIndex("EmployeeId", "PermissionGroupId")
                         .IsUnique();
@@ -215,6 +236,10 @@ namespace Infrastucture.Migrations
 
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -239,9 +264,17 @@ namespace Infrastucture.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("UpdateById");
 
                     b.ToTable("IRSequences");
                 });
@@ -261,8 +294,9 @@ namespace Infrastucture.Migrations
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -291,14 +325,19 @@ namespace Infrastucture.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("CreatedById");
+
                     b.HasIndex("PartnerId");
+
+                    b.HasIndex("UpdateById");
 
                     b.HasIndex("Code", "DateCreated");
 
@@ -312,6 +351,10 @@ namespace Infrastucture.Migrations
 
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -335,14 +378,26 @@ namespace Infrastucture.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("UnitOfMeasure")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("CreatedById");
+
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("UpdateById");
 
                     b.ToTable("OrderItems");
                 });
@@ -366,6 +421,10 @@ namespace Infrastucture.Migrations
 
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -418,9 +477,13 @@ namespace Infrastucture.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("WardCode")
                         .HasColumnType("nvarchar(max)");
@@ -431,6 +494,12 @@ namespace Infrastucture.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("UpdateById");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("Name", "Ref", "Phone", "PhoneLastThreeDigits");
 
@@ -448,8 +517,9 @@ namespace Infrastucture.Migrations
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -477,6 +547,10 @@ namespace Infrastucture.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
@@ -484,9 +558,13 @@ namespace Infrastucture.Migrations
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("CreatedById");
+
                     b.HasIndex("OrderId");
 
                     b.HasIndex("PartnerId");
+
+                    b.HasIndex("UpdateById");
 
                     b.ToTable("Payments");
                 });
@@ -501,6 +579,10 @@ namespace Infrastucture.Migrations
 
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -518,9 +600,17 @@ namespace Infrastucture.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("UpdateById");
 
                     b.HasIndex("Name", "CompanyId")
                         .IsUnique()
@@ -536,6 +626,10 @@ namespace Infrastucture.Migrations
 
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CssStyles")
                         .IsRequired()
@@ -572,7 +666,15 @@ namespace Infrastucture.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("UpdateById");
 
                     b.HasIndex("CompanyId", "TemplateType", "IsDefault");
 
@@ -590,6 +692,10 @@ namespace Infrastucture.Migrations
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
@@ -601,8 +707,17 @@ namespace Infrastucture.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsWeightBased")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("MinimumPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MinimumWeight")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -615,14 +730,22 @@ namespace Infrastucture.Migrations
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("UpdateById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("UpdateById");
+
                     b.ToTable("Service");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -636,8 +759,9 @@ namespace Infrastucture.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -646,7 +770,7 @@ namespace Infrastucture.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -660,8 +784,9 @@ namespace Infrastucture.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -670,7 +795,7 @@ namespace Infrastucture.Migrations
                     b.ToTable("AspNetUserClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -681,8 +806,9 @@ namespace Infrastucture.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -691,13 +817,13 @@ namespace Infrastucture.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -706,10 +832,10 @@ namespace Infrastucture.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -729,19 +855,46 @@ namespace Infrastucture.Migrations
                 {
                     b.HasOne("Domain.Entity.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId");
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entity.Partner", "Partner")
-                        .WithOne("User")
-                        .HasForeignKey("Domain.Entity.ApplicationUser", "PartnerId");
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Company");
 
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("Domain.Entity.Company", b =>
+                {
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("UpdateBy");
+                });
+
             modelBuilder.Entity("Domain.Entity.EmployeePermissionGroup", b =>
                 {
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Domain.Entity.ApplicationUser", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
@@ -754,9 +907,19 @@ namespace Infrastucture.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
                     b.Navigation("Employee");
 
                     b.Navigation("PermissionGroup");
+
+                    b.Navigation("UpdateBy");
                 });
 
             modelBuilder.Entity("Domain.Entity.IRSequence", b =>
@@ -765,7 +928,23 @@ namespace Infrastucture.Migrations
                         .WithMany()
                         .HasForeignKey("CompanyId");
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("Company");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("UpdateBy");
                 });
 
             modelBuilder.Entity("Domain.Entity.Order", b =>
@@ -775,14 +954,30 @@ namespace Infrastucture.Migrations
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Domain.Entity.Partner", "Partner")
                         .WithMany("Orders")
                         .HasForeignKey("PartnerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("Company");
 
+                    b.Navigation("CreatedBy");
+
                     b.Navigation("Partner");
+
+                    b.Navigation("UpdateBy");
                 });
 
             modelBuilder.Entity("Domain.Entity.OrderItem", b =>
@@ -791,24 +986,65 @@ namespace Infrastucture.Migrations
                         .WithMany()
                         .HasForeignKey("CompanyId");
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Domain.Entity.Order", "Order")
                         .WithMany("OrderItem")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("Company");
 
+                    b.Navigation("CreatedBy");
+
                     b.Navigation("Order");
+
+                    b.Navigation("UpdateBy");
                 });
 
             modelBuilder.Entity("Domain.Entity.Partner", b =>
                 {
                     b.HasOne("Domain.Entity.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId");
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Company");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("UpdateBy");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entity.Payment", b =>
@@ -816,6 +1052,12 @@ namespace Infrastucture.Migrations
                     b.HasOne("Domain.Entity.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId");
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.HasOne("Domain.Entity.Order", "Order")
                         .WithMany()
@@ -825,11 +1067,21 @@ namespace Infrastucture.Migrations
                         .WithMany()
                         .HasForeignKey("PartnerId");
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("Company");
+
+                    b.Navigation("CreatedBy");
 
                     b.Navigation("Order");
 
                     b.Navigation("Partner");
+
+                    b.Navigation("UpdateBy");
                 });
 
             modelBuilder.Entity("Domain.Entity.PermissionGroup", b =>
@@ -838,6 +1090,18 @@ namespace Infrastucture.Migrations
                         .WithMany()
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.OwnsOne("Domain.Entity.PermissionList", "Permissions", b1 =>
                         {
@@ -860,8 +1124,12 @@ namespace Infrastucture.Migrations
 
                     b.Navigation("Company");
 
+                    b.Navigation("CreatedBy");
+
                     b.Navigation("Permissions")
                         .IsRequired();
+
+                    b.Navigation("UpdateBy");
                 });
 
             modelBuilder.Entity("Domain.Entity.PrintTemplate", b =>
@@ -871,7 +1139,23 @@ namespace Infrastucture.Migrations
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("Company");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("UpdateBy");
                 });
 
             modelBuilder.Entity("Domain.Entity.Service", b =>
@@ -880,10 +1164,26 @@ namespace Infrastucture.Migrations
                         .WithMany()
                         .HasForeignKey("CompanyId");
 
+                    b.HasOne("Domain.Entity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.ApplicationUser", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("Company");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("UpdateBy");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Domain.Entity.ApplicationRole", null)
                         .WithMany()
@@ -892,7 +1192,7 @@ namespace Infrastucture.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.HasOne("Domain.Entity.ApplicationUser", null)
                         .WithMany()
@@ -901,7 +1201,7 @@ namespace Infrastucture.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.HasOne("Domain.Entity.ApplicationUser", null)
                         .WithMany()
@@ -910,7 +1210,7 @@ namespace Infrastucture.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.HasOne("Domain.Entity.ApplicationRole", null)
                         .WithMany()
@@ -925,7 +1225,7 @@ namespace Infrastucture.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.HasOne("Domain.Entity.ApplicationUser", null)
                         .WithMany()
@@ -942,9 +1242,6 @@ namespace Infrastucture.Migrations
             modelBuilder.Entity("Domain.Entity.Partner", b =>
                 {
                     b.Navigation("Orders");
-
-                    b.Navigation("User")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Domain.Entity.PermissionGroup", b =>

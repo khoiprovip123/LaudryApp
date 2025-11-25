@@ -13,6 +13,7 @@ namespace Domain.Services.Commands
 		public string Name { get; set; } = string.Empty;
 		public decimal UnitPrice { get; set; }
 		public string UnitOfMeasure { get; set; } = "kg";
+		public bool IsWeightBased { get; set; } = false;
 		public decimal? MinimumWeight { get; set; }
 		public decimal? MinimumPrice { get; set; }
 		public string? Description { get; set; }
@@ -55,6 +56,7 @@ namespace Domain.Services.Commands
 				Name = request.Name,
 				UnitPrice = request.UnitPrice,
 				UnitOfMeasure = request.UnitOfMeasure ?? "kg",
+				IsWeightBased = request.IsWeightBased,
 				MinimumWeight = request.MinimumWeight,
 				MinimumPrice = request.MinimumPrice,
 				Description = request.Description ?? string.Empty,

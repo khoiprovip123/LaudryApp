@@ -10,7 +10,7 @@ namespace Domain.Entity
         /// <summary>
         /// ID nhân viên
         /// </summary>
-        public Guid EmployeeId { get; set; }
+        public string EmployeeId { get; set; }
 
         /// <summary>
         /// Nhân viên

@@ -22,7 +22,7 @@ namespace LaundryAPI.Controllers
 
         [HttpGet("{id}")]
         [CheckAccess(Actions = Permissions.Companies_View)]
-        public async Task<IActionResult> GetEmployeeById(Guid id)
+        public async Task<IActionResult> GetEmployeeById(string id)
         {
             var result = await Mediator.Send(new GetEmployeeByIdQuery { Id = id });
             return Ok(result);

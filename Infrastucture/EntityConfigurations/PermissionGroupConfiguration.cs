@@ -1,4 +1,5 @@
 using Domain.Entity;
+using Infrastucture.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -32,6 +33,8 @@ namespace Infrastucture.EntityConfigurations
 
             builder.HasIndex(pg => new { pg.Name, pg.CompanyId })
                 .IsUnique();
+
+            builder.ConfigureBaseEntity();
         }
     }
 }

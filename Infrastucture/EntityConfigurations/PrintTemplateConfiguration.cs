@@ -1,4 +1,5 @@
 using Domain.Entity;
+using Infrastucture.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -35,6 +36,8 @@ namespace Infrastucture.EntityConfigurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(x => new { x.CompanyId, x.TemplateType, x.IsDefault });
+
+            builder.ConfigureBaseEntity();
         }
     }
 }

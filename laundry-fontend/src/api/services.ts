@@ -5,6 +5,7 @@ export type ServiceDto = {
 	name: string;
 	unitPrice: number;
 	unitOfMeasure: string;
+	isWeightBased: boolean;
 	minimumWeight?: number | null;
 	minimumPrice?: number | null;
 	description: string;
@@ -33,6 +34,7 @@ export type CreateServiceRequest = {
 	name: string;
 	unitPrice: number;
 	unitOfMeasure?: string;
+	isWeightBased: boolean;
 	minimumWeight?: number | null;
 	minimumPrice?: number | null;
 	description: string;
@@ -49,6 +51,7 @@ export type UpdateServiceRequest = {
 	name: string;
 	unitPrice: number;
 	unitOfMeasure?: string;
+	isWeightBased: boolean;
 	minimumWeight?: number | null;
 	minimumPrice?: number | null;
 	description: string;

@@ -11,6 +11,7 @@ namespace Domain.Entity
         public string Name { get; set; }
         public decimal UnitPrice { get; set; }
         public string UnitOfMeasure { get; set; } = "kg"; // Đơn vị tính: kg, cái, bộ, v.v.
+        public bool IsWeightBased { get; set; } = false; // Tính trên kg hay không
         public decimal? MinimumWeight { get; set; } // Khối lượng tối thiểu (kg)
         public decimal? MinimumPrice { get; set; } // Giá tối thiểu (VNĐ) - tự động điền trên FE, có thể tùy chỉnh khi tạo order
         public Guid? CompanyId { get; set; }

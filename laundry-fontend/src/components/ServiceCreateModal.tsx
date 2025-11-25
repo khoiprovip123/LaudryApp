@@ -15,7 +15,6 @@ import {
 	Switch,
 	Textarea,
 	Box,
-	Select,
 	Divider,
 	Heading,
 } from '@chakra-ui/react';
@@ -34,7 +33,8 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 	const [form, setForm] = useState<Omit<CreateServiceRequest, 'defaultCode'>>({
 		name: '',
 		unitPrice: 0,
-		unitOfMeasure: 'kg',
+		unitOfMeasure: 'chiếc',
+		isWeightBased: false,
 		minimumWeight: null,
 		minimumPrice: null,
 		description: '',
@@ -70,9 +70,10 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 			const payload: CreateServiceRequest = {
 				name: form.name,
 				unitPrice: form.unitPrice,
-				unitOfMeasure: form.unitOfMeasure || 'kg',
-				minimumWeight: form.unitOfMeasure === 'kg' ? form.minimumWeight : null,
-				minimumPrice: form.unitOfMeasure === 'kg' ? form.minimumPrice : null,
+				unitOfMeasure: form.unitOfMeasure || 'chiếc',
+				isWeightBased: form.isWeightBased,
+				minimumWeight: form.isWeightBased ? form.minimumWeight : null,
+				minimumPrice: form.isWeightBased ? form.minimumPrice : null,
 				description: form.description,
 				active: form.active,
 			};
@@ -83,7 +84,8 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 			setForm({
 				name: '',
 				unitPrice: 0,
-				unitOfMeasure: 'kg',
+				unitOfMeasure: 'chiếc',
+				isWeightBased: false,
 				minimumWeight: null,
 				minimumPrice: null,
 				description: '',
@@ -125,25 +127,6 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 								</Heading>
 								<Stack spacing={4}>
 									<FormControl isRequired>
-										<FormLabel>Loại tính</FormLabel>
-										<Select 
-											value={form.unitOfMeasure || 'kg'} 
-											onChange={(e) => {
-												const newUnitOfMeasure = e.target.value;
-												update('unitOfMeasure', newUnitOfMeasure);
-												if (newUnitOfMeasure !== 'kg') {
-													update('minimumWeight', null);
-													update('minimumPrice', null);
-													setMinimumPriceDisplay('');
-												}
-											}}
-										>
-											<option value="kg">kg</option>
-											<option value="chiếc">chiếc</option>
-											<option value="bộ">bộ</option>
-										</Select>
-									</FormControl>
-									<FormControl isRequired>
 										<FormLabel>Giá theo đơn vị (VND)</FormLabel>
 										<Input
 											value={unitPriceDisplay}
@@ -153,10 +136,28 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 											inputMode="numeric"
 										/>
 									</FormControl>
-									{form.unitOfMeasure === 'kg' && (
+									<FormControl display="flex" alignItems="center">
+										<FormLabel mb="0">Tính trên kg</FormLabel>
+										<Switch 
+											isChecked={form.isWeightBased}
+											onChange={(e) => {
+												const checked = e.target.checked;
+												update('isWeightBased', checked);
+												if (checked) {
+													update('unitOfMeasure', 'kg');
+												} else {
+													update('unitOfMeasure', 'chiếc');
+													update('minimumWeight', null);
+													update('minimumPrice', null);
+													setMinimumPriceDisplay('');
+												}
+											}}
+										/>
+									</FormControl>
+									{form.isWeightBased && (
 										<>
 											<FormControl>
-												<FormLabel>Khối lượng tối thiểu (kg)</FormLabel>
+												<FormLabel>Số kg tối thiểu</FormLabel>
 												<Input
 													type="number"
 													value={form.minimumWeight ?? ''}
@@ -167,7 +168,7 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 												/>
 											</FormControl>
 											<FormControl>
-												<FormLabel>Giá tối thiểu (VNĐ)</FormLabel>
+												<FormLabel>Số tiền tối thiểu (VNĐ)</FormLabel>
 												<Input
 													value={minimumPriceDisplay}
 													onChange={(e) => handleMinimumPriceChange(e.target.value)}
