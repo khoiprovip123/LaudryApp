@@ -26,7 +26,10 @@ namespace Application.Orders.Commands
         public Guid ServiceId { get; set; }
         public decimal Quantity { get; set; }
         public decimal UnitPrice { get; set; }
-        public decimal TotalPrice{ get; set; }
+        public decimal TotalPrice { get; set; }
+        public bool IsWeightBased { get; set; }
+        public float WeightInKg { get; set; }
+
     }
 
     public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Guid>
@@ -109,7 +112,9 @@ namespace Application.Orders.Commands
                     itemRequest.UnitPrice,
                     itemRequest.Quantity,
                     service.UnitOfMeasure ?? "kg",
-                    itemRequest.TotalPrice
+                    itemRequest.TotalPrice,
+                    itemRequest.IsWeightBased,
+                    itemRequest.WeightInKg
                 )
                 {
                     CompanyId = companyId

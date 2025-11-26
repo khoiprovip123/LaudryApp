@@ -16,6 +16,16 @@ namespace Domain.Service
             : base(repository, httpContextAccessor)
         {
         }
+
+        public void ComputeAmountForOrder(Order order)
+        {
+            
+        }
+
+        public void ComputeAmountForOrderItems(OrderItem order)
+        {
+
+        }
     }
 }
 

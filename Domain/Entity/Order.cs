@@ -15,11 +15,17 @@ namespace Domain.Entity
         public Guid? PartnerId { get; set; }
         public Partner Partner { get; set; }
         public string? AddressText { get; set; }
+
         public DateTime? RequestedPickupTime { get; set; }
         public DateTime? ReceivedTime { get; set; }
+
         public string? Status { get; set; }
         public string? PaymentStatus { get; set; }
+
         public decimal TotalPrice { get; set; }
+        public decimal PaidAmount { get; private set; }
+        public decimal Residual => TotalPrice - PaidAmount;
+
         public string? Notes { get; set; }
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }

@@ -10,6 +10,9 @@ namespace Domain.Entity
 {
     public class Partner : BaseEntity
     {
+
+       private readonly static Regex rx = new Regex(@"^(?:.*?)(\d{0,9})(?:\D*?)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         public Partner()
         {
             Active = true;
@@ -146,7 +149,6 @@ namespace Domain.Entity
             if (string.IsNullOrEmpty(Ref) || Ref == "/")
                 return;
 
-            Regex rx = new Regex(@"^(?:.*?)(\d{0,9})(?:\D*?)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             var match = rx.Match(Ref);
             if (match.Success)
             {

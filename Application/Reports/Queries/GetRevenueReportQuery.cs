@@ -42,7 +42,8 @@ namespace Application.Reports.Queries
         public async Task<RevenueReportDto> Handle(GetRevenueReportQuery request, CancellationToken cancellationToken)
         {
             var companyId = _workContext?.CompanyId;
-            if (companyId == null)
+            var isSuperAdmin = _workContext.IsSuperAdmin;
+            if (companyId == null && !isSuperAdmin)
             {
                 throw new Exception("Không xác định được cửa hàng của người dùng.");
             }

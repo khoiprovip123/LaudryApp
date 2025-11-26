@@ -301,6 +301,7 @@ const OrderCreate: React.FC = () => {
 			service,
 			quantity: 1,
 		};
+		console.log(newService);
 		const newServices = [...activeTab.selectedServices, newService];
 		updateTab(activeTabId, { selectedServices: newServices });
 	};
@@ -354,6 +355,7 @@ const OrderCreate: React.FC = () => {
 
 	// Cập nhật giá tổng cho dịch vụ (không tự động điều chỉnh giá đơn vị)
 	const handleUpdateTotalPrice = (serviceEntryId: string, totalPrice: number) => {
+		console.log(totalPrice);
 		if (totalPrice < 0) return; // Không cho phép giá tổng âm
 		const newServices = activeTab.selectedServices.map(s => {
 			if (s.id === serviceEntryId) {
@@ -368,6 +370,7 @@ const OrderCreate: React.FC = () => {
 			}
 			return s;
 		});
+		console.log(newServices);
 		updateTab(activeTabId, { selectedServices: newServices });
 	};
 
@@ -1101,18 +1104,16 @@ const OrderCreate: React.FC = () => {
 								setIsCreating(true);
 								try {
 									const orderItems = activeTab.selectedServices.map(item => {
-										// Nếu dịch vụ có tính theo kg và có weightInKg, dùng weightInKg làm quantity
-										let quantity = item.quantity;
-										if (item.service.isWeightBased && item.weightInKg !== undefined && item.weightInKg > 0) {
-											quantity = item.weightInKg;
-										}
 										return {
 											serviceId: item.service.id,
-											quantity: quantity,
+											quantity: item.quantity,
 											unitPrice: getServicePrice(item),
+											isWeightBased: item.service.isWeightBased,
+											weightInKg: item.weightInKg,
+											totalPrice: item.customTotalPrice ?? getServiceTotal(item),
 										};
 									});
-
+									console.log(orderItems);
 									await createOrder({
 										partnerId: activeTab.selectedCustomer.id,
 										orderItems,

@@ -13,6 +13,8 @@ namespace Domain.Entity
         public decimal UnitPrice { get; private set; }
         public decimal Quantity { get; private set; }
         public string UnitOfMeasure { get; private set; } = "kg"; // Đơn vị tính: kg, cái, bộ, v.v.
+        public bool IsWeightBased { get; set; }
+        public float? WeightInKg { get; set; }
         public decimal TotalPrice { get; set; }
         public Guid OrderId { get; set; }
         public Order Order { get; set; }
@@ -22,14 +24,16 @@ namespace Domain.Entity
         private OrderItem() { }
 
 
-        public OrderItem(Guid serviceId, string serviceName, decimal unitPrice, decimal quantity, string? unitOfMeasure, decimal totalPrice)
+        public OrderItem(Guid serviceId, string serviceName, decimal unitPrice, decimal quantity, string? unitOfMeasure, decimal totalPrice, bool isWeightBased, float weightInKg)
         {
             ServiceId = serviceId;
             ServiceName = serviceName;
             UnitPrice = unitPrice;
             Quantity = quantity;
             UnitOfMeasure = unitOfMeasure ?? null;
-            TotalPrice = totalPrice; // Tính tổng tiền = số lượng × đơn giá
+            TotalPrice = totalPrice; 
+            IsWeightBased = isWeightBased;
+            WeightInKg = weightInKg;
         }
     }
 }

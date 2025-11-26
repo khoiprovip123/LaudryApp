@@ -21,6 +21,7 @@ namespace Infrastucture.EntityConfigurations
                    .HasForeignKey(x => x.CompanyId)
                    .OnDelete(DeleteBehavior.Restrict);
 
+
             builder.HasOne(x => x.User)
                   .WithMany()
                   .HasForeignKey(x => x.UserId)
