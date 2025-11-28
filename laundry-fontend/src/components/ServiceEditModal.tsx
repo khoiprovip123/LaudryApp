@@ -24,7 +24,7 @@ import { useToast } from '../hooks/useToast';
 import { getServiceById, updateService } from '../api/services';
 import type { UpdateServiceRequest } from '../api/services';
 import { numberToWords } from '../utils/numberToWords';
-import { formatCurrencyInput, parseCurrencyInput } from '../utils/currencyFormat';
+import { formatPriceInput, parsePriceInput } from '../utils/currencyFormat';
 
 type Props = {
 	isOpen: boolean;
@@ -68,9 +68,9 @@ const ServiceEditModal: React.FC<Props> = ({ isOpen, onClose, serviceId, onSucce
 						defaultCode: data.defaultCode,
 						active: data.active,
 					});
-					setUnitPriceDisplay(formatCurrencyInput(data.unitPrice));
+					setUnitPriceDisplay(formatPriceInput(data.unitPrice));
 					if (data.minimumPrice) {
-						setMinimumPriceDisplay(formatCurrencyInput(data.minimumPrice));
+						setMinimumPriceDisplay(formatPriceInput(data.minimumPrice));
 					}
 				} catch (err: any) {
 					// Toast error đã được xử lý tự động bởi http wrapper
@@ -84,16 +84,16 @@ const ServiceEditModal: React.FC<Props> = ({ isOpen, onClose, serviceId, onSucce
 		setForm((s) => ({ ...s, [k]: v }));
 
 	const handleUnitPriceChange = (value: string) => {
-		const formatted = formatCurrencyInput(value);
+		const formatted = formatPriceInput(value);
 		setUnitPriceDisplay(formatted);
-		const parsed = parseCurrencyInput(value);
+		const parsed = parsePriceInput(value);
 		update('unitPrice', parsed);
 	};
 
 	const handleMinimumPriceChange = (value: string) => {
-		const formatted = formatCurrencyInput(value);
+		const formatted = formatPriceInput(value);
 		setMinimumPriceDisplay(formatted);
-		const parsed = parseCurrencyInput(value);
+		const parsed = parsePriceInput(value);
 		update('minimumPrice', parsed || null);
 	};
 

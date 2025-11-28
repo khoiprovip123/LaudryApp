@@ -46,6 +46,7 @@ import { FaFileExcel } from 'react-icons/fa';
 import SearchInput from '../../components/SearchInput';
 import DateRangePicker from '../../components/DateRangePicker';
 import { useToast } from '../../hooks/useToast';
+import { formatPriceInput, parsePriceInput } from '../../utils/currencyFormat';
 
 const OrdersList: React.FC = () => {
 	const [items, setItems] = useState<OrderDto[]>([]);
@@ -172,7 +173,8 @@ const OrdersList: React.FC = () => {
 	};
 
 	const handleCreatePayment = async () => {
-		if (!selectedOrder || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0) {
+		const amountValue = paymentForm.amount ? parsePriceInput(paymentForm.amount) : 0;
+		if (!selectedOrder || !paymentForm.amount || amountValue <= 0) {
 			toast({
 				status: 'error',
 				title: 'Vui lòng nhập số tiền hợp lệ',
@@ -182,7 +184,7 @@ const OrdersList: React.FC = () => {
 			return;
 		}
 
-		const amount = parseFloat(paymentForm.amount);
+		const amount = parsePriceInput(paymentForm.amount);
 		if (amount > selectedOrder.remainingAmount) {
 			toast({
 				status: 'error',
@@ -620,11 +622,16 @@ const OrdersList: React.FC = () => {
 									<FormControl isRequired>
 										<FormLabel>Số tiền thanh toán</FormLabel>
 										<Input
-											type="number"
-											value={paymentForm.amount}
-											onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+											type="text"
+											value={paymentForm.amount ? formatPriceInput(paymentForm.amount) : ''}
+											onChange={(e) => {
+												const value = e.target.value;
+												const numValue = parsePriceInput(value);
+												setPaymentForm({ ...paymentForm, amount: value === '' ? '' : numValue.toString() });
+											}}
 											placeholder="Nhập số tiền"
 											size="lg"
+											textAlign="right"
 											focusBorderColor="green.500"
 										/>
 										<Text fontSize="xs" color="gray.500" mt={1}>

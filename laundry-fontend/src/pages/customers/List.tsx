@@ -254,7 +254,7 @@ const CustomersList: React.FC = () => {
                                   await deleteCustomer(c.id);
                                   toast({
                                     status: "success",
-                                    title: "Đã xóa (soft delete)",
+                                    title: "Đã xóa thành công",
                                   });
                                   void load();
                                 } catch (err: any) {

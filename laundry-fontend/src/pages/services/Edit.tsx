@@ -4,7 +4,7 @@ import { useToast } from '../../hooks/useToast';
 import { getServiceById, updateService } from '../../api/services';
 import type { UpdateServiceRequest } from '../../api/services';
 import { useNavigate, useParams } from 'react-router-dom';
-import { formatCurrencyInput, parseCurrencyInput } from '../../utils/currencyFormat';
+import { formatPriceInput, parsePriceInput } from '../../utils/currencyFormat';
 
 const ServiceEdit: React.FC = () => {
 	const params = useParams<{ id: string }>();
@@ -44,9 +44,9 @@ const ServiceEdit: React.FC = () => {
 					active: data.active,
 				});
 				// Format giá trị ban đầu để hiển thị
-				setUnitPriceDisplay(formatCurrencyInput(data.unitPrice));
+				setUnitPriceDisplay(formatPriceInput(data.unitPrice));
 				if (data.minimumPrice) {
-					setMinimumPriceDisplay(formatCurrencyInput(data.minimumPrice));
+					setMinimumPriceDisplay(formatPriceInput(data.minimumPrice));
 				}
 			} catch (err: any) {
 				// Toast error đã được xử lý tự động bởi http wrapper
@@ -60,21 +60,21 @@ const ServiceEdit: React.FC = () => {
 
 	const handleUnitPriceChange = (value: string) => {
 		// Format hiển thị với dấu chấm
-		const formatted = formatCurrencyInput(value);
+		const formatted = formatPriceInput(value);
 		setUnitPriceDisplay(formatted);
 		
 		// Parse về số để lưu vào form
-		const parsed = parseCurrencyInput(value);
+		const parsed = parsePriceInput(value);
 		update('unitPrice', parsed);
 	};
 
 	const handleMinimumPriceChange = (value: string) => {
 		// Format hiển thị với dấu chấm
-		const formatted = formatCurrencyInput(value);
+		const formatted = formatPriceInput(value);
 		setMinimumPriceDisplay(formatted);
 		
 		// Parse về số để lưu vào form
-		const parsed = parseCurrencyInput(value);
+		const parsed = parsePriceInput(value);
 		update('minimumPrice', parsed || null);
 	};
 

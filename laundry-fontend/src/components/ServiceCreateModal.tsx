@@ -21,7 +21,7 @@ import {
 import { useToast } from '../hooks/useToast';
 import { createService } from '../api/services';
 import type { CreateServiceRequest } from '../api/services';
-import { formatCurrencyInput, parseCurrencyInput } from '../utils/currencyFormat';
+import { formatPriceInput, parsePriceInput } from '../utils/currencyFormat';
 
 type Props = {
 	isOpen: boolean;
@@ -49,16 +49,16 @@ const ServiceCreateModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
 		setForm((s) => ({ ...s, [k]: v }));
 
 	const handleUnitPriceChange = (value: string) => {
-		const formatted = formatCurrencyInput(value);
+		const formatted = formatPriceInput(value);
 		setUnitPriceDisplay(formatted);
-		const parsed = parseCurrencyInput(value);
+		const parsed = parsePriceInput(value);
 		update('unitPrice', parsed);
 	};
 
 	const handleMinimumPriceChange = (value: string) => {
-		const formatted = formatCurrencyInput(value);
+		const formatted = formatPriceInput(value);
 		setMinimumPriceDisplay(formatted);
-		const parsed = parseCurrencyInput(value);
+		const parsed = parsePriceInput(value);
 		update('minimumPrice', parsed || null);
 	};
 

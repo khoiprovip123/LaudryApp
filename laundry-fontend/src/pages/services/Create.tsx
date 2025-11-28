@@ -5,7 +5,7 @@ import { createService } from '../../api/services';
 import type { CreateServiceRequest } from '../../api/services';
 import { useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
-import { formatCurrencyInput, parseCurrencyInput } from '../../utils/currencyFormat';
+import { formatPriceInput, parsePriceInput } from '../../utils/currencyFormat';
 
 const ServiceCreate: React.FC = () => {
 	const [form, setForm] = useState<CreateServiceRequest>({
@@ -33,11 +33,11 @@ const ServiceCreate: React.FC = () => {
 		const value = e.target.value;
 		
 		// Format hiển thị với dấu chấm
-		const formatted = formatCurrencyInput(value);
+		const formatted = formatPriceInput(value);
 		setUnitPriceDisplay(formatted);
 		
 		// Parse về số để lưu vào form
-		const parsed = parseCurrencyInput(value);
+		const parsed = parsePriceInput(value);
 		update('unitPrice', parsed);
 	};
 
@@ -45,11 +45,11 @@ const ServiceCreate: React.FC = () => {
 		const value = e.target.value;
 		
 		// Format hiển thị với dấu chấm
-		const formatted = formatCurrencyInput(value);
+		const formatted = formatPriceInput(value);
 		setMinimumPriceDisplay(formatted);
 		
 		// Parse về số để lưu vào form
-		const parsed = parseCurrencyInput(value);
+		const parsed = parsePriceInput(value);
 		update('minimumPrice', parsed || null);
 	};
 

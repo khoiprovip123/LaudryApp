@@ -44,6 +44,7 @@ import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabel
 import { getPaymentMethodLabel } from '../../constants/paymentMethod';
 import OrderPrint from '../../components/OrderPrint';
 import { FaPrint } from 'react-icons/fa';
+import { formatPriceInput, parsePriceInput } from '../../utils/currencyFormat';
 
 const OrderDetail: React.FC = () => {
 	const params = useParams<{ id: string }>();
@@ -148,7 +149,8 @@ const OrderDetail: React.FC = () => {
 	};
 
 	const handleCreatePayment = async () => {
-		if (!order || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0) {
+		const amountValue = paymentForm.amount ? parsePriceInput(paymentForm.amount) : 0;
+		if (!order || !paymentForm.amount || amountValue <= 0) {
 			toast({
 				status: 'error',
 				title: 'Vui lòng nhập số tiền hợp lệ',
@@ -158,7 +160,7 @@ const OrderDetail: React.FC = () => {
 			return;
 		}
 
-		const amount = parseFloat(paymentForm.amount);
+		const amount = parsePriceInput(paymentForm.amount);
 		if (amount > order.remainingAmount) {
 			toast({
 				status: 'error',
@@ -519,18 +521,19 @@ const OrderDetail: React.FC = () => {
 														<Td isNumeric>
 															{isEditing ? (
 																<Input
-																	type="number"
-																	value={editingValues?.unitPrice || 0}
-																	onChange={(e) =>
-																		setEditingValues({
-																			...editingValues!,
-																			unitPrice: parseFloat(e.target.value) || 0,
-																		})
-																	}
+																	type="text"
+																	value={formatPriceInput(editingValues?.unitPrice || 0)}
+																	onChange={(e) => {
+																		const newPrice = parsePriceInput(e.target.value);
+																		if (!isNaN(newPrice) && newPrice >= 0) {
+																			setEditingValues({
+																				...editingValues!,
+																				unitPrice: newPrice,
+																			});
+																		}
+																	}}
 																	size="sm"
 																	width="100px"
-																	min="0"
-																	step="1000"
 																	textAlign="right"
 																/>
 															) : (
@@ -540,18 +543,19 @@ const OrderDetail: React.FC = () => {
 														<Td isNumeric fontWeight="semibold">
 															{isEditing ? (
 																<Input
-																	type="number"
-																	value={editingValues?.totalPrice || 0}
-																	onChange={(e) =>
-																		setEditingValues({
-																			...editingValues!,
-																			totalPrice: parseFloat(e.target.value) || 0,
-																		})
-																	}
+																	type="text"
+																	value={formatPriceInput(editingValues?.totalPrice || 0)}
+																	onChange={(e) => {
+																		const newTotal = parsePriceInput(e.target.value);
+																		if (!isNaN(newTotal) && newTotal >= 0) {
+																			setEditingValues({
+																				...editingValues!,
+																				totalPrice: newTotal,
+																			});
+																		}
+																	}}
 																	size="sm"
 																	width="120px"
-																	min="0"
-																	step="1000"
 																	textAlign="right"
 																/>
 															) : (
@@ -776,24 +780,22 @@ const OrderDetail: React.FC = () => {
 								<FormLabel>Số tiền</FormLabel>
 								<HStack spacing={2}>
 									<Input
-										type="number"
-										value={paymentForm.amount}
-										min="0"
-										max={order?.remainingAmount || 0}
-										step="1000"
+										type="text"
+										value={paymentForm.amount ? formatPriceInput(paymentForm.amount) : ''}
 										onChange={(e) => {
 											const value = e.target.value;
-											const numValue = parseFloat(value);
+											const numValue = parsePriceInput(value);
 											if (value === '' || (!isNaN(numValue) && numValue >= 0)) {
 												// Giới hạn giá trị không vượt quá số tiền còn lại
 												if (order && !isNaN(numValue) && numValue > order.remainingAmount) {
 													setPaymentForm({ ...paymentForm, amount: order.remainingAmount.toString() });
 												} else {
-													setPaymentForm({ ...paymentForm, amount: value });
+													setPaymentForm({ ...paymentForm, amount: value === '' ? '' : numValue.toString() });
 												}
 											}
 										}}
 										placeholder="Nhập số tiền"
+										textAlign="right"
 										_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
 										flex="1"
 									/>
@@ -815,7 +817,7 @@ const OrderDetail: React.FC = () => {
 										<Text fontSize="xs" color="gray.500" mt={1}>
 											Số tiền còn lại: {formatCurrency(order.remainingAmount)}
 										</Text>
-										{paymentForm.amount && parseFloat(paymentForm.amount) > order.remainingAmount && (
+										{paymentForm.amount && parsePriceInput(paymentForm.amount) > order.remainingAmount && (
 											<Text fontSize="xs" color="red.500" mt={1}>
 												Số tiền không được vượt quá số tiền còn lại
 											</Text>

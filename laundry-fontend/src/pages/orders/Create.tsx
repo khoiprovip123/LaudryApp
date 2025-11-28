@@ -40,6 +40,7 @@ import { createOrder } from '../../api/orders';
 import type { ServiceDto } from '../../api/services';
 import type { CustomerDto } from '../../api/customers';
 import SearchInput from '../../components/SearchInput';
+import { formatPriceInput, parsePriceInput } from '../../utils/currencyFormat';
 
 type SelectedService = {
 	id: string; // ID duy nhất cho mỗi dòng dịch vụ
@@ -752,26 +753,25 @@ const OrderCreate: React.FC = () => {
 																		Giá:
 																	</Text>
 																	<Input
-																		type="number"
+																		type="text"
 																		size="md"
-																		value={item.customPrice !== undefined ? item.customPrice : item.service.unitPrice}
+																		value={formatPriceInput(item.customPrice !== undefined ? item.customPrice : item.service.unitPrice)}
 																		onChange={(e) => {
-																			const newPrice = parseFloat(e.target.value);
-																			if (!isNaN(newPrice)) {
+																			const newPrice = parsePriceInput(e.target.value);
+																			if (!isNaN(newPrice) && newPrice >= 0) {
 																				handleUpdatePrice(item.id, newPrice);
 																			}
 																		}}
 																		onBlur={(e) => {
-																			const newPrice = parseFloat(e.target.value);
+																			const newPrice = parsePriceInput(e.target.value);
 																			if (isNaN(newPrice) || newPrice < 0) {
 																				// Reset về giá gốc nếu giá không hợp lệ
 																				handleUpdatePrice(item.id, item.service.unitPrice);
 																			}
 																		}}
-																		min={0}
-																		step={1000}
 																		className="min-h-[30px]"
 																		fontSize="md"
+																		textAlign="right"
 																		_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
 																	/>
 																	<Text fontSize="md" color="gray.500">
@@ -791,26 +791,25 @@ const OrderCreate: React.FC = () => {
 															</Text>
 															<HStack spacing={1} align="center" w="100%">
 																<Input
-																	type="number"
+																	type="text"
 																	size="md"
-																	value={getServiceTotal(item)}
+																	value={formatPriceInput(getServiceTotal(item))}
 																	onChange={(e) => {
-																		const newTotal = parseFloat(e.target.value);
-																		if (!isNaN(newTotal)) {
+																		const newTotal = parsePriceInput(e.target.value);
+																		if (!isNaN(newTotal) && newTotal >= 0) {
 																			handleUpdateTotalPrice(item.id, newTotal);
 																		}
 																	}}
 																	onBlur={(e) => {
-																		const newTotal = parseFloat(e.target.value);
+																		const newTotal = parsePriceInput(e.target.value);
 																		if (isNaN(newTotal) || newTotal < 0) {
 																			// Không làm gì, để giá hiện tại
 																		}
 																	}}
-																	min={0}
-																	step={1000}
 																	fontSize="sm"
 																	fontWeight="bold"
 																	color="blue.600"
+																	textAlign="right"
 																	_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
 																/>
 																<Text fontSize="sm" fontWeight="bold" color="blue.600">

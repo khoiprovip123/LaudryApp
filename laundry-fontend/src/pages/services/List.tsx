@@ -189,7 +189,7 @@ const ServicesList: React.FC = () => {
 															onClick={async () => {
 																try {
 																	await deleteService(s.id);
-																	toast({ status: 'success', title: 'Đã xóa (soft delete)' });
+																	toast({ status: 'success', title: 'Đã xóa thành công' });
 																	void load();
 																} catch (err: any) {
 																	// Toast error đã được xử lý tự động bởi http wrapper

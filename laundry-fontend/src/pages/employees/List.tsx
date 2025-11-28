@@ -255,7 +255,7 @@ const EmployeesList: React.FC = () => {
                                   await deleteEmployee(e.id);
                                   toast({
                                     status: "success",
-                                    title: "Đã xóa (soft delete)",
+                                    title: "Đã xóa thành công",
                                   });
                                   void load();
                                 } catch (err: any) {

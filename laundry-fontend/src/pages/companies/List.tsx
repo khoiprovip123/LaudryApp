@@ -121,7 +121,7 @@ const CompaniesList: React.FC = () => {
     if (!deletingId) return;
     try {
       await deleteCompany(deletingId);
-      toast({ status: "success", title: "Đã xóa (soft delete)" });
+      toast({ status: "success", title: "Đã xóa thành công" });
       setDeletingId(null);
       void load();
     } catch (err: any) {
