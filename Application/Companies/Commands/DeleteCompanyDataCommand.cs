@@ -69,7 +69,7 @@ namespace Application.Companies.Commands
 
             // 2. Xóa Orders và OrderItems (OrderItems sẽ được xóa cascade)
             var orders = await _orderService.SearchQuery(o => o.CompanyId == request.CompanyId)
-                .Include(o => o.OrderItem)
+                .Include(o => o.OrderItems)
                 .ToListAsync(cancellationToken);
             
             if (orders.Any())

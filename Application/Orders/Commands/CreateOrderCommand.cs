@@ -61,21 +61,10 @@ namespace Application.Orders.Commands
         {
             // Lấy CompanyId từ WorkContext
             var companyId = _workContext.CompanyId;
-            if (companyId == null)
+            var isSuperAdmin = _workContext.IsSuperAdmin;
+            if (companyId == null && !isSuperAdmin)
             {
-                var ctx = _httpContextAccessor.HttpContext;
-                var companyClaim = ctx?.User?.FindFirst("company_id");
-                if (companyClaim == null || !Guid.TryParse(companyClaim.Value, out var parsedCompanyId))
                     throw new UserFriendlyException("Không xác định được cửa hàng của người dùng.", "COMPANY_NOT_FOUND");
-                companyId = parsedCompanyId;
-            }
-
-            // Lấy UserId từ claim
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-            Guid? userId = null;
-            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var parsedUserId))
-            {
-                userId = parsedUserId;
             }
 
             // Validate Partner
@@ -121,7 +110,6 @@ namespace Application.Orders.Commands
                 };
 
                 orderItems.Add(orderItem);
-                totalPrice += orderItem.TotalPrice;
             }
 
             // Tạo mã đơn hàng
@@ -137,7 +125,6 @@ namespace Application.Orders.Commands
                 receivedTime: receivedTime,
                 status: OrderStatus.Received, // Trạng thái khởi tạo: Đã nhận đồ
                 paymentStatus: "Unpaid", // Trạng thái thanh toán mặc định
-                totalPrice: totalPrice,
                 notes: request.Notes
             )
             {
@@ -148,9 +135,10 @@ namespace Application.Orders.Commands
             foreach (var item in orderItems)
             {
                 item.OrderId = order.Id;
-                order.OrderItem.Add(item);
+                order.OrderItems.Add(item);
             }
 
+            _orderService.ComputeAmountForOrder(order);
             // Lưu Order (sẽ tự động lưu OrderItems do navigation property)
             await _orderService.CreateAsync(order);
 

@@ -38,6 +38,9 @@ namespace Application.DTOs
         public decimal Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice { get; set; }
+        public string UnitOfMeasure { get; set; }
+        public float? WeightInKg { get; set; }
+        public bool IsWeightBased { get; set; }
     }
 }
 

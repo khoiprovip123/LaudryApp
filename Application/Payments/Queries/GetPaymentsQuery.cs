@@ -107,8 +107,6 @@ namespace Application.Payments.Queries
                     PaymentCode = p.PaymentCode,
                     DateCreated = p.DateCreated,
                     DateUpdated = p.LastUpdated,
-                    CreatedBy = p.CreatedBy,
-                    UpdatedBy = p.UpdatedBy
                 }).ToListAsync(cancellationToken);
 
             return new PagedResult<PaymentDto>(totalItems, request.Offset, request.Limit)

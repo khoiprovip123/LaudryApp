@@ -9,7 +9,7 @@ namespace Domain.Entity
 {
     public class Order : BaseEntity, IAggregateRoot
     {
-        public ICollection<OrderItem> OrderItem { get; set; } = new List<OrderItem>();
+        public ICollection<OrderItem>? OrderItems { get; set; } = new List<OrderItem>();
 
         public string Code { get; set; }
         public Guid? PartnerId { get; set; }
@@ -23,14 +23,15 @@ namespace Domain.Entity
         public string? PaymentStatus { get; set; }
 
         public decimal TotalPrice { get; set; }
-        public decimal PaidAmount { get; private set; }
-        public decimal Residual => TotalPrice - PaidAmount;
+        public decimal PaidAmount { get; set; }
+        public decimal Residual { get; set; }
+
 
         public string? Notes { get; set; }
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
 
-        public Order(string code, Guid? partnerId, string? addressText, DateTime? requestedPickupTime, DateTime? receivedTime, string? status, string? paymentStatus, decimal totalPrice, string? notes)
+        public Order(string code, Guid? partnerId, string? addressText, DateTime? requestedPickupTime, DateTime? receivedTime, string? status, string? paymentStatus, string? notes)
         {
             Code = code;
             PartnerId = partnerId;
@@ -39,7 +40,6 @@ namespace Domain.Entity
             ReceivedTime = receivedTime;
             Status = status;
             PaymentStatus = paymentStatus;
-            TotalPrice = totalPrice;
             Notes = notes;
         }
     }

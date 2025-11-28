@@ -19,7 +19,5 @@ namespace Domain.Entity
         public DateTime PaymentDate { get; set; }
         public string? Note { get; set; }
         public string PaymentCode { get; set; } = string.Empty;
-        public Guid? CreatedBy { get; set; }
-        public Guid? UpdatedBy { get; set; }
     }
 }

@@ -35,11 +35,11 @@ import {
 	useDisclosure,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getOrderById, updateOrderStatus } from '../../api/orders';
+import { getOrderById, updateOrderStatus, updateOrderItem, type OrderItemDto } from '../../api/orders';
 import type { OrderDto } from '../../api/orders';
 import { getPayments, createPayment, deletePayment, type PaymentDto } from '../../api/payments';
 import Breadcrumb from '../../components/Breadcrumb';
-import { ChevronLeftIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, DeleteIcon, AddIcon, EditIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
 import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabels } from '../../constants/orderStatus';
 import { getPaymentMethodLabel } from '../../constants/paymentMethod';
 import OrderPrint from '../../components/OrderPrint';
@@ -55,6 +55,14 @@ const OrderDetail: React.FC = () => {
 	const [updatingStatus, setUpdatingStatus] = useState(false);
 	const [creatingPayment, setCreatingPayment] = useState(false);
 	const [printType, setPrintType] = useState<'Receive' | 'Delivery'>('Receive');
+	const [editingItemId, setEditingItemId] = useState<string | null>(null);
+	const [editingValues, setEditingValues] = useState<{
+		quantity: number;
+		unitPrice: number;
+		totalPrice: number;
+		weightInKg?: number;
+	} | null>(null);
+	const [updatingItem, setUpdatingItem] = useState(false);
 	const toast = useToast();
 	const navigate = useNavigate();
 	const { isOpen, onOpen, onClose } = useDisclosure();
@@ -222,6 +230,53 @@ const OrderDetail: React.FC = () => {
 		}
 	};
 
+	const handleStartEdit = (item: OrderItemDto) => {
+		setEditingItemId(item.id);
+		setEditingValues({
+			quantity: item.quantity,
+			unitPrice: item.unitPrice,
+			totalPrice: item.totalPrice,
+			weightInKg: item.isWeightBased ? item.weightInKg : undefined,
+		});
+	};
+
+	const handleCancelEdit = () => {
+		setEditingItemId(null);
+		setEditingValues(null);
+	};
+
+	const handleSaveEdit = async (item: OrderItemDto) => {
+		if (!order || !editingValues) return;
+
+		setUpdatingItem(true);
+		try {
+			// Gọi API updateOrderItem để cập nhật từng dòng
+			await updateOrderItem(item.id, {
+				orderItemId: item.id,
+				quantity: editingValues.quantity,
+				unitPrice: editingValues.unitPrice,
+				totalPrice: editingValues.totalPrice,
+				weightInKg: item.isWeightBased ? editingValues.weightInKg : null,
+			});
+
+			toast({
+				status: 'success',
+				title: 'Cập nhật dịch vụ thành công',
+				duration: 2000,
+				isClosable: true,
+			});
+
+			// Reload order để lấy dữ liệu mới nhất từ server
+			await loadOrder();
+			setEditingItemId(null);
+			setEditingValues(null);
+		} catch (err: any) {
+			// Toast error đã được xử lý tự động bởi http wrapper
+		} finally {
+			setUpdatingItem(false);
+		}
+	};
+
 	if (loading) {
 		return (
 			<Box className="flex flex-col h-full w-full">
@@ -381,37 +436,166 @@ const OrderDetail: React.FC = () => {
 										<Tr>
 											<Th>Dịch vụ</Th>
 											<Th isNumeric>Số lượng</Th>
+											{order.orderItems.some((item) => item.isWeightBased) && (
+												<Th isNumeric>Số kg</Th>
+											)}
 											<Th isNumeric>Đơn giá</Th>
 											<Th isNumeric>Thành tiền</Th>
+											<Th width="100px">Thao tác</Th>
 										</Tr>
 									</Thead>
 									<Tbody>
 										{order.orderItems.length === 0 ? (
 											<Tr>
-												<Td colSpan={4} textAlign="center" p={8}>
+												<Td colSpan={order.orderItems.some((item) => item.isWeightBased) ? 6 : 5} textAlign="center" p={8}>
 													<Text color="gray.400">Chưa có dịch vụ nào</Text>
 												</Td>
 											</Tr>
 										) : (
-											order.orderItems.map((item) => (
-												<Tr key={item.id}>
-													<Td>
-														<VStack align="start" spacing={0}>
-															<Text fontWeight="medium">{item.serviceName}</Text>
-															{item.serviceCode && (
-																<Text fontSize="xs" color="gray.500">
-																	{item.serviceCode}
-																</Text>
+											order.orderItems.map((item) => {
+												const isEditing = editingItemId === item.id;
+												const hasWeightColumn = order.orderItems.some((i) => i.isWeightBased);
+
+												return (
+													<Tr key={item.id}>
+														<Td>
+															<VStack align="start" spacing={0}>
+																<Text fontWeight="medium">{item.serviceName}</Text>
+																{item.serviceCode && (
+																	<Text fontSize="xs" color="gray.500">
+																		{item.serviceCode}
+																	</Text>
+																)}
+															</VStack>
+														</Td>
+														<Td isNumeric>
+															{isEditing ? (
+																<Input
+																	type="number"
+																	value={editingValues?.quantity || 0}
+																	onChange={(e) =>
+																		setEditingValues({
+																			...editingValues!,
+																			quantity: parseFloat(e.target.value) || 0,
+																		})
+																	}
+																	size="sm"
+																	width="80px"
+																	min="0"
+																	step="1"
+																	textAlign="right"
+																/>
+															) : (
+																item.quantity
 															)}
-														</VStack>
-													</Td>
-													<Td isNumeric>{item.quantity}</Td>
-													<Td isNumeric>{formatCurrency(item.unitPrice)}</Td>
-													<Td isNumeric fontWeight="semibold">
-														{formatCurrency(item.totalPrice)}
-													</Td>
-												</Tr>
-											))
+														</Td>
+														{hasWeightColumn && (
+															<Td isNumeric>
+																{item.isWeightBased ? (
+																	isEditing ? (
+																		<Input
+																			type="number"
+																			value={editingValues?.weightInKg || 0}
+																			onChange={(e) =>
+																				setEditingValues({
+																					...editingValues!,
+																					weightInKg: parseFloat(e.target.value) || 0,
+																				})
+																			}
+																			size="sm"
+																			width="80px"
+																			min="0"
+																			step="0.1"
+																			textAlign="right"
+																		/>
+																	) : (
+																		item.weightInKg || 0
+																	)
+																) : (
+																	<Text color="gray.400">-</Text>
+																)}
+															</Td>
+														)}
+														<Td isNumeric>
+															{isEditing ? (
+																<Input
+																	type="number"
+																	value={editingValues?.unitPrice || 0}
+																	onChange={(e) =>
+																		setEditingValues({
+																			...editingValues!,
+																			unitPrice: parseFloat(e.target.value) || 0,
+																		})
+																	}
+																	size="sm"
+																	width="100px"
+																	min="0"
+																	step="1000"
+																	textAlign="right"
+																/>
+															) : (
+																formatCurrency(item.unitPrice)
+															)}
+														</Td>
+														<Td isNumeric fontWeight="semibold">
+															{isEditing ? (
+																<Input
+																	type="number"
+																	value={editingValues?.totalPrice || 0}
+																	onChange={(e) =>
+																		setEditingValues({
+																			...editingValues!,
+																			totalPrice: parseFloat(e.target.value) || 0,
+																		})
+																	}
+																	size="sm"
+																	width="120px"
+																	min="0"
+																	step="1000"
+																	textAlign="right"
+																/>
+															) : (
+																formatCurrency(item.totalPrice)
+															)}
+														</Td>
+														<Td>
+															{isEditing ? (
+																<HStack spacing={1} justify="center">
+																	<IconButton
+																		aria-label="Lưu"
+																		icon={<CheckIcon />}
+																		size="sm"
+																		colorScheme="green"
+																		onClick={() => handleSaveEdit(item)}
+																		isLoading={updatingItem}
+																		_focus={{ boxShadow: 'none', outline: 'none' }}
+																	/>
+																	<IconButton
+																		aria-label="Hủy"
+																		icon={<CloseIcon />}
+																		size="sm"
+																		colorScheme="red"
+																		variant="ghost"
+																		onClick={handleCancelEdit}
+																		isDisabled={updatingItem}
+																		_focus={{ boxShadow: 'none', outline: 'none' }}
+																	/>
+																</HStack>
+															) : (
+																<IconButton
+																	aria-label="Chỉnh sửa"
+																	icon={<EditIcon />}
+																	size="sm"
+																	colorScheme="blue"
+																	variant="ghost"
+																	onClick={() => handleStartEdit(item)}
+																	_focus={{ boxShadow: 'none', outline: 'none' }}
+																/>
+															)}
+														</Td>
+													</Tr>
+												);
+											})
 										)}
 									</Tbody>
 								</Table>

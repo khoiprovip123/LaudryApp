@@ -30,6 +30,9 @@ export type OrderItemDto = {
 	quantity: number;
 	unitPrice: number;
 	totalPrice: number;
+	unitOfMeasure: string;
+	weightInKg: number;
+	isWeightBased: boolean;
 };
 
 export type PagedResult<T> = {
@@ -67,6 +70,14 @@ export type UpdateOrderRequest = {
 	orderItems?: CreateOrderItemRequest[];
 	notes?: string | null;
 	status?: string;
+};
+
+export type UpdateOrderItemRequest = {
+	orderItemId: string;
+	quantity: number;
+	unitPrice: number;
+	totalPrice: number;
+	weightInKg?: number | null;
 };
 
 export type OrderPrintDto = {
@@ -125,6 +136,10 @@ export const deleteOrder = async (id: string) => {
 
 export const updateOrderStatus = async (orderId: string, status: string) => {
 	await httpPut(`/orders/${orderId}/status`, { orderId, status });
+};
+
+export const updateOrderItem = async (orderItemId: string, payload: UpdateOrderItemRequest) => {
+	await httpPut(`/orderitems/${orderItemId}`, payload);
 };
 
 export const getOrderPrint = async (orderId: string, printType: 'Receive' | 'Delivery' = 'Receive') => {

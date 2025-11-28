@@ -8,11 +8,10 @@ namespace Domain.Entity
 {
     public class OrderItem : BaseEntity
     {
-        public Guid ServiceId { get; private set; }
-        public string ServiceName { get; private set; }
-        public decimal UnitPrice { get; private set; }
-        public decimal Quantity { get; private set; }
-        public string UnitOfMeasure { get; private set; } = "kg"; // Đơn vị tính: kg, cái, bộ, v.v.
+        public string ServiceName { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal Quantity { get; set; }
+        public string UnitOfMeasure { get; set; } = ""; // Đơn vị tính: kg, cái, bộ, v.v.
         public bool IsWeightBased { get; set; }
         public float? WeightInKg { get; set; }
         public decimal TotalPrice { get; set; }
@@ -20,6 +19,8 @@ namespace Domain.Entity
         public Order Order { get; set; }
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
+        public Guid ServiceId { get; private set; }
+        public Service Service { get; set; }
 
         private OrderItem() { }
 
@@ -31,7 +32,7 @@ namespace Domain.Entity
             UnitPrice = unitPrice;
             Quantity = quantity;
             UnitOfMeasure = unitOfMeasure ?? null;
-            TotalPrice = totalPrice; 
+            TotalPrice = totalPrice;
             IsWeightBased = isWeightBased;
             WeightInKg = weightInKg;
         }

@@ -16,8 +16,12 @@ namespace Infrastucture.EntityConfigurations
         public void Configure(EntityTypeBuilder<OrderItem> builder)
         {
             builder.HasOne(x => x.Order)
-                   .WithMany(x => x.OrderItem)
+                   .WithMany(x => x.OrderItems)
                    .HasForeignKey(x => x.OrderId);
+
+            builder.HasOne(x => x.Service)
+                      .WithMany()
+                      .HasForeignKey(x => x.ServiceId);
 
             builder.ConfigureBaseEntity();
         }

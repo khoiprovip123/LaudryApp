@@ -42,7 +42,7 @@ namespace Application.Orders.Queries
             var order = await _orderService.SearchQuery(o => o.Id == request.Id)
                 .AsNoTracking()
                 .Include(o => o.Partner)
-                .Include(o => o.OrderItem)
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.Service)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (order == null)
@@ -53,40 +53,20 @@ namespace Application.Orders.Queries
             if (companyId != null && order.CompanyId != companyId)
                 throw new UserFriendlyException("Bạn không có quyền truy cập đơn hàng này.", "ORDER_ACCESS_DENIED");
 
-            var orderItems = order.OrderItem.Select(oi => new OrderItemDto
+            var orderItems = order.OrderItems.Select(oi => new OrderItemDto
             {
                 Id = oi.Id,
                 OrderId = oi.OrderId,
                 ServiceId = oi.ServiceId,
                 ServiceName = oi.ServiceName,
-                ServiceCode = string.Empty, // TODO: Lấy từ Service nếu cần
+                ServiceCode = oi.Service.DefaultCode, // TODO: Lấy từ Service nếu cần
                 Quantity = oi.Quantity,
                 UnitPrice = oi.UnitPrice,
-                TotalPrice = oi.TotalPrice
+                TotalPrice = oi.TotalPrice,
+                UnitOfMeasure = oi.UnitOfMeasure,
+                WeightInKg = oi.WeightInKg,
+                IsWeightBased = oi.IsWeightBased
             }).ToList();
-
-            // Tính TotalAmount từ tổng OrderItems (ưu tiên) hoặc dùng TotalPrice nếu OrderItems rỗng
-            // Đảm bảo tính từ quantity * unitPrice để chính xác
-            decimal totalAmount = 0;
-            if (orderItems.Count > 0)
-            {
-                totalAmount = orderItems.Sum(oi => oi.Quantity * oi.UnitPrice);
-            }
-            else
-            {
-                totalAmount = order.TotalPrice;
-            }
-
-            // Tính PaidAmount từ Payments
-            decimal paidAmount = 0;
-            if (_paymentRepository != null)
-            {
-                paidAmount = await _paymentRepository.Table
-                    .Where(p => p.OrderId.HasValue && p.OrderId.Value == order.Id)
-                    .SumAsync(p => (decimal?)p.Amount, cancellationToken) ?? 0;
-            }
-
-            var remainingAmount = totalAmount - paidAmount;
 
             return new OrderDto
             {
@@ -97,9 +77,9 @@ namespace Application.Orders.Queries
                 PartnerRef = order.Partner != null ? order.Partner.Ref : string.Empty,
                 PartnerDisplayName = order.Partner != null ? (order.Partner.DisplayName ?? string.Empty) : string.Empty,
                 PartnerPhone = order.Partner != null ? order.Partner.Phone : string.Empty,
-                TotalAmount = totalAmount,
-                PaidAmount = paidAmount,
-                RemainingAmount = remainingAmount,
+                TotalAmount = order.TotalPrice,
+                PaidAmount = order.PaidAmount,
+                RemainingAmount = order.Residual,
                 Status = order.Status ?? string.Empty,
                 PaymentStatus = order.PaymentStatus ?? string.Empty,
                 Notes = order.Notes ?? string.Empty,

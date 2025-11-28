@@ -56,7 +56,7 @@ namespace Application.Reports.Queries
                 o.DateCreated >= dateFrom && 
                 o.DateCreated < dateTo)
                 .Include(o => o.Partner)
-                .Include(o => o.OrderItem);
+                .Include(o => o.OrderItems);
 
             var payments = _paymentService.SearchQuery(p => 
                 p.CompanyId == companyId && 
@@ -78,7 +78,7 @@ namespace Application.Reports.Queries
 
             foreach (var order in allOrders)
             {
-                var orderTotal = order.OrderItem?.Sum(oi => oi.Quantity * oi.UnitPrice) ?? order.TotalPrice;
+                var orderTotal = order.OrderItems?.Sum(oi => oi.Quantity * oi.UnitPrice) ?? order.TotalPrice;
                 var paidAmount = await _paymentService.SearchQuery(p => p.OrderId == order.Id)
                     .SumAsync(p => (decimal?)p.Amount, cancellationToken) ?? 0;
                 var remaining = orderTotal - paidAmount;
@@ -102,7 +102,7 @@ namespace Application.Reports.Queries
             {
                 // Group trong memory để tránh lỗi GroupBy với anonymous type trong EF Core
                 var revenueByService = allOrders
-                    .SelectMany(o => o.OrderItem.Select(oi => new
+                    .SelectMany(o => o.OrderItems.Select(oi => new
                     {
                         ServiceId = oi.ServiceId,
                         ServiceName = oi.ServiceName,
@@ -144,7 +144,7 @@ namespace Application.Reports.Queries
                     var partner = customerOrders.FirstOrDefault()?.Partner;
 
                     var customerRevenue = customerOrders
-                        .SelectMany(o => o.OrderItem)
+                        .SelectMany(o => o.OrderItems)
                         .Sum(oi => oi.Quantity * oi.UnitPrice);
 
                     var customerPaid = await payments

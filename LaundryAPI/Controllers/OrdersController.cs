@@ -63,7 +63,7 @@ namespace LaundryAPI.Controllers
             // Nếu có templateId, render với template
             if (templateId.HasValue)
             {
-                var res = await Mediator.Send(new Application.Orders.Queries.GetOrderPrintWithTemplateQuery
+                var res = await Mediator.Send(new GetOrderPrintWithTemplateQuery
                 {
                     OrderId = id,
                     PrintType = printType,
@@ -73,7 +73,7 @@ namespace LaundryAPI.Controllers
             }
 
             // Nếu không có templateId, trả về dữ liệu raw
-            var res2 = await Mediator.Send(new Application.Orders.Queries.GetOrderPrintQuery 
+            var res2 = await Mediator.Send(new GetOrderPrintQuery 
             { 
                 OrderId = id, 
                 PrintType = printType 

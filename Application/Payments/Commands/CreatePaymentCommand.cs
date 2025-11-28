@@ -75,7 +75,7 @@ namespace Application.Payments.Commands
 
             // Validate Order - Load với OrderItems để tính toán chính xác
             var order = await _orderService.SearchQuery(o => o.Id == request.OrderId)
-                .Include(o => o.OrderItem)
+                .Include(o => o.OrderItems)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (order == null)
@@ -87,9 +87,9 @@ namespace Application.Payments.Commands
             // Tính tổng tiền đơn hàng từ OrderItems (ưu tiên) hoặc dùng TotalPrice
             // Đảm bảo tính từ quantity * unitPrice để chính xác
             decimal orderTotal = 0;
-            if (order.OrderItem != null && order.OrderItem.Any())
+            if (order.OrderItems != null && order.OrderItems.Any())
             {
-                orderTotal = order.OrderItem.Sum(oi => oi.Quantity * oi.UnitPrice);
+                orderTotal = order.OrderItems.Sum(oi => oi.Quantity * oi.UnitPrice);
             }
             else
             {
@@ -128,7 +128,6 @@ namespace Application.Payments.Commands
                 PaymentDate = request.PaymentDate,
                 Note = request.Note,
                 PaymentCode = paymentCode,
-                CreatedBy = userId
             };
 
             // Lưu Payment

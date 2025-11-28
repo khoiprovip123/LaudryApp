@@ -1,4 +1,5 @@
 using Application.DTOs;
+using Domain.Entity;
 using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
@@ -34,7 +35,7 @@ namespace Application.Orders.Queries
             IHttpContextAccessor httpContextAccessor, 
             IOrderService orderService, 
             IWorkContext? workContext = null,
-            IAsyncRepository<Domain.Entity.Payment>? paymentRepository = null)
+            IAsyncRepository<Payment>? paymentRepository = null)
         {
             _httpContextAccessor = httpContextAccessor;
             _orderService = orderService;
@@ -94,61 +95,13 @@ namespace Application.Orders.Queries
             var items = await orders
                 .AsNoTracking()
                 .Include(o => o.Partner)
-                .Include(o => o.OrderItem)
                 .OrderByDescending(x => x.DateCreated)
                 .Skip(request.Offset)
                 .Take(request.Limit)
                 .ToListAsync(cancellationToken);
 
-            // Lấy danh sách OrderIds để tính PaidAmount
-            var orderIds = items.Select(o => o.Id).ToList();
-            var paymentsByOrder = new Dictionary<Guid, decimal>();
-            
-            if (_paymentRepository != null && orderIds.Any())
-            {
-                var payments = await _paymentRepository.Table
-                    .Where(p => p.OrderId.HasValue && orderIds.Contains(p.OrderId.Value))
-                    .GroupBy(p => p.OrderId!.Value)
-                    .Select(g => new { OrderId = g.Key, TotalPaid = g.Sum(p => p.Amount) })
-                    .ToListAsync(cancellationToken);
-
-                foreach (var payment in payments)
-                {
-                    paymentsByOrder[payment.OrderId] = payment.TotalPaid;
-                }
-            }
-
-            // Map sang DTO và tính TotalAmount từ OrderItems
             var orderDtos = items.Select(o =>
             {
-                var orderItems = o.OrderItem.Select(oi => new OrderItemDto
-                {
-                    Id = oi.Id,
-                    OrderId = oi.OrderId,
-                    ServiceId = oi.ServiceId,
-                    ServiceName = oi.ServiceName,
-                    ServiceCode = string.Empty, // TODO: Lấy từ Service nếu cần
-                    Quantity = oi.Quantity,
-                    UnitPrice = oi.UnitPrice,
-                    TotalPrice = oi.TotalPrice
-                }).ToList();
-
-                // Tính TotalAmount từ tổng OrderItems (ưu tiên) hoặc dùng TotalPrice nếu OrderItems rỗng
-                // Đảm bảo tính từ quantity * unitPrice để chính xác
-                decimal totalAmount = 0;
-                if (orderItems.Count > 0)
-                {
-                    totalAmount = orderItems.Sum(oi => oi.Quantity * oi.UnitPrice);
-                }
-                else
-                {
-                    totalAmount = o.TotalPrice;
-                }
-
-                // Tính PaidAmount từ Payments
-                var paidAmount = paymentsByOrder.ContainsKey(o.Id) ? paymentsByOrder[o.Id] : 0;
-                var remainingAmount = totalAmount - paidAmount;
-
                 return new OrderDto
                 {
                     Id = o.Id,
@@ -158,17 +111,13 @@ namespace Application.Orders.Queries
                     PartnerRef = o.Partner != null ? o.Partner.Ref : string.Empty,
                     PartnerDisplayName = o.Partner != null ? o.Partner.DisplayName : string.Empty,
                     PartnerPhone = o.Partner != null ? o.Partner.Phone : string.Empty,
-                    TotalAmount = totalAmount,
-                    PaidAmount = paidAmount,
-                    RemainingAmount = remainingAmount,
+                    TotalAmount = o.TotalPrice,
+                    PaidAmount = o.PaidAmount,
+                    RemainingAmount = o.Residual,
                     Status = o.Status ?? string.Empty,
                     PaymentStatus = o.PaymentStatus ?? string.Empty,
                     Notes = o.Notes ?? string.Empty,
                     DateCreated = o.DateCreated,
-                    DateUpdated = o.LastUpdated,
-                    CreatedById = o.CreatedById,
-                    UpdatedById = o.UpdateById,
-                    OrderItems = orderItems
                 };
             }).ToList();
 

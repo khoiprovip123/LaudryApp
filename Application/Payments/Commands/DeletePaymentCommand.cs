@@ -75,7 +75,7 @@ namespace Application.Payments.Commands
                         .Where(p => p.OrderId == payment.OrderId && p.Id != payment.Id)
                         .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
-                    var orderTotal = order.OrderItem?.Sum(oi => oi.TotalPrice) ?? order.TotalPrice;
+                    var orderTotal = order.OrderItems?.Sum(oi => oi.TotalPrice) ?? order.TotalPrice;
                     var remainingAmount = orderTotal - paidAmount;
 
                     if (paidAmount <= 0)

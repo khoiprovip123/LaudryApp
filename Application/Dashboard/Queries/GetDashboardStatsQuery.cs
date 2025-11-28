@@ -67,7 +67,7 @@ namespace Application.Dashboard.Queries
                 .ToListAsync(cancellationToken);
 
             var orderItemsList = await orders
-                .SelectMany(o => o.OrderItem.Select(oi => new { o.Id, oi.Quantity, oi.UnitPrice }))
+                .SelectMany(o => o.OrderItems.Select(oi => new { o.Id, oi.Quantity, oi.UnitPrice }))
                 .ToListAsync(cancellationToken);
 
             // Tính toán doanh thu từ Payments trong memory

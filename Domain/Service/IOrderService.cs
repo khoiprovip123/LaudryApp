@@ -11,7 +11,7 @@ namespace Domain.Service
     public interface IOrderService : IBaseService<Order>
     {
          void ComputeAmountForOrder(Order order);
-         void ComputeAmountForOrderItems(OrderItem order);
+         void ComputeAmountForOrderItems(IEnumerable<OrderItem> orderItems);
     }
 }
 

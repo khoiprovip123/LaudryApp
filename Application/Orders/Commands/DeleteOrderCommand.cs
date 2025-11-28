@@ -63,7 +63,7 @@ namespace Application.Orders.Commands
 
             // Kiểm tra RemainingAmount - nếu đã thanh toán một phần hoặc toàn bộ thì không cho xóa
             // Tính RemainingAmount từ OrderItems (nếu có)
-            var calculatedTotal = order.OrderItem?.Sum(oi => oi.TotalPrice) ?? order.TotalPrice;
+            var calculatedTotal = order.OrderItems?.Sum(oi => oi.TotalPrice) ?? order.TotalPrice;
             var remainingAmount = calculatedTotal; // TODO: Tính từ Payment khi có module Payment
             
             // Nếu remainingAmount = 0 nghĩa là đã thanh toán hết

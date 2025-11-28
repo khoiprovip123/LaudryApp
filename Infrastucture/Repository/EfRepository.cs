@@ -78,8 +78,7 @@ namespace Infrastucture.Repository
 
         public async Task<T> InsertAsync(T entity)
         {
-            await Db.Set<T>().AddAsync(entity);
-            await Db.SaveChangesAsync();
+            await InsertAsync(new List<T>() { entity });
             return entity;
         }
 
@@ -92,20 +91,24 @@ namespace Infrastucture.Repository
 
         public async Task UpdateAsync(T entity)
         {
-            Db.Set<T>().Update(entity);
-            await Db.SaveChangesAsync();
+            await UpdateAsync(new List<T>() { entity });
         }
 
         public async Task UpdateAsync(IEnumerable<T> entities, bool autoSave = true)
         {
-            Db.Set<T>().UpdateRange(entities);
+            if (entities == null)
+                return;
+
+            foreach (var entity in entities)
+            {
+                Db.Entry(entity).State = EntityState.Modified;
+            }
             if (autoSave) await Db.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(T entity)
         {
-            Db.Set<T>().Remove(entity);
-            await Db.SaveChangesAsync();
+            await DeleteAsync(new List<T>() { entity });
         }
 
         public async Task DeleteAsync(IEnumerable<T> entities, bool autoSave = true)

@@ -69,7 +69,7 @@ namespace Application.Orders.Queries
             // Lấy dữ liệu đơn hàng
             var order = await _orderService.SearchQuery(o => o.Id == request.OrderId)
                 .Include(o => o.Partner)
-                .Include(o => o.OrderItem)
+                .Include(o => o.OrderItems)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (order == null)
@@ -83,7 +83,7 @@ namespace Application.Orders.Queries
             }
 
             // Tính tổng tiền
-            var totalAmount = order.OrderItem?.Sum(oi => oi.Quantity * oi.UnitPrice) ?? order.TotalPrice;
+            var totalAmount = order.OrderItems?.Sum(oi => oi.Quantity * oi.UnitPrice) ?? order.TotalPrice;
 
             // Tính số tiền đã thanh toán
             var paidAmount = await _paymentService.SearchQuery(p => p.OrderId == order.Id)
@@ -97,7 +97,7 @@ namespace Application.Orders.Queries
             var companyPhone = company?.Phone ?? "";
 
             // Map OrderItems
-            var items = order.OrderItem?.Select(oi => new OrderItemPrintDto
+            var items = order.OrderItems?.Select(oi => new OrderItemPrintDto
             {
                 ServiceName = oi.ServiceName,
                 Quantity = oi.Quantity,

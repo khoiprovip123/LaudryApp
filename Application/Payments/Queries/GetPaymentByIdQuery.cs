@@ -62,8 +62,6 @@ namespace Application.Payments.Queries
                 PaymentCode = payment.PaymentCode,
                 DateCreated = payment.DateCreated,
                 DateUpdated = payment.LastUpdated,
-                CreatedBy = payment.CreatedBy,
-                UpdatedBy = payment.UpdatedBy
             };
         }
     }
