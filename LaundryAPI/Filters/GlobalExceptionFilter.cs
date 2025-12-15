@@ -45,7 +45,7 @@ namespace LaundryAPI.Filters
                     {
                         Code = userFriendlyEx.Code ?? "USER_FRIENDLY_ERROR",
                         Message = userFriendlyEx.Message,
-                        Details = userFriendlyEx.Details
+                        //Details = userFriendlyEx.Details
                     };
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
@@ -55,7 +55,7 @@ namespace LaundryAPI.Filters
                     {
                         Code = businessEx.Code ?? "BUSINESS_ERROR",
                         Message = businessEx.Message,
-                        Details = businessEx.Details,
+                        //Details = businessEx.Details,
                         Data = businessEx.ErrorData != null ? ConvertToDictionary(businessEx.ErrorData) : null
                     };
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -67,7 +67,7 @@ namespace LaundryAPI.Filters
                     {
                         Code = "CONCURRENCY_ERROR",
                         Message = "Dữ liệu đã bị thay đổi bởi người dùng khác. Vui lòng làm mới và thử lại.",
-                        Details = _environment.IsDevelopment() ? exception.Message : null
+                        //Details = _environment.IsDevelopment() ? exception.Message : null
                     };
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
                     break;
@@ -77,7 +77,7 @@ namespace LaundryAPI.Filters
                     {
                         Code = "DATABASE_ERROR",
                         Message = "Đã xảy ra lỗi khi thao tác với cơ sở dữ liệu",
-                        Details = _environment.IsDevelopment() ? dbEx.InnerException?.Message ?? dbEx.Message : null
+                        //Details = _environment.IsDevelopment() ? dbEx.InnerException?.Message ?? dbEx.Message : null
                     };
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     break;
@@ -88,7 +88,7 @@ namespace LaundryAPI.Filters
                     {
                         Code = "NOT_FOUND",
                         Message = argNullEx.Message,
-                        Details = _environment.IsDevelopment() ? exception.StackTrace : null
+                        //Details = _environment.IsDevelopment() ? exception.StackTrace : null
                     };
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
@@ -98,7 +98,7 @@ namespace LaundryAPI.Filters
                     {
                         Code = "INVALID_ARGUMENT",
                         Message = argEx.Message,
-                        Details = _environment.IsDevelopment() ? exception.StackTrace : null
+                        //Details = _environment.IsDevelopment() ? exception.StackTrace : null
                     };
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
@@ -110,7 +110,7 @@ namespace LaundryAPI.Filters
                     {
                         Code = "UNAUTHORIZED",
                         Message = "Bạn không có quyền truy cập tài nguyên này",
-                        Details = _environment.IsDevelopment() ? exception.Message : null
+                        //Details = _environment.IsDevelopment() ? exception.Message : null
                     };
                     errorResponse.UnauthorizedRequest = true;
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -122,7 +122,7 @@ namespace LaundryAPI.Filters
                     {
                         Code = "NOT_FOUND",
                         Message = exception.Message,
-                        Details = _environment.IsDevelopment() ? exception.StackTrace : null
+                        //Details = _environment.IsDevelopment() ? exception.StackTrace : null
                     };
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     break;
@@ -135,7 +135,7 @@ namespace LaundryAPI.Filters
                         Message = _environment.IsDevelopment() 
                             ? exception.Message 
                             : "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
-                        Details = _environment.IsDevelopment() ? exception.StackTrace : null
+                        //Details = _environment.IsDevelopment() ? exception.StackTrace : null
                     };
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     break;

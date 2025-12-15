@@ -86,7 +86,7 @@ namespace Application.Orders.Queries
             var totalAmount = order.OrderItems?.Sum(oi => oi.Quantity * oi.UnitPrice) ?? order.TotalPrice;
 
             // Tính số tiền đã thanh toán
-            var paidAmount = await _paymentService.SearchQuery(p => p.OrderId == order.Id)
+            var paidAmount = await _paymentService.SearchQuery()
                 .SumAsync(p => (decimal?)p.Amount, cancellationToken) ?? 0;
 
             var remainingAmount = totalAmount - paidAmount;

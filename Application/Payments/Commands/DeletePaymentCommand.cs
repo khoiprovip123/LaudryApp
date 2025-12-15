@@ -41,59 +41,7 @@ namespace Application.Payments.Commands
 
         public async Task<Unit> Handle(DeletePaymentCommand request, CancellationToken cancellationToken)
         {
-            // Lấy CompanyId từ WorkContext
-            var companyId = _workContext?.CompanyId;
-            if (companyId == null)
-            {
-                var ctx = _httpContextAccessor.HttpContext;
-                var companyClaim = ctx?.User?.FindFirst("company_id");
-                if (companyClaim == null || !Guid.TryParse(companyClaim.Value, out var parsedCompanyId))
-                    throw new UserFriendlyException("Không xác định được cửa hàng của người dùng.", "COMPANY_NOT_FOUND");
-                companyId = parsedCompanyId;
-            }
-
-            // Lấy Payment
-            var payment = await _paymentService.GetByIdAsync(request.Id);
-            if (payment == null)
-                throw new UserFriendlyException("Thanh toán không tồn tại.", "PAYMENT_NOT_FOUND");
-
-            // Kiểm tra quyền truy cập theo CompanyId
-            if (payment.CompanyId != companyId)
-                throw new UserFriendlyException("Bạn không có quyền xóa thanh toán này.", "PAYMENT_ACCESS_DENIED");
-
-            // Xóa Payment
-            await _paymentService.DeleteAsync(payment);
-
-            // Cập nhật PaymentStatus của Order
-            if (payment.OrderId.HasValue)
-            {
-                var order = await _orderService.GetByIdAsync(payment.OrderId.Value);
-                if (order != null)
-                {
-                    // Tính lại tổng tiền đã thanh toán
-                    var paidAmount = await _paymentRepository.Table
-                        .Where(p => p.OrderId == payment.OrderId && p.Id != payment.Id)
-                        .SumAsync(p => (decimal?)p.Amount) ?? 0;
-
-                    var orderTotal = order.OrderItems?.Sum(oi => oi.TotalPrice) ?? order.TotalPrice;
-                    var remainingAmount = orderTotal - paidAmount;
-
-                    if (paidAmount <= 0)
-                    {
-                        order.PaymentStatus = "Unpaid";
-                    }
-                    else if (remainingAmount > 0)
-                    {
-                        order.PaymentStatus = "PartiallyPaid";
-                    }
-                    else
-                    {
-                        order.PaymentStatus = "Paid";
-                    }
-
-                    await _orderService.UpdateAsync(order);
-                }
-            }
+         
 
             return Unit.Value;
         }

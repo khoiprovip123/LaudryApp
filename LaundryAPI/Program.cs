@@ -7,6 +7,7 @@ using Infrastucture;
 using Infrastucture.Data;
 using Infrastucture.Interfaces;
 using Infrastucture.Repository;
+using Infrastucture.Services;
 using LaundryAPI.Filters;
 using LHK.Share;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -175,7 +176,7 @@ services.AddSwaggerGen(c =>
 services.AddHealthChecks();
 
 // Đăng ký RoleSeederService để seed roles khi app khởi động
-services.AddHostedService<Infrastucture.Services.RoleSeederService>();
+services.AddHostedService<RoleSeederService>();
 
 var app = builder.Build();
 

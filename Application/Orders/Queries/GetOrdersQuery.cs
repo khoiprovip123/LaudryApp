@@ -32,8 +32,8 @@ namespace Application.Orders.Queries
         private readonly IAsyncRepository<Domain.Entity.Payment>? _paymentRepository;
 
         public GetOrdersQueryHandler(
-            IHttpContextAccessor httpContextAccessor, 
-            IOrderService orderService, 
+            IHttpContextAccessor httpContextAccessor,
+            IOrderService orderService,
             IWorkContext? workContext = null,
             IAsyncRepository<Payment>? paymentRepository = null)
         {

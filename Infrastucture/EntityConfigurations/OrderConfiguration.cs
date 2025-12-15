@@ -26,6 +26,10 @@ namespace Infrastucture.EntityConfigurations
                .HasForeignKey(x => x.CompanyId)
                .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasMany(x => x.PaymentOrders)
+               .WithOne(x => x.Order)
+               .HasForeignKey(x => x.OrderId);
+
             builder.ConfigureBaseEntity();
         }
     }

@@ -28,7 +28,7 @@ namespace Domain.Services.Commands
 			if (service == null) throw new Exception("Dịch vụ không tồn tại");
 
 			// Kiểm tra xem dịch vụ có được sử dụng trong OrderItem không
-			var hasOrderItems = await _orderItemRepository.Table
+			var hasOrderItems = await _orderItemRepository.SearchQuery()
 				.AnyAsync(oi => oi.ServiceId == request.Id, cancellationToken);
 
 			if (hasOrderItems)

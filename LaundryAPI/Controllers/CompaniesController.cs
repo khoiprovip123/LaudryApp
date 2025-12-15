@@ -32,7 +32,7 @@ namespace LaundryAPI.Controllers
             return Ok(res);
         }
 
-        [UowAttribute]
+        [Uow]
         [HttpPost]
         [RequireSuperAdmin] // Chỉ SuperAdmin mới tạo được cửa hàng
         [CheckAccess(Actions = Permissions.Companies_Create)]

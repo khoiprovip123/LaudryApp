@@ -18,10 +18,10 @@ namespace Infrastucture.EntityConfigurations
            .WithMany()
            .HasForeignKey(x => x.CompanyId);
 
-            builder.HasOne(x => x.Order)
-              .WithMany()
-              .HasForeignKey(x => x.OrderId);
-
+            builder.HasMany(x => x.PaymentOrders)
+               .WithOne(x => x.Payment)
+               .HasForeignKey(x => x.PaymentId);
+        
             builder.ConfigureBaseEntity();
         }
     }

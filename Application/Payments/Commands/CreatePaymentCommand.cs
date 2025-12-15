@@ -18,6 +18,7 @@ namespace Application.Payments.Commands
     public class CreatePaymentCommand : IRequest<Guid>
     {
         public Guid OrderId { get; set; }
+        public  Guid PartnerId { get; set; }
         public decimal Amount { get; set; }
         public string PaymentMethod { get; set; } = string.Empty;
         public DateTime PaymentDate { get; set; }
@@ -56,22 +57,6 @@ namespace Application.Payments.Commands
         {
             // Lấy CompanyId từ WorkContext
             var companyId = _workContext?.CompanyId;
-            if (companyId == null)
-            {
-                var ctx = _httpContextAccessor.HttpContext;
-                var companyClaim = ctx?.User?.FindFirst("company_id");
-                if (companyClaim == null || !Guid.TryParse(companyClaim.Value, out var parsedCompanyId))
-                    throw new UserFriendlyException("Không xác định được cửa hàng của người dùng.", "COMPANY_NOT_FOUND");
-                companyId = parsedCompanyId;
-            }
-
-            // Lấy UserId từ claim
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-            Guid? userId = null;
-            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var parsedUserId))
-            {
-                userId = parsedUserId;
-            }
 
             // Validate Order - Load với OrderItems để tính toán chính xác
             var order = await _orderService.SearchQuery(o => o.Id == request.OrderId)
@@ -84,76 +69,42 @@ namespace Application.Payments.Commands
             if (order.CompanyId != companyId)
                 throw new UserFriendlyException("Đơn hàng không thuộc cửa hàng này.", "ORDER_COMPANY_MISMATCH");
 
-            // Tính tổng tiền đơn hàng từ OrderItems (ưu tiên) hoặc dùng TotalPrice
-            // Đảm bảo tính từ quantity * unitPrice để chính xác
-            decimal orderTotal = 0;
-            if (order.OrderItems != null && order.OrderItems.Any())
-            {
-                orderTotal = order.OrderItems.Sum(oi => oi.Quantity * oi.UnitPrice);
-            }
-            else
-            {
-                orderTotal = order.TotalPrice;
-            }
-
-            // Tính tổng tiền đã thanh toán (chỉ tính các payment đã được lưu, không bao gồm payment đang tạo)
-            var paidAmount = await _paymentRepository.Table
-                .Where(p => p.OrderId == request.OrderId)
-                .SumAsync(p => (decimal?)p.Amount, cancellationToken) ?? 0;
-
-            var remainingAmount = orderTotal - paidAmount;
-
             // Validate số tiền thanh toán
             if (request.Amount <= 0)
                 throw new UserFriendlyException("Số tiền thanh toán phải lớn hơn 0.", "INVALID_AMOUNT");
 
-            if (request.Amount > remainingAmount)
-                throw new UserFriendlyException($"Số tiền thanh toán ({request.Amount:N0} đ) không được vượt quá số tiền còn lại ({remainingAmount:N0} đ).", "AMOUNT_EXCEEDS_REMAINING");
 
-            // Validate PaymentMethod
-            if (string.IsNullOrWhiteSpace(request.PaymentMethod))
-                throw new UserFriendlyException("Phương thức thanh toán không được để trống.", "PAYMENT_METHOD_REQUIRED");
-
-            // Tạo mã thanh toán
-            var paymentCode = await _sequenceService.GetNextRefAsync("Payment", companyId, cancellationToken);
-
-            // Tạo Payment
+            var sequence = await _sequenceService.GetNextRefAsync("Payment", companyId!.Value);
             var payment = new Payment
             {
-                CompanyId = companyId,
-                OrderId = request.OrderId,
-                PartnerId = order.PartnerId,
                 Amount = request.Amount,
+                CompanyId = companyId,
                 PaymentMethod = request.PaymentMethod,
+                PartnerId = request.PartnerId,
                 PaymentDate = request.PaymentDate,
-                Note = request.Note,
-                PaymentCode = paymentCode,
             };
 
-            // Lưu Payment
-            await _paymentService.CreateAsync(payment);
+            var allocate = Math.Min(order.Residual, request.Amount);
 
-            // Cập nhật PaymentStatus của Order
-            var newPaidAmount = paidAmount + request.Amount;
-            var newRemainingAmount = orderTotal - newPaidAmount;
+            var paymentOrder = new PaymentOrder
+            {
+                OrderId = order.Id,
+                PaymentId = payment.Id,
+                AmountAllocated = allocate,
+            };
+            payment.PaymentOrders.Add(paymentOrder);
 
-            if (newRemainingAmount <= 0)
-            {
-                // Tự động cập nhật PaymentStatus = "Paid" khi thanh toán xong
-                order.PaymentStatus = "Paid";
-                // Lưu ý: PaymentStatus ("đã thanh toán") khác với Status ("đã giao cho khách")
-                // Status không tự động chuyển sang Delivered, sẽ được quản lý độc lập
-                // FE có thể chuyển Status tự do theo nhu cầu business
-            }
-            else if (newPaidAmount > 0)
-            {
-                // Tự động cập nhật PaymentStatus = "PartiallyPaid" khi thanh toán một phần
-                order.PaymentStatus = "PartiallyPaid";
-            }
+
+            // === 5. Update Order ===
+            order.PaidAmount += allocate;
+            order.Residual -= allocate;
+
+            order.PaymentStatus = order.Residual == 0 ? "partially_paid" : "paid";
 
             await _orderService.UpdateAsync(order);
+            await _paymentRepository.InsertAsync(payment);
 
-            return payment.Id;
+            return order.Id;
         }
     }
 }

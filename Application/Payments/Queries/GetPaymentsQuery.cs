@@ -1,4 +1,5 @@
 using Application.DTOs;
+using Domain.Entity;
 using Domain.Interfaces;
 using Domain.Service;
 using MediatR;
@@ -29,7 +30,7 @@ namespace Application.Payments.Queries
         private readonly IPaymentService _paymentService;
         private readonly IWorkContext? _workContext;
 
-        public GetPaymentsQueryHandler(IHttpContextAccessor httpContextAccessor, IPaymentService paymentService, IWorkContext? workContext = null)
+        public GetPaymentsQueryHandler(IHttpContextAccessor httpContextAccessor, IPaymentService paymentService, IWorkContext? workContext = null, IRepository<PaymentOrder> paymentOrder = null)
         {
             _httpContextAccessor = httpContextAccessor;
             _paymentService = paymentService;
@@ -38,80 +39,21 @@ namespace Application.Payments.Queries
 
         public async Task<PagedResult<PaymentDto>> Handle(GetPaymentsQuery request, CancellationToken cancellationToken)
         {
-            var payments = _paymentService.SearchQuery();
 
-            // Lọc theo CompanyId nếu người dùng thuộc một công ty
-            var companyId = _workContext?.CompanyId;
-            if (companyId != null)
+            var paymentOrder = await _paymentService.SearchQuery(x => x.PartnerId == request.PartnerId).Select(x => new PaymentDto
             {
-                payments = payments.Where(p => p.CompanyId == companyId);
-            }
+                PartnerId = x.PartnerId,
+                Amount = x.Amount,
+                PaymentMethod = x.PaymentMethod,
+                PaymentDate = x.PaymentDate,
+                Note = x.Note,
+                PaymentCode = x.PaymentCode,
+                DateCreated = x.DateCreated,
+            }).ToListAsync();
 
-            // Lọc theo OrderId
-            if (request.OrderId.HasValue)
+            return new PagedResult<PaymentDto>(5, request.Offset, request.Limit)
             {
-                payments = payments.Where(p => p.OrderId == request.OrderId);
-            }
-
-            // Lọc theo PartnerId
-            if (request.PartnerId.HasValue)
-            {
-                payments = payments.Where(p => p.PartnerId == request.PartnerId);
-            }
-
-            // Lọc theo DateFrom
-            if (request.DateFrom.HasValue)
-            {
-                payments = payments.Where(p => p.PaymentDate >= request.DateFrom.Value);
-            }
-
-            // Lọc theo DateTo
-            if (request.DateTo.HasValue)
-            {
-                var dateTo = request.DateTo.Value.Date.AddDays(1);
-                payments = payments.Where(p => p.PaymentDate < dateTo);
-            }
-
-            // Tìm kiếm theo Code hoặc PaymentCode
-            if (!string.IsNullOrWhiteSpace(request.Search))
-            {
-                var kw = request.Search.Trim().ToLower();
-                payments = payments.Where(p =>
-                    (p.PaymentCode != null && p.PaymentCode.ToLower().Contains(kw)) ||
-                    (p.Order != null && p.Order.Code != null && p.Order.Code.ToLower().Contains(kw)) ||
-                    (p.Partner != null && p.Partner.Name != null && p.Partner.Name.ToLower().Contains(kw)));
-            }
-
-            var totalItems = await payments.CountAsync(cancellationToken);
-
-            var items = await payments
-                .AsNoTracking()
-                .Include(p => p.Order)
-                .Include(p => p.Partner)
-                .OrderByDescending(x => x.PaymentDate)
-                .ThenByDescending(x => x.DateCreated)
-                .Skip(request.Offset)
-                .Take(request.Limit)
-                .Select(p => new PaymentDto
-                {
-                    Id = p.Id,
-                    OrderId = p.OrderId,
-                    OrderCode = p.Order != null ? p.Order.Code : string.Empty,
-                    PartnerId = p.PartnerId,
-                    PartnerName = p.Partner != null ? p.Partner.Name : string.Empty,
-                    PartnerRef = p.Partner != null ? p.Partner.Ref : string.Empty,
-                    Amount = p.Amount,
-                    PaymentMethod = p.PaymentMethod,
-                    PaymentDate = p.PaymentDate,
-                    Note = p.Note,
-                    PaymentCode = p.PaymentCode,
-                    DateCreated = p.DateCreated,
-                    DateUpdated = p.LastUpdated,
-                }).ToListAsync(cancellationToken);
-
-            return new PagedResult<PaymentDto>(totalItems, request.Offset, request.Limit)
-            {
-                Items = items,
+                Items = paymentOrder
             };
         }
     }

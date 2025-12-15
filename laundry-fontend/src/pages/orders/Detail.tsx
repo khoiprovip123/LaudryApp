@@ -37,7 +37,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { getOrderById, updateOrderStatus, updateOrderItem, type OrderItemDto } from '../../api/orders';
 import type { OrderDto } from '../../api/orders';
-import { getPayments, createPayment, deletePayment, type PaymentDto } from '../../api/payments';
+import { getPayments, createPayment, deletePayment, type PaymentDto, type CreatePaymentRequest } from '../../api/payments';
 import Breadcrumb from '../../components/Breadcrumb';
 import { ChevronLeftIcon, DeleteIcon, AddIcon, EditIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
 import { getOrderStatusLabel, getOrderStatusColor, OrderStatus, OrderStatusLabels } from '../../constants/orderStatus';
@@ -68,12 +68,13 @@ const OrderDetail: React.FC = () => {
 	const navigate = useNavigate();
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const { isOpen: isPrintOpen, onOpen: onPrintOpen, onClose: onPrintClose } = useDisclosure();
-	const [paymentForm, setPaymentForm] = useState({
-		amount: '',
+	const [paymentForm, setPaymentForm] = useState<CreatePaymentRequest>({
+		amount: 0,
+		partnerId: order?.partnerId ?? null,
 		paymentMethod: 'Cash',
 		paymentDate: new Date().toISOString().split('T')[0],
-		note: '',
-	});
+		note: null,
+	  });
 
 	const loadOrder = async () => {
 		setLoading(true);
@@ -93,7 +94,7 @@ const OrderDetail: React.FC = () => {
 		setLoadingPayments(true);
 		try {
 			const res = await getPayments({ orderId: id, limit: 100 });
-			setPayments(res.items);
+			setPayments(res);
 		} catch (err: any) {
 			// Toast error đã được xử lý tự động bởi http wrapper
 		} finally {
@@ -149,7 +150,7 @@ const OrderDetail: React.FC = () => {
 	};
 
 	const handleCreatePayment = async () => {
-		const amountValue = paymentForm.amount ? parsePriceInput(paymentForm.amount) : 0;
+		const amountValue = paymentForm.amount ? paymentForm.amount : 0;
 		if (!order || !paymentForm.amount || amountValue <= 0) {
 			toast({
 				status: 'error',
@@ -160,8 +161,8 @@ const OrderDetail: React.FC = () => {
 			return;
 		}
 
-		const amount = parsePriceInput(paymentForm.amount);
-		if (amount > order.remainingAmount) {
+		// const amount = parsePriceInput(paymentForm.amount);
+		if (paymentForm.amount > order.remainingAmount) {
 			toast({
 				status: 'error',
 				title: `Số tiền không được vượt quá số tiền còn lại (${formatCurrency(order.remainingAmount)})`,
@@ -187,10 +188,11 @@ const OrderDetail: React.FC = () => {
 			const paymentDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}+07:00`;
 			await createPayment({
 				orderId: order.id,
-				amount,
+				amount: paymentForm.amount,
 				paymentMethod: paymentForm.paymentMethod,
 				paymentDate: paymentDateTime,
 				note: paymentForm.note || null,
+				partnerId: order?.partnerId ?? null,
 			});
 			toast({
 				status: 'success',
@@ -200,10 +202,11 @@ const OrderDetail: React.FC = () => {
 			});
 			onClose();
 			setPaymentForm({
-				amount: '',
+				amount: null,
+				partnerId: order?.partnerId || null,
 				paymentMethod: 'Cash',
 				paymentDate: new Date().toISOString().split('T')[0],
-				note: '',
+				note: null,
 			});
 			await loadOrder();
 			await loadPayments();
@@ -264,6 +267,7 @@ const OrderDetail: React.FC = () => {
 			toast({
 				status: 'success',
 				title: 'Cập nhật dịch vụ thành công',
+				position: 'top',
 				duration: 2000,
 				isClosable: true,
 			});
@@ -666,13 +670,13 @@ const OrderDetail: React.FC = () => {
 								<Flex justify="center" py={4}>
 									<Spinner size="sm" />
 								</Flex>
-							) : payments.length === 0 ? (
+							) : payments?.length === 0 ? (
 								<Text color="gray.400" fontSize="sm" textAlign="center" py={4}>
 									Chưa có thanh toán nào
 								</Text>
 							) : (
 								<VStack align="stretch" spacing={2}>
-									{payments.map((payment) => (
+									{payments?.map((payment) => (
 										<Box
 											key={payment.id}
 											p={3}
@@ -788,9 +792,9 @@ const OrderDetail: React.FC = () => {
 											if (value === '' || (!isNaN(numValue) && numValue >= 0)) {
 												// Giới hạn giá trị không vượt quá số tiền còn lại
 												if (order && !isNaN(numValue) && numValue > order.remainingAmount) {
-													setPaymentForm({ ...paymentForm, amount: order.remainingAmount.toString() });
+													setPaymentForm({ ...paymentForm, amount: order.remainingAmount });
 												} else {
-													setPaymentForm({ ...paymentForm, amount: value === '' ? '' : numValue.toString() });
+													setPaymentForm({ ...paymentForm, amount: value === '' ? 0 : numValue as number });
 												}
 											}
 										}}
@@ -804,7 +808,7 @@ const OrderDetail: React.FC = () => {
 											size="sm"
 											variant="outline"
 											onClick={() => {
-												setPaymentForm({ ...paymentForm, amount: order.remainingAmount.toString() });
+												setPaymentForm({ ...paymentForm, amount: order.remainingAmount as number });
 											}}
 											_focus={{ boxShadow: 'none', outline: 'none' }}
 										>
@@ -817,7 +821,7 @@ const OrderDetail: React.FC = () => {
 										<Text fontSize="xs" color="gray.500" mt={1}>
 											Số tiền còn lại: {formatCurrency(order.remainingAmount)}
 										</Text>
-										{paymentForm.amount && parsePriceInput(paymentForm.amount) > order.remainingAmount && (
+										{paymentForm.amount && paymentForm.amount > order.remainingAmount && (
 											<Text fontSize="xs" color="red.500" mt={1}>
 												Số tiền không được vượt quá số tiền còn lại
 											</Text>
@@ -828,7 +832,7 @@ const OrderDetail: React.FC = () => {
 							<FormControl isRequired>
 								<FormLabel>Phương thức thanh toán</FormLabel>
 								<Select
-									value={paymentForm.paymentMethod}
+									value={paymentForm.paymentMethod ?? ''}
 									onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value })}
 									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
 								>
@@ -843,7 +847,7 @@ const OrderDetail: React.FC = () => {
 								<FormLabel>Ngày thanh toán</FormLabel>
 								<Input
 									type="date"
-									value={paymentForm.paymentDate}
+									value={paymentForm.paymentDate ?? ''}
 									isDisabled
 									lang="vi-VN"
 									_focus={{ boxShadow: 'none', outline: 'none', borderColor: 'blue.500' }}
@@ -857,7 +861,7 @@ const OrderDetail: React.FC = () => {
 							<FormControl>
 								<FormLabel>Ghi chú</FormLabel>
 								<Textarea
-									value={paymentForm.note}
+									value={paymentForm.note ?? ''}
 									onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })}
 									placeholder="Nhập ghi chú (tùy chọn)"
 									rows={3}

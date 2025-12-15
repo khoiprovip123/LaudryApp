@@ -12,12 +12,11 @@ namespace Domain.Entity
         public Company Company { get; set; }
         public Guid? PartnerId { get; set; }
         public Partner Partner { get; set; }
-        public Guid? OrderId { get; set; }
-        public Order Order { get; set; }
         public decimal Amount { get; set; }
         public string PaymentMethod { get; set; } = string.Empty;
-        public DateTime PaymentDate { get; set; }
+        public DateTime? PaymentDate { get; set; }
         public string? Note { get; set; }
         public string PaymentCode { get; set; } = string.Empty;
+        public ICollection<PaymentOrder> PaymentOrders { get; set; } = new List<PaymentOrder>();
     }
 }

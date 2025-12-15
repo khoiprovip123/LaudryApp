@@ -36,14 +36,22 @@ export type GetPaymentsQuery = {
 };
 
 export type CreatePaymentRequest = {
-	orderId: string;
-	amount: number;
-	paymentMethod: string;
-	paymentDate: string;
+	orderId?: string | null;
+	partnerId?: string | null;
+	amount?: number | null;
+	paymentMethod?: string | null;
+	paymentDate?: string | null;
 	note?: string | null;
 };
 
 export const getPayments = async (query: GetPaymentsQuery) => {
+	const { data } = await httpGet<PaymentDto[]>('/paymentorders', {
+		params: query,
+	});
+	return data;
+};
+
+export const getPayments2 = async (query: GetPaymentsQuery) => {
 	const { data } = await httpGet<PagedResult<PaymentDto>>('/payments', {
 		params: query,
 	});

@@ -10,6 +10,7 @@ namespace Domain.Entity
     public class Order : BaseEntity, IAggregateRoot
     {
         public ICollection<OrderItem>? OrderItems { get; set; } = new List<OrderItem>();
+        public ICollection<PaymentOrder> PaymentOrders { get; set; } = new List<PaymentOrder>();
 
         public string Code { get; set; }
         public Guid? PartnerId { get; set; }
