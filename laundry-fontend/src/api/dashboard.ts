@@ -20,6 +20,11 @@ export type DashboardStatsDto = {
 	overdueOrders: number;
 };
 
+export type GetCountOrdersTodayByStatusDto = {
+	status: string;
+	count: number;
+};
+
 export type TopCustomerDto = {
 	partnerId: string;
 	partnerName: string;
@@ -43,6 +48,18 @@ export const getDashboardStats = async (query?: GetDashboardStatsQuery) => {
 	const { data } = await httpGet<DashboardStatsDto>('/dashboard/stats', {
 		params: query,
 	});
+	return data;
+};
+
+export const getCountOrdersTodayByStatus = async (query?: GetDashboardStatsQuery) => {
+	const { data } = await httpGet<GetCountOrdersTodayByStatusDto[]>('/dashboard/GetCountOrdersToday', {
+		params: query,
+	});
+	return data;
+};
+
+export const getRevenueForTheDay = async () => {
+	const { data } = await httpGet<object>('/dashboard/GetRevenueForTheDay');
 	return data;
 };
 

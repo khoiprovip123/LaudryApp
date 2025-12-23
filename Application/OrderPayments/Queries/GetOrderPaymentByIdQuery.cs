@@ -40,6 +40,7 @@ namespace Application.OrderPayment.Queries
                 .ThenInclude(x => x.Partner)
                 .Select(x => new PaymentDto
                 {
+                    PaymentId = x.PaymentId,
                     PartnerName = x.Order.Partner != null ? x.Order.Partner.Name : null,
                     PartnerRef = x.Order.Partner != null ? x.Order.Partner.Ref : null,
                     Amount = x.AmountAllocated,

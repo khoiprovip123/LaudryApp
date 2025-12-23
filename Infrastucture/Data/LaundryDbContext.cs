@@ -52,7 +52,7 @@ namespace Infrastucture.Data
             builder.ApplyConfiguration(new PermissionGroupConfiguration());
             builder.ApplyConfiguration(new EmployeePermissionGroupConfiguration());
             builder.ApplyConfiguration(new PrintTemplateConfiguration());
-
+            builder.ApplyConfiguration(new PaymentOrderConfiguration());
             base.OnModelCreating(builder);
         }
 

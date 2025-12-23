@@ -3,6 +3,7 @@ import { httpGet, httpPost, httpDelete } from './http';
 export type PaymentDto = {
 	id: string;
 	orderId?: string | null;
+	paymentId: string;
 	orderCode: string;
 	partnerId?: string | null;
 	partnerName: string;

@@ -15,5 +15,7 @@ namespace Domain.Entity
 
         public Payment Payment { get; set; }
         public Order Order { get; set; }
+        public Guid? CompanyId { get; set; }
+        public Company Company { get; set; }
     }
 }

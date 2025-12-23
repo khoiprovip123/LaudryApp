@@ -21,20 +21,6 @@ namespace Domain.Service
 
         public void ComputeAmountForOrder(Order order)
         {
-            //// sô tiền đã thanh toán
-            //var totalPaid = 0M;
-            ////số tiền cần thanh toán
-            //var totalAmount = 0M;
-            ////số tiền đã xuất hóa đơn
-            //var totalInvoiced = 0M;
-
-            //foreach (var item in order.OrderItems)
-            //{
-            //    totalAmount += item.TotalPrice;
-            //}
-            //order.TotalPrice = totalAmount;
-            //order.PaidAmount = totalPaid;
-            //order.Residual = order.TotalPrice - order.PaidAmount;
             if (order == null) return;
 
             // Tổng tiền đơn
@@ -89,10 +75,11 @@ namespace Domain.Service
         public async override Task<Order> GetByIdAsync(object id)
         {
             var guidId = (Guid)id;
-            return await SearchQuery(x => x.Id == guidId)
+            var order = await SearchQuery(x => x.Id == guidId)
                 .Include(x => x.OrderItems)
                 .Include(x => x.PaymentOrders)
                 .FirstOrDefaultAsync();
+            return order ?? throw new KeyNotFoundException("Order not found");
         }
 
         public override Task UpdateAsync(IEnumerable<Order> entities)

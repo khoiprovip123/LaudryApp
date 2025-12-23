@@ -713,7 +713,7 @@ const OrderDetail: React.FC = () => {
 													size="xs"
 													colorScheme="red"
 													variant="ghost"
-													onClick={() => handleDeletePayment(payment.id)}
+													onClick={() => handleDeletePayment(payment.paymentId)}
 													_focus={{ boxShadow: 'none', outline: 'none' }}
 												/>
 											</Flex>

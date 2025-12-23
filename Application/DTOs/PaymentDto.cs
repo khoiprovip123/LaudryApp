@@ -12,6 +12,7 @@ namespace Application.DTOs
         public Guid? OrderId { get; set; }
         public string OrderCode { get; set; }
         public Guid? PartnerId { get; set; }
+        public Guid PaymentId { get; set; }
         public string PartnerName { get; set; }
         public string PartnerRef { get; set; }
         public decimal Amount { get; set; }

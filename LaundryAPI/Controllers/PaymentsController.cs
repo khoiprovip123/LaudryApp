@@ -36,6 +36,16 @@ namespace LaundryAPI.Controllers
         }
 
         [Uow]
+        [HttpPost("{id}/cancel")]
+        [CheckAccess(Actions = Permissions.Payments_Delete)]
+        public async Task<IActionResult> CancelPayment(Guid id, [FromBody] CancelPaymentCommand command)
+        {
+            command.Id = id;
+            await Mediator.Send(command);
+            return Ok(new { message = "Hủy thanh toán thành công." });
+        }
+
+        [Uow]
         [HttpDelete("{id}")]
         [CheckAccess(Actions = Permissions.Payments_Delete)]
         public async Task<IActionResult> DeletePayment(Guid id)

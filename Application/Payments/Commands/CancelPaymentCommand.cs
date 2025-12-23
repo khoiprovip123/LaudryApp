@@ -11,19 +11,20 @@ using System.Threading.Tasks;
 
 namespace Application.Payments.Commands
 {
-    public class DeletePaymentCommand : IRequest<Unit>
+    public class CancelPaymentCommand : IRequest<Unit>
     {
         public Guid Id { get; set; }
+        public string? Reason { get; set; }
     }
 
-    public class DeletePaymentCommandHandler : IRequestHandler<DeletePaymentCommand, Unit>
+    public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand, Unit>
     {
         private readonly IOrderService _orderService;
         private readonly IPaymentOrderService _paymentOrderService;
         private readonly IWorkContext _workContext;
         private readonly IAsyncRepository<Payment> _paymentRepository;
 
-        public DeletePaymentCommandHandler(
+        public CancelPaymentCommandHandler(
             IOrderService orderService,
             IPaymentOrderService paymentOrderService,
             IWorkContext workContext,
@@ -35,37 +36,41 @@ namespace Application.Payments.Commands
             _paymentRepository = paymentRepository;
         }
 
-        public async Task<Unit> Handle(DeletePaymentCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(CancelPaymentCommand request, CancellationToken cancellationToken)
         {
             var companyId = _workContext?.CompanyId;
             if (companyId == null)
                 throw new UserFriendlyException("Không xác định được cửa hàng của người dùng.", "COMPANY_NOT_FOUND");
 
-            // Load Payment
+            // Load Payment với PaymentOrders
             var payment = await _paymentRepository.GetByIdAsync(request.Id);
             if (payment == null)
                 throw new UserFriendlyException("Thanh toán không tồn tại.", "PAYMENT_NOT_FOUND");
 
             // Validate Payment thuộc đúng Company
             if (payment.CompanyId != companyId)
-                throw new UserFriendlyException("Bạn không có quyền xóa thanh toán này.", "PAYMENT_ACCESS_DENIED");
+                throw new UserFriendlyException("Bạn không có quyền hủy thanh toán này.", "PAYMENT_ACCESS_DENIED");
 
-            // Load PaymentOrders với Order để tính toán lại
-            var paymentOrders = await _paymentOrderService.SearchQuery(po => po.PaymentId == payment.Id)
-                .Include(po => po.Order)
+            // Load các PaymentOrder của Payment này
+            var existingPaymentOrders = await _paymentOrderService.SearchQuery(po => po.PaymentId == payment.Id)
                 .ToListAsync(cancellationToken);
 
-            if (paymentOrders == null || !paymentOrders.Any())
-            {
-                // Nếu không có PaymentOrder, chỉ cần xóa Payment
-                await _paymentRepository.DeleteAsync(payment);
-                return Unit.Value;
-            }
+            // Kiểm tra Payment đã bị hủy chưa (kiểm tra xem có PaymentOrder nào có AmountAllocated âm không)
+            var hasNegativeAllocation = existingPaymentOrders.Any(po => po.AmountAllocated < 0);
+            if (hasNegativeAllocation)
+                throw new UserFriendlyException("Thanh toán này đã được hủy trước đó.", "PAYMENT_ALREADY_CANCELLED");
+
+            // Load các PaymentOrder dương (chưa bị rollback) để rollback
+            var positivePaymentOrders = existingPaymentOrders
+                .Where(po => po.AmountAllocated > 0)
+                .ToList();
+
+            if (!positivePaymentOrders.Any())
+                throw new UserFriendlyException("Không có thanh toán nào để hủy.", "NO_PAYMENT_TO_CANCEL");
 
             // Lấy danh sách OrderId duy nhất
-            var orderIds = paymentOrders
-                .Where(po => po.Order != null)
-                .Select(po => po.Order!.Id)
+            var orderIds = positivePaymentOrders
+                .Select(po => po.OrderId)
                 .Distinct()
                 .ToList();
 
@@ -88,20 +93,27 @@ namespace Application.Payments.Commands
                 ordersToUpdate[orderId] = order;
             }
 
-            // Xóa các PaymentOrder
-            await _paymentOrderService.DeleteAsync(paymentOrders);
-
-            // Tính lại PaidAmount và Residual cho từng Order
+            // Rollback bằng cách tạo PaymentOrder với AmountAllocated âm (chuẩn ERP)
+            var rollbackPaymentOrders = new List<PaymentOrder>();
             foreach (var order in ordersToUpdate.Values)
             {
-                // Xóa PaymentOrder khỏi collection để tính toán chính xác
-                var paymentOrdersToRemove = order.PaymentOrders
-                    .Where(po => po.PaymentId == payment.Id)
+                var paymentOrdersToRollback = positivePaymentOrders
+                    .Where(po => po.OrderId == order.Id)
                     .ToList();
 
-                foreach (var po in paymentOrdersToRemove)
+                foreach (var po in paymentOrdersToRollback)
                 {
-                    order.PaymentOrders.Remove(po);
+                    // Tạo PaymentOrder với AmountAllocated âm để rollback
+                    var rollbackPaymentOrder = new PaymentOrder
+                    {
+                        OrderId = order.Id,
+                        PaymentId = payment.Id,
+                        AmountAllocated = -po.AmountAllocated,
+                        CompanyId = companyId
+                    };
+
+                    rollbackPaymentOrders.Add(rollbackPaymentOrder);
+                    order.PaymentOrders.Add(rollbackPaymentOrder);
                 }
 
                 // Tính lại số tiền đã thanh toán và còn lại
@@ -122,14 +134,25 @@ namespace Application.Payments.Commands
                 }
             }
 
+            // Lưu các PaymentOrder rollback
+            if (rollbackPaymentOrders.Any())
+            {
+                await _paymentOrderService.CreateAsync(rollbackPaymentOrders);
+            }
+
+            // Cập nhật Note của Payment để ghi lại lý do hủy
+            if (!string.IsNullOrWhiteSpace(request.Reason))
+            {
+                var currentNote = string.IsNullOrWhiteSpace(payment.Note) ? "" : payment.Note + "\n";
+                payment.Note = $"{currentNote}[Hủy: {DateTime.Now:yyyy-MM-dd HH:mm:ss}] {request.Reason}";
+                await _paymentRepository.UpdateAsync(payment);
+            }
+
             // Cập nhật các Order
             if (ordersToUpdate.Any())
             {
                 await _orderService.UpdateAsync(ordersToUpdate.Values);
             }
-
-            // Xóa Payment sau khi đã xóa PaymentOrder
-            await _paymentRepository.DeleteAsync(payment);
 
             return Unit.Value;
         }

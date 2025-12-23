@@ -1112,7 +1112,6 @@ const OrderCreate: React.FC = () => {
 											totalPrice: item.customTotalPrice ?? getServiceTotal(item),
 										};
 									});
-									console.log(orderItems);
 									await createOrder({
 										partnerId: activeTab.selectedCustomer.id,
 										orderItems,

@@ -16,6 +16,21 @@ namespace LaundryAPI.Controllers
             var res = await Mediator.Send(query);
             return Ok(res);
         }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetCountOrdersToday([FromQuery] GetCountOrdersTodayByStatusQuery query)
+        {
+            var res = await Mediator.Send(query);
+            return Ok(res);
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetRevenueForTheDay([FromQuery] GetRevenueForTheDayQuery query)
+        {
+            var res = await Mediator.Send(query);
+            return Ok(res);
+        }
+
     }
 }
 

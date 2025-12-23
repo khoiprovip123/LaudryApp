@@ -148,6 +148,7 @@ namespace Domain.Service
         {
             //CheckAccessRights(typeof(TEntity).Name, "Read");
             ISpecification<TEntity> spec = new InitialSpecification<TEntity>(x => true);
+            
             if (domain != null)
                 spec = new InitialSpecification<TEntity>(domain);
 
