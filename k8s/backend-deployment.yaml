@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: laundry-api
-  namespace: laundry
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -19,7 +19,7 @@ spec:
       containers:
         - name: laundry-api
           # TODO: đổi <github-username> thành username/organization GitHub thật
-          image: ghcr.io/your-github-username/laundry-backend:latest
+          image: ghcr.io/khoiprovip123/laundry-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
