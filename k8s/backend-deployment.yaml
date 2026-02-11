@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laundry-api
+  namespace: laundry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: laundry-api
+  template:
+    metadata:
+      labels:
+        app: laundry-api
+    spec:
+      # Uncomment nếu bạn dùng private registry secret
+      # imagePullSecrets:
+      #   - name: ghcr-creds
+      containers:
+        - name: laundry-api
+          # TODO: đổi <github-username> thành username/organization GitHub thật
+          image: ghcr.io/your-github-username/laundry-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ASPNETCORE_URLS
+              value: "http://0.0.0.0:8080"
