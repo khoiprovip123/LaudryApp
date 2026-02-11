@@ -1,1 +1,122 @@
+name: CI - Build, Docker & Deploy k3s
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/laundry-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/laundry-frontend
+
+jobs:
+  build-backend:
+    name: Build .NET backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore LaundryAPI.sln
+
+      - name: Build (Release)
+        run: dotnet build LaundryAPI.sln --configuration Release --no-restore
+
+  build-frontend:
+    name: Build React/Vite frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./laundry-fontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./laundry-fontend/package-lock.json"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  docker-build-push:
+    name: Build & push Docker images
+    runs-on: ubuntu-latest
+    needs:
+      - build-backend
+    # Nếu muốn chỉ build/push khi push lên master thì bật điều kiện dưới:
+    # if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./LaundryAPI/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+            ${{ env.BACKEND_IMAGE }}:latest
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./laundry-fontend
+          file: ./laundry-fontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+
+  deploy-k3s:
+    name: Deploy to k3s (self-hosted runner)
+    needs:
+      - docker-build-push
+    # Job này chạy trên runner tự host nằm trên server Linux + k3s
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    env:
+      NAMESPACE: default
+    steps:
+      - name: Show kubectl context
+        run: kubectl config current-context || echo "kubectl chưa được cấu hình trên runner"
+
+      # Ví dụ cập nhật image cho deployment backend
+      - name: Update backend deployment image
+        run: |
+          kubectl -n $NAMESPACE set image deployment/laundry-api \
+            laundry-api=${BACKEND_IMAGE}:${GITHUB_SHA}
+
+      # Ví dụ cập nhật image cho deployment frontend
+      - name: Update frontend deployment image
+        run: |
+          kubectl -n $NAMESPACE set image deployment/laundry-frontend \
+            laundry-frontend=${FRONTEND_IMAGE}:${GITHUB_SHA}
+
 
