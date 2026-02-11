@@ -1,0 +1,61 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: laundry-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "StrongPass@123"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - laundry-network
+    restart: unless-stopped
+
+  laundry-api:
+    build:
+      context: .
+      dockerfile: LaundryAPI/Dockerfile
+    container_name: laundry-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: >
+        Server=sqlserver;
+        Database=LaundryDB;
+        User Id=sa;
+        Password=StrongPass@123;
+        TrustServerCertificate=True;
+        Encrypt=False;
+        MultipleActiveResultSets=True
+    ports:
+      - "8080:8080"
+    depends_on:
+      - sqlserver
+    networks:
+      - laundry-network
+    restart: unless-stopped
+
+  laundry-frontend:
+    build:
+      context: ./laundry-fontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8080/api
+    container_name: laundry-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - laundry-api
+    networks:
+      - laundry-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+
+networks:
+  laundry-network:
+    driver: bridge

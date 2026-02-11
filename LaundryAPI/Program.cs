@@ -180,6 +180,12 @@ services.AddHostedService<RoleSeederService>();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<LaundryDbContext>();
+    db.Database.Migrate(); // hoặc EnsureCreated()
+}
+
 // Pipeline
 if (environment.IsDevelopment())
 {
@@ -187,7 +193,7 @@ if (environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors("DefaultCorsPolicy");
 
 app.UseAuthentication();
